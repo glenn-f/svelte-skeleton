@@ -1,0 +1,15 @@
+CREATE TABLE
+    IF NOT EXISTS usuario (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL,
+        created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+CREATE TABLE
+    IF NOT EXISTS sessao (
+        id TEXT PRIMARY KEY,
+        created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        expires DATETIME NOT NULL
+    );
