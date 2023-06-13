@@ -4,7 +4,7 @@ import fs from 'fs';
 
 const dbPath = process.env.DB_PATH || "./data/sqlite.db"
 const sqlPath = "./src/lib/server/db/schema.sql"
-const db = new Database(dbPath, { verbose: console.log });
+const db = new Database(dbPath, { verbose: console.log, foreignKeys: true });
 const sql = fs.readFileSync(sqlPath, { encoding: "utf8" })
 
 db.exec(sql)
