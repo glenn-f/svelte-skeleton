@@ -15,14 +15,14 @@ function limparSessoes() {
   nextClean = Date.now() + 1000 * 60 * 60 // 1 hour
 }
 
-export function criarSessao(email, maxAge) {
+export function criarSessao(email, maxAge, usuario) {
   let id = ''
   do {
     id = randomBytes(32).toString('hex')
   } while (sessionStore.has(id))
   const expires = Date.now() + maxAge * 1000
-  criarSessaoDB(id, expires)
-  sessionStore.set(id, { ...data, invalidAt: expires })
+  criarSessaoDB(id, expires, usuario.id)
+  sessionStore.set(id, { email, nome: usuario.nome, invalidAt: expires })
   if (Date.now() > nextClean) {
     setTimeout(limparSessoes, 5000)
   }
