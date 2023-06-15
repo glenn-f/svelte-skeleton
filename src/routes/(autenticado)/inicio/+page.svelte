@@ -15,7 +15,7 @@
   })
 </script>
 
-<SuperDebug {data} />
+<!-- <SuperDebug {data} /> -->
 
 <h1 class="h1">Bem-vindo, {data?.sessao?.nome ?? 'Anônimo'}</h1>
 <h3 class="h3">Seu e-mail é: <code class="code">{data?.sessao?.email ?? ''}</code>.</h3>
