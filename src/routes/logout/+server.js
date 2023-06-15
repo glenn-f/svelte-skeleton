@@ -1,7 +1,10 @@
 import { redirect } from '@sveltejs/kit'
-import { apagarSessao } from '../../lib/server/session.js'
+import { apagarSessao } from '$lib/server/session'
 
-export async function GET({ locals }) {
-    if (locals.sessao) { apagarSessao(locals.sessao.sid) }
+export async function GET({ locals, cookies }) {
+    if (locals.sessao) {
+        cookies.delete('sid')
+        apagarSessao(locals.sessao.sid)
+    }
     throw redirect(302, "/login");
 };
