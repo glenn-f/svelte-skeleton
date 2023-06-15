@@ -9,4 +9,4 @@ const db = new Database(dbPath, { verbose: console.log, foreignKeys: true })
 const sql = fs.readFileSync(sqlPath, { encoding: 'utf8' })
 
 db.exec(sql)
-// criarUsuario("glenn@adm.com", "senha", { nome: "Glenn Fonseca" })
+criarUsuario("glenn@adm.com", "senha", { nome: "Glenn Fonseca" })

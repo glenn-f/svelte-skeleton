@@ -1,8 +1,7 @@
 import Database from 'better-sqlite3'
 import bcrypt from 'bcrypt'
 
-const DB_SQLITE_PATH = process.env.DB_SQLITE_PATH ?? "./data/sqlite.db"
-console.log(DB_SQLITE_PATH)
+const DB_SQLITE_PATH = process.env.DB_SQLITE_PATH ?? './data/sqlite.db'
 const db = new Database(DB_SQLITE_PATH, { verbose: console.log })
 
 export function criarSessaoDB(id, expiracao, usuarioId) {
@@ -10,7 +9,7 @@ export function criarSessaoDB(id, expiracao, usuarioId) {
   query.run({ id, expiracao, usuarioId })
 }
 export function buscarSessaoDB(id) {
-  const query = db.prepare('select id, expiracao from sessao where id = $id')
+  const query = db.prepare('select s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email email from sessao s left join usuario u on u.id = s.usuario_id where s.id = $id')
   const row = query.get({ id })
   return row ? row : undefined
 }
@@ -29,7 +28,7 @@ export async function criarUsuario(email, senha, dados) {
   query.run({ email, senha, nome })
 }
 export async function verificarCredencialUsuario(email, senha) {
-  const query = db.prepare('select id, senha from usuario where email = $email')
+  const query = db.prepare('select * from usuario where email = $email')
   const rs = query.get({ email })
   return rs && (await bcrypt.compare(senha, rs.senha)) ? rs : false
 }
