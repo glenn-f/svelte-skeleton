@@ -1,7 +1,10 @@
 <script>
+  import DevAccordion from '$lib/components/DevAccordion.svelte'
+  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import { superForm } from 'sveltekit-superforms/client'
+  import { dev } from '$app/environment'
   export let data
-  const { form, errors, enhance } = superForm(data.form, { taintedMessage: false })
+  const { form, errors, enhance, allErrors } = superForm(data.form, { taintedMessage: false, defaultValidator: 'keep' })
 </script>
 
 <div class="grid place-items-center my-3">
@@ -16,5 +19,10 @@
       {#if $errors.senha} <span class="text-error-400">{$errors.senha}</span> {/if}
     </div>
     <button class="btn variant-filled-primary" type="submit">Entrar</button>
+    {#if $errors._errors} <span class="text-error-400">{$errors._errors}</span> {/if}
   </form>
+</div>
+
+<div class="grid place-items-center">
+  <DevAccordion />
 </div>

@@ -1,22 +1,30 @@
 <script>
-  import { dev } from '$app/environment'
-  import { page } from '$app/stores'
-  import { Accordion, AccordionItem, AppBar, AppShell } from '@skeletonlabs/skeleton'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
+  import NavItems from './NavItems.svelte'
+  import { autoModeWatcher } from '@skeletonlabs/skeleton'
+  import DevAccordion from '$lib/components/DevAccordion.svelte'
+  import { AppBar, AppShell, LightSwitch } from '@skeletonlabs/skeleton'
   export let data
   let primeiroNome = data?.sessao?.nome?.split(' ')[0]
 </script>
 
+<svelte:head>{@html `<script>${autoModeWatcher.toString()} autoModeWatcher();</script>`}</svelte:head>
+
 <AppShell>
   <svelte:fragment slot="header">
-    <AppBar background="bg-slate-400">
+    <AppBar gridColumns="grid-cols-3" slotDefault="place-self-center" slotTrail="place-content-end" background="bg-primary-300-600-token">
       <svelte:fragment slot="lead">
-        <h4 class="h4 uppercase">📊[Nome da Aplicação]</h4>
+        <a href="/inicio" class="anchor no-underline">
+          <h5 class="h5 uppercase text-primary-50-900-token">📊[Nome da Aplicação]</h5>
+        </a>
+      </svelte:fragment>
+      <svelte:fragment slot="default">
+        <NavItems />
       </svelte:fragment>
       <svelte:fragment slot="trail">
         <a href="/logout" class="btn variant-filled"
           >Sair {#if primeiroNome} ({primeiroNome}) {/if}</a
         >
+        <LightSwitch rounded="rounded-full" />
       </svelte:fragment>
     </AppBar>
   </svelte:fragment>
@@ -26,18 +34,6 @@
   </main>
 
   <svelte:fragment slot="pageFooter">
-    {#if dev}
-      <div class="bg-orange-300">
-        <Accordion>
-          <AccordionItem>
-            <svelte:fragment slot="lead">🧪</svelte:fragment>
-            <svelte:fragment slot="summary">SuperDebug</svelte:fragment>
-            <svelte:fragment slot="content">
-              <SuperDebug data={$page} label="/(autenticado)/* - layout.svelte - SuperDebug" />
-            </svelte:fragment>
-          </AccordionItem>
-        </Accordion>
-      </div>
-    {/if}
+    <DevAccordion />
   </svelte:fragment>
 </AppShell>

@@ -7,7 +7,7 @@ import { redirect } from '@sveltejs/kit'
 const maxAge = 60 * 60
 const loginSchema = z.object({
   email: z.string().email(),
-  senha: z.string()
+  senha: z.string().nonempty("Digite a senha")
 })
 
 export async function load() {
@@ -18,18 +18,18 @@ export async function load() {
 export const actions = {
   async login({ request, cookies }) {
     const form = await superValidate(request, loginSchema)
-
     if (form.valid) {
       const usuarioValido = await verificarCredencialUsuario(form.data.email, form.data.senha)
       if (!usuarioValido) {
-        setError(form, 'email', '')
-        return setError(form, 'senha', 'Credenciais inválidas.', { status: 401 })
+        setError(form, 'email')
+        setError(form, 'senha')
+        return setError(form, null, 'Credenciais inválidas.', { status: 401 })
       }
       const sid = criarSessao(form.data.email, maxAge, usuarioValido)
       cookies.set('sid', sid, { maxAge })
       throw redirect(303, '/inicio')
     }
-    setError(form, 'email', '')
-    return setError(form, 'senha', 'Preenchimento inválido.', { status: 401 })
+
+    return { form }
   }
 }

@@ -13,12 +13,6 @@ async function iniciarLog({ event, resolve }) {
   return resolve(event)
 }
 
-async function finalizarLog({ event, resolve }) {
-  const res = await resolve(event)
-  event.locals.log.end()
-  return res
-}
-
 async function lerCookies({ event, resolve }) {
   const { cookies, locals } = event
   const sid = cookies.get('sid')
@@ -36,6 +30,12 @@ async function verificarAutenticacao({ event, resolve }) {
   }
 
   return resolve(event)
+}
+
+async function finalizarLog({ event, resolve }) {
+  const res = await resolve(event)
+  event.locals.log.end()
+  return res
 }
 
 export const handle = sequence(iniciarLog, lerCookies, verificarAutenticacao, finalizarLog)

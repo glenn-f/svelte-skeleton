@@ -2,16 +2,13 @@ import moment from "moment/moment";
 
 export class Logger {
   static colors = {
-    black: '\x1b[30m',
-    red: '\x1b[31m',
-    green: '\x1b[32m',
-    yellow: '\x1b[33m',
-    blue: '\x1b[34m',
-    magenta: '\x1b[35m',
-    cyan: '\x1b[36m',
-    white: '\x1b[37m',
+    black: '\x1b[30m', red: '\x1b[31m', green: '\x1b[32m', yellow: '\x1b[33m', blue: '\x1b[34m', magenta: '\x1b[35m', cyan: '\x1b[36m', white: '\x1b[37m',
   };
+  static bgs = {
+    preto: "\u001b[40m", vermelho: "\u001b[41m", verde: "\u001b[42m", amarelo: "\u001b[43m", azul: "\u001b[44m", magenta: "\u001b[45m", ciano: "\u001b[46m", branco: "\u001b[47m",
+  }
 
+  static invert = "\u001b[7m"
   static reset = '\x1b[0m';
   static qntdEventos = 0
   constructor(event, dev) {
@@ -22,7 +19,7 @@ export class Logger {
     this.inicio = moment()
     this.fim = null
     const rota = event.route.id ? ` → ${this.ct("Rota", "magenta")} ${this.ct(event.route.id ?? "?", 'cyan')}` : ""
-    console.log(this.inicio.format("HH:mm:ss.SS") + ` [${this.numEvento}] ${this.ct(event.request.method, 'green')} ${this.ct(event.url.pathname, 'yellow')}` + rota)
+    console.log(Logger.colors.blue + Logger.invert + this.inicio.format("HH:mm:ss.SS") + Logger.reset + ` [${this.numEvento}] ${this.ct(event.request.method, 'green')} ${this.ct(event.url.pathname, 'yellow')}` + rota)
   }
 
   ct(texto, cor) {
@@ -39,6 +36,6 @@ export class Logger {
     if (texto) console.log("\t" + this.ct(texto, cor))
     this.fim = moment()
     this.duracao = this.fim.diff(this.inicio, "millisecond")
-    console.log(`------- Fim [` + this.numEvento + "] " + this.ct(this.duracao, 'red') + " ms\n")
+    console.log(Logger.colors.cyan + Logger.invert + `------- Fim` + Logger.reset + ` [` + this.numEvento + "] " + this.ct(this.duracao, 'red') + " ms\n")
   }
 }
