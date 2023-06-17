@@ -1,13 +1,22 @@
 <script>
-  import NavItems from './NavItems.svelte'
-  import { autoModeWatcher } from '@skeletonlabs/skeleton'
+  import { invalidateAll } from '$app/navigation'
   import DevAccordion from '$lib/components/DevAccordion.svelte'
   import { AppBar, AppShell, LightSwitch } from '@skeletonlabs/skeleton'
+  import { onMount } from 'svelte'
+  import NavItems from './NavItems.svelte'
   export let data
   let primeiroNome = data?.sessao?.nome?.split(' ')[0]
+  onMount(() => {
+    const tempoAtualizar = 5 * 60 * 1000
+    const tempoSessao = Math.max((data?.sessao?.expiracao ?? 0) - Date.now(), 5000)
+    const atualizar = setInterval(invalidateAll, tempoAtualizar)
+    const verificarSessao = setInterval(invalidateAll, tempoSessao)
+    return () => {
+      clearInterval(atualizar)
+      clearInterval(verificarSessao)
+    }
+  })
 </script>
-
-<svelte:head>{@html `<script>${autoModeWatcher.toString()} autoModeWatcher();</script>`}</svelte:head>
 
 <AppShell>
   <svelte:fragment slot="header">

@@ -1,4 +1,4 @@
-import moment from "moment/moment";
+import { DateTime } from "luxon";
 
 export class Logger {
   static colors = {
@@ -16,10 +16,10 @@ export class Logger {
     if (!dev) return
     this.numEvento = Logger.qntdEventos++
     this.event = event;
-    this.inicio = moment()
+    this.inicio = DateTime.now()
     this.fim = null
     const rota = event.route.id ? ` → ${this.ct("Rota", "magenta")} ${this.ct(event.route.id ?? "?", 'cyan')}` : ""
-    console.log(Logger.colors.blue + Logger.invert + this.inicio.format("HH:mm:ss.SS") + Logger.reset + ` [${this.numEvento}] ${this.ct(event.request.method, 'green')} ${this.ct(event.url.pathname, 'yellow')}` + rota)
+    console.log(Logger.colors.blue + Logger.invert + this.inicio.toFormat("TT'.'u") + Logger.reset + ` [${this.numEvento}] ${this.ct(event.request.method, 'green')} ${this.ct(event.url.pathname, 'yellow')}` + rota)
   }
 
   ct(texto, cor) {
@@ -34,8 +34,8 @@ export class Logger {
   end(texto, cor = "blue") {
     if (!this.dev) return
     if (texto) console.log("\t" + this.ct(texto, cor))
-    this.fim = moment()
-    this.duracao = this.fim.diff(this.inicio, "millisecond")
-    console.log(Logger.colors.cyan + Logger.invert + `------- Fim` + Logger.reset + ` [` + this.numEvento + "] " + this.ct(this.duracao, 'red') + " ms\n")
+    this.fim = DateTime.now()
+    this.duracao = this.fim.diff(this.inicio)
+    console.log(Logger.colors.cyan + Logger.invert + `------- Fim` + Logger.reset + ` [` + this.numEvento + "] " + this.ct(this.duracao.toMillis(), 'red') + " ms\n")
   }
 }

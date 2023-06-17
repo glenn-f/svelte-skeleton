@@ -1,0 +1,339 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model tipo_lancamento {
+  id            Int            @id @default(autoincrement())
+  perc_encargo  Decimal        @default(0) @db.Decimal(7, 6)
+  conta         conta?
+  conta_forma   conta_forma?
+  forma_parcela forma_parcela?
+  lancamento    lancamento[]
+}
+
+model conta {
+  id                 Int             @id @default(autoincrement())
+  tipo_lancamento_id Int             @unique
+  nome               String          @db.VarChar(50)
+  saldo              Decimal         @default(0) @db.Decimal(14, 4)
+  esta_ativo         Boolean         @default(true)
+  tipo_lancamento    tipo_lancamento @relation(fields: [tipo_lancamento_id], references: [id])
+  formas             conta_forma[]
+}
+
+model conta_forma {
+  id                 Int             @id @default(autoincrement())
+  conta_id           Int
+  tipo_lancamento_id Int             @unique
+  nome               String          @db.VarChar(40)
+  pode_compra        Boolean
+  pode_venda         Boolean
+  pode_parcelar      Boolean
+  esta_ativo         Boolean         @default(true)
+  conta              conta           @relation(fields: [conta_id], references: [id])
+  tipo_lancamento    tipo_lancamento @relation(fields: [tipo_lancamento_id], references: [id])
+  parcelas           forma_parcela[]
+}
+
+model forma_parcela {
+  id                 Int             @id @default(autoincrement())
+  conta_forma_id     Int
+  tipo_lancamento_id Int             @unique
+  qntd_parcela       Int             @default(0) @db.SmallInt
+  esta_ativo         Boolean         @default(true)
+  forma              conta_forma     @relation(fields: [conta_forma_id], references: [id])
+  tipo_lancamento    tipo_lancamento @relation(fields: [tipo_lancamento_id], references: [id])
+}
+
+model est_buyback {
+  id              BigInt      @id
+  est_saida_id    BigInt      @unique
+  origem_saida    est_saida   @relation(fields: [est_saida_id], references: [id])
+  destino_entrada est_entrada @relation(fields: [id], references: [id])
+}
+
+model est_estorno_saida {
+  id              BigInt      @id
+  est_saida_id    BigInt
+  origem_saida    est_saida   @relation(fields: [est_saida_id], references: [id])
+  destino_entrada est_entrada @relation(fields: [id], references: [id])
+}
+
+model est_compra {
+  id            BigInt      @id
+  entrada       est_entrada @relation(fields: [id], references: [id])
+  fornecedor_id Int?
+  fornecedor    pessoa?     @relation("compra_fornecedor", fields: [fornecedor_id], references: [id])
+}
+
+model est_entrada {
+  id             BigInt             @id @default(autoincrement())
+  data_entrada   DateTime           @default(now()) @db.Timestamptz(6)
+  observacoes    String?
+  responsavel_id Int?
+  responsavel    pessoa?            @relation("entrada_responsavel", fields: [responsavel_id], references: [id])
+  buyback        est_buyback?
+  compra         est_compra?
+  estorno_saida  est_estorno_saida?
+  itens_entrada  estoque[]
+  pagamentos     lanc_pagamento[]
+}
+
+model est_item_estorno {
+  id             BigInt   @id
+  est_item_id    BigInt
+  item_estornado est_item @relation(fields: [est_item_id], references: [id])
+  estoque_criado estoque  @relation(fields: [id], references: [id])
+}
+
+model est_item {
+  id             BigInt             @id @default(autoincrement())
+  estoque_id     BigInt
+  est_saida_id   BigInt
+  qntd           Int
+  preco          Decimal            @db.Decimal(14, 4)
+  desconto       Decimal            @default(0) @db.Decimal(14, 4)
+  saida_destino  est_saida          @relation(fields: [est_saida_id], references: [id])
+  estoque_origem estoque            @relation(fields: [estoque_id], references: [id])
+  comissoes      comissao[]
+  devolucoes     est_item_estorno[]
+}
+
+model est_perda {
+  id         BigInt    @id
+  tipo_perda Int
+  saida      est_saida @relation(fields: [id], references: [id])
+}
+
+model est_saida {
+  id             BigInt              @id @default(autoincrement())
+  data_saida     DateTime            @default(now()) @db.Timestamptz(6)
+  observacoes    String?
+  responsavel_id Int?
+  responsavel    pessoa?             @relation("saida_responsavel", fields: [responsavel_id], references: [id])
+  buybacks       est_buyback?
+  perda          est_perda?
+  venda          est_venda?
+  itens_saida    est_item[]
+  recebimentos   lanc_recebimento[]
+  estornos       est_estorno_saida[]
+}
+
+model est_venda {
+  id         BigInt    @id
+  cliente_id Int?
+  troco      Decimal   @default(0) @db.Decimal(14, 4)
+  diferenca  Decimal   @default(0) @db.Decimal(14, 4)
+  cliente    pessoa?   @relation("saida_cliente", fields: [cliente_id], references: [id])
+  saida      est_saida @relation(fields: [id], references: [id])
+}
+
+model estoque {
+  id             BigInt            @id @default(autoincrement())
+  primario_id    BigInt?
+  est_entrada_id BigInt
+  produto_id     Int
+  qntd_inicial   Int
+  qntd           Int
+  estado         Int               @default(2)
+  condicao       Int?
+  origem         Int?
+  imei           String?           @db.VarChar(100)
+  sn             String?           @db.VarChar(100)
+  observacoes    String?
+  custo          Decimal           @db.Decimal(14, 4)
+  preco          Decimal?          @db.Decimal(14, 4)
+  entrada        est_entrada       @relation(fields: [est_entrada_id], references: [id])
+  produto        produto           @relation(fields: [produto_id], references: [id])
+  itens_saida    est_item[]
+  primario       estoque?          @relation("deriva", fields: [primario_id], references: [id])
+  derivados      estoque[]         @relation("deriva")
+  estorno_origem est_item_estorno?
+}
+
+model lanc_pagamento {
+  id             BigInt      @id
+  est_entrada_id BigInt
+  entrada        est_entrada @relation(fields: [est_entrada_id], references: [id])
+  lancamento     lancamento  @relation(fields: [id], references: [id])
+}
+
+model lanc_recebimento {
+  id           BigInt     @id
+  est_saida_id BigInt
+  saida        est_saida  @relation(fields: [est_saida_id], references: [id])
+  lancamento   lancamento @relation(fields: [id], references: [id])
+}
+
+model lancamento {
+  id                 BigInt            @id @default(autoincrement())
+  tipo_lancamento_id Int
+  valor              Decimal           @db.Decimal(14, 4)
+  tarifa             Decimal           @default(0) @db.Decimal(14, 4)
+  encargo            Decimal           @default(0) @db.Decimal(14, 4)
+  data_efetivacao    DateTime          @default(now()) @db.Timestamptz(6)
+  tipo               tipo_lancamento   @relation(fields: [tipo_lancamento_id], references: [id])
+  pagamento          lanc_pagamento?
+  recebimento        lanc_recebimento?
+}
+
+model pes_cliente {
+  id      Int     @id
+  deleted Boolean @default(false)
+  pessoa  pessoa  @relation(fields: [id], references: [id])
+}
+
+model pes_fornecedor {
+  id      Int     @id
+  deleted Boolean @default(false)
+  pessoa  pessoa  @relation(fields: [id], references: [id])
+}
+
+model pes_colaborador {
+  id      Int     @id
+  deleted Boolean @default(false)
+  pessoa  pessoa  @relation(fields: [id], references: [id])
+}
+
+model pessoa {
+  id                   Int              @id @default(autoincrement())
+  nome                 String           @db.VarChar(127)
+  cpf                  String?          @unique @db.Char(11)
+  cnpj                 String?          @unique @db.Char(14)
+  email                String?          @db.VarChar(127)
+  telefone             String?          @db.VarChar(15)
+  deleted              Boolean          @default(false)
+  compras_fornecedor   est_compra[]     @relation("compra_fornecedor")
+  saidas_cliente       est_venda[]      @relation("saida_cliente")
+  entradas_responsavel est_entrada[]    @relation("entrada_responsavel")
+  saidas_responsavel   est_saida[]      @relation("saida_responsavel")
+  comissoes            comissao[]
+  cliente              pes_cliente?
+  fornecedor           pes_fornecedor?
+  colaborador          pes_colaborador?
+  usuario              usuario[]
+}
+
+model prod_atributo {
+  id             Int             @id @default(autoincrement())
+  prod_modelo_id Int
+  nome           String          @db.VarChar(60)
+  ordem          Int
+  deleted        Boolean         @default(false)
+  modelo         prod_modelo     @relation(fields: [prod_modelo_id], references: [id])
+  variacoes      prod_variacao[]
+}
+
+model prod_caracteristica {
+  produto_id       Int
+  prod_variacao_id Int
+  caracteristica   prod_variacao @relation(fields: [prod_variacao_id], references: [id])
+  produto          produto       @relation(fields: [produto_id], references: [id])
+
+  @@id([produto_id, prod_variacao_id])
+}
+
+model prod_categoria {
+  id              Int             @id @default(autoincrement())
+  nome            String          @db.VarChar(60)
+  deleted         Boolean         @default(false)
+  regras_comissao com_categoria[]
+  modelos         prod_modelo[]
+  produtos        produto[]
+}
+
+model prod_modelo {
+  id                Int             @id @default(autoincrement())
+  prod_categoria_id Int?
+  nome              String          @db.VarChar(60)
+  deleted           Boolean         @default(false)
+  categoria         prod_categoria? @relation(fields: [prod_categoria_id], references: [id])
+  regras_comissao   com_modelo[]
+  atributos         prod_atributo[]
+}
+
+model prod_variacao {
+  id               Int                   @id @default(autoincrement())
+  prod_atributo_id Int
+  nome             String                @db.VarChar(60)
+  deleted          Boolean               @default(false)
+  atributo         prod_atributo         @relation(fields: [prod_atributo_id], references: [id])
+  produtos         prod_caracteristica[]
+}
+
+model produto {
+  id                Int                   @id @default(autoincrement())
+  prod_categoria_id Int?
+  nome              String                @db.VarChar(63)
+  deleted           Boolean               @default(false)
+  derivado          Boolean               @default(false)
+  categoria         prod_categoria?       @relation(fields: [prod_categoria_id], references: [id])
+  itens_estoque     estoque[]
+  caracteristicas   prod_caracteristica[]
+}
+
+model com_categoria {
+  comissao_regra_id Int
+  prod_categoria_id Int
+  regra_comissao    com_regra      @relation(fields: [comissao_regra_id], references: [id])
+  categoria         prod_categoria @relation(fields: [prod_categoria_id], references: [id])
+
+  @@id([comissao_regra_id, prod_categoria_id])
+}
+
+model com_modelo {
+  prod_modelo_id Int
+  com_regra_id   Int
+  regra_comissao com_regra   @relation(fields: [com_regra_id], references: [id])
+  modelo         prod_modelo @relation(fields: [prod_modelo_id], references: [id])
+
+  @@id([com_regra_id, prod_modelo_id])
+}
+
+model com_regra {
+  id              Int             @id @default(autoincrement())
+  nome            String          @db.VarChar(60)
+  percentual      Decimal         @db.Decimal(7, 6)
+  incluir_novos   Boolean
+  incluir_usados  Boolean
+  limite_superior Decimal?        @db.Decimal(14, 4)
+  limite_inferior Decimal?        @db.Decimal(14, 4)
+  data_inicio     DateTime?       @db.Timestamptz(6)
+  data_fim        DateTime?       @db.Timestamptz(6)
+  categorias      com_categoria[]
+  modelos         com_modelo[]
+  aplicacoes      comissao[]
+}
+
+model comissao {
+  id              BigInt    @id @default(autoincrement())
+  est_item_id     BigInt
+  beneficiario_id Int
+  valor           Decimal   @db.Decimal(14, 4)
+  com_regra_id    Int
+  beneficiario    pessoa    @relation(fields: [beneficiario_id], references: [id])
+  regra           com_regra @relation(fields: [com_regra_id], references: [id])
+  item_saida      est_item  @relation(fields: [est_item_id], references: [id])
+}
+
+model usuario {
+  id                  Int     @id @default(autoincrement())
+  nome                String  @db.VarChar()
+  senha               String  @db.VarChar()
+  perm_venda          Int?    @default(1)
+  perm_compra         Int?    @default(0)
+  perm_perda          Int?    @default(0)
+  perm_buyback        Int?    @default(0)
+  perm_estorno_venda  Int?    @default(0)
+  perm_estorno_compra Int?    @default(0)
+  perm_cadastros      Int?    @default(0)
+  perm_mov_conta      Int?    @default(0)
+  perm_estornar_mov   Int?    @default(0)
+  pessoa_id           Int?
+  pessoa              pessoa? @relation(fields: [pessoa_id], references: [id])
+}

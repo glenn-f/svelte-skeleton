@@ -2,7 +2,7 @@ import { buscarSessao } from '$lib/server/session'
 import { Logger } from '$lib/logger'
 import { dev } from '$app/environment'
 import { sequence } from '@sveltejs/kit/hooks'
-import { error } from '@sveltejs/kit'
+import { error, redirect } from '@sveltejs/kit'
 
 async function iniciarLog({ event, resolve }) {
   event.locals.log = new Logger(event, dev)
@@ -26,7 +26,7 @@ async function lerCookies({ event, resolve }) {
 async function verificarAutenticacao({ event, resolve }) {
   if (event.route.id?.startsWith('/(autenticado)') && !event.locals.sessao) {
     event.locals.log.auth("Rota não autorizada para este usuário")
-    throw error(401, "Não autorizado")
+    throw redirect(307, "/login")
   }
 
   return resolve(event)
