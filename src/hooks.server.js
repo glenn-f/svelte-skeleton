@@ -2,13 +2,13 @@ import { buscarSessao } from '$lib/server/session'
 import { Logger } from '$lib/logger'
 import { dev } from '$app/environment'
 import { sequence } from '@sveltejs/kit/hooks'
-import { error, redirect } from '@sveltejs/kit'
+import { redirect } from '@sveltejs/kit'
 
 async function iniciarLog({ event, resolve }) {
   event.locals.log = new Logger(event, dev)
   if (event.route.id === null) {
     event.locals.log.end("Rota não encontrada", "red")
-    throw error(404, "Página não encontrada")
+    throw redirect(307, "/inicio")
   }
   return resolve(event)
 }

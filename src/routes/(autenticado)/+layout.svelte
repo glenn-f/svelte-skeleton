@@ -1,9 +1,10 @@
 <script>
+  import Icon from '@iconify/svelte'
   import { invalidateAll } from '$app/navigation'
-  import DevAccordion from '$lib/components/DevAccordion.svelte'
+  import { DevAccordion, Menu, MenuItem } from '$lib/components'
   import { AppBar, AppShell, LightSwitch } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
-  import NavItems from './NavItems.svelte'
+
   export let data
   let primeiroNome = data?.sessao?.nome?.split(' ')[0]
   onMount(() => {
@@ -26,12 +27,20 @@
           <h5 class="h5 uppercase text-primary-50-900-token">📊[Nome da Aplicação]</h5>
         </a>
       </svelte:fragment>
-      <svelte:fragment slot="default">
-        <NavItems />
-      </svelte:fragment>
+      <div class="flex flex-row gap-1">
+        <Menu titulo="Administração" icon="fa6-solid:gears">
+          <MenuItem href="/admin/usuarios" titulo="Usuários" icon="fa-solid:user-cog" />
+        </Menu>
+
+        <Menu titulo="Cadatros" icon="mdi:book-cog">
+          <MenuItem href="/produtos" titulo="Produtos" icon="fluent-mdl2:product-list" />
+          <MenuItem href="/pessoas" titulo="Pessoas" icon="ph:user-list" />
+        </Menu>
+      </div>
       <svelte:fragment slot="trail">
-        <a href="/logout" class="btn variant-filled"
-          >Sair {#if primeiroNome} ({primeiroNome}) {/if}</a
+        <a href="/logout" class="btn variant-filled">
+          <Icon icon="mdi:logout" width="20px" height="20px" />
+          Sair {#if primeiroNome}({primeiroNome}){/if}</a
         >
         <LightSwitch rounded="rounded-full" />
       </svelte:fragment>
