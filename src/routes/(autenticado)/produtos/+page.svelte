@@ -316,7 +316,7 @@
       {#each $table.getHeaderGroups() as headerGroup}
         <tr>
           {#each headerGroup.headers as header}
-            <th colSpan={header.colSpan}>
+            <th colspan={header.colSpan}>
               {#if !header.isPlaceholder}
                 <div class:table-sort-asc={header.column.getIsSorted().toString() == "asc"}   class:table-sort-dsc={header.column.getIsSorted().toString() == "desc"}  class:cursor-pointer={header.column.getCanSort()} class:select-none={header.column.getCanSort()} on:click={header.column.getToggleSortingHandler()}>
                   <svelte:component this={flexRender(header.column.columnDef.header, header.getContext())} />
