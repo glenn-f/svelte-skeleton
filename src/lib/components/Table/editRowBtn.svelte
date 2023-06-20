@@ -1,6 +1,6 @@
 <script>
+	import { rowChanges } from './stores.js';
   import Icon from '@iconify/svelte'
-import { rowChanges } from './stores'
 
   export let row
   let isEdit = false

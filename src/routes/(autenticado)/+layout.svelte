@@ -47,7 +47,7 @@
     </AppBar>
   </svelte:fragment>
 
-  <main class="p-2">
+  <main class="p-2 overflow-x-auto">
     <slot />
   </main>
 

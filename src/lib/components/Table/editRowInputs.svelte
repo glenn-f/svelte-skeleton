@@ -1,5 +1,5 @@
 <script>
-  import { rowChanges } from './stores'
+	import { rowChanges } from './stores.js';
 
   export let id
   export let colId
