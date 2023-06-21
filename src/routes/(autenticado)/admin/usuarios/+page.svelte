@@ -1,9 +1,11 @@
 <script>
-  import { modalStore } from '@skeletonlabs/skeleton'
-  import FormAdicionarUsuario from './FormAdicionarUsuario.svelte'
   import { Table, TableActions } from '$lib/components/Table'
   import Icon from '@iconify/svelte'
+  import { modalStore } from '@skeletonlabs/skeleton'
   import { renderComponent } from '@tanstack/svelte-table'
+  import FormAdicionarUsuario from './FormAdicionarUsuario.svelte'
+  export let data
+
   let columns = [
     { accessorKey: 'id', header: 'ID', cell: (info) => info.getValue().toString() },
     { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
@@ -19,12 +21,11 @@
       type: 'component',
       component: {
         ref: FormAdicionarUsuario,
-        props: { background: 'bg-red-500' },
+        props: { formData: data.form, background: 'bg-red-500' },
         slot: '<p>Skeleton</p>'
       }
     })
   }
-  export let data
 </script>
 
 <div class="grid gap-3">

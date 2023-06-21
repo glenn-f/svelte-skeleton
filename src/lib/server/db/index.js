@@ -42,7 +42,7 @@ export function criarUsuario(email, senha, dados) {
 }
 
 export function listarUsuarios() {
-  const query = db.prepare('select u.*, c.nome as criador from usuario u left join usuario c on c.id == u.criador_id')
+  const query = db.prepare('select u.*, c.nome as criador from usuario u left join usuario c on c.id = u.criador_id')
   return query.all()
 }
 

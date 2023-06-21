@@ -1,8 +1,6 @@
 <script>
   import DevAccordion from '$lib/components/DevAccordion.svelte'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import { superForm } from 'sveltekit-superforms/client'
-  import { dev } from '$app/environment'
   export let data
   const { form, errors, enhance, allErrors } = superForm(data.form, { taintedMessage: false, defaultValidator: 'keep' })
 </script>

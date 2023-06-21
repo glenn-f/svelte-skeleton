@@ -27,7 +27,6 @@ VALUES
         '$2b$10$kgAkctImz3V8beH8rUcp5eUxa8N4FUWrI4DQ2J30sePHSVmzNqj9C'
     );
 --senha123
-DROP TABLE PESSOA;
 CREATE TABLE IF NOT EXISTS pessoa (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     criador_id INTEGER NOT NULL,
@@ -72,7 +71,7 @@ VALUES ('NomeAleatorio', 'email@aleatorio.com', 'senhaAleatoria', 0);
 SELECT last_insert_rowid() AS novo_usuario_id;
 
 --!Inserir uma pessoa relacionada ao usuário
-INSERT INTO pessoa (nome, email, usuario_id)
-SELECT u.nome, u.email, last_insert_rowid()
+INSERT INTO pessoa (nome, email, usuario_id, criador_id)
+SELECT u.nome, u.email, last_insert_rowid(), 0
 FROM usuario u
 WHERE u.id = last_insert_rowid();
