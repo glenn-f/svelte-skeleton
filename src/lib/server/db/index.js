@@ -1,60 +1,105 @@
 import Database from 'better-sqlite3'
 import bcrypt from 'bcrypt'
-const env = await import("$env/dynamic/private").then(r => r.env).catch(e => process.env);
+import path from 'node:path'
+import { sqlValor } from './escape';
+const env = await import("$env/dynamic/private").then(r => r.env).catch(e => process.env); //eslint-disable-line
 
-const DB_SQLITE_PATH = env.DB_SQLITE_PATH ?? './data/sqlite.db'
-const db = new Database(DB_SQLITE_PATH, { verbose: console.log })
-
-//* Helpers
-function qr(query, params) {
+const DB_SQLITE_PATH = env.DB_SQLITE_PATH ?? path.join(__dirname, '../../../../data/sqlite.db')
+export const db = new Database(DB_SQLITE_PATH, { verbose: console.log })
+//!###################################################################
+//* Sessão
+export function criarSessaoDB(id, expiracao, usuarioId) {
   try {
-    return query.run(params)
+    const query = db.prepare('insert into sessao (id, expiracao, usuario_id) values ($id, $expiracao, $usuarioId)')
+    const values = sqlValor({ id, expiracao, usuarioId })
+    const { changes, lastInsertRowid } = query.run(values)
+    return changes ? lastInsertRowid : undefined
   } catch (e) {
-    console.log("QueryRun Error:", e?.message?.split("\n"))
+    //TODO criar mensagens para erros conhecidos. Ex: valor inválido, usuario não existe. Erro desconhecido: printar todo erro e retornar undefined
+    console.error(e)
+    return undefined
+  }
+}
+export function buscarSessaoDB(id) {
+  try {
+    const query = db.prepare('select s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email email from sessao s left join usuario u on u.id = s.usuario_id where s.id = $id')
+    const row = query.get({ id })
+    return row ? row : undefined
+  } catch (e) {
+    //TODO criar mensagens para erros conhecidos. Ex: valor inválido. Erro desconhecido: printar todo erro e retornar undefined
+    console.error(e)
+    return undefined
+  }
+}
+export function apagarSessaoDB(id) {
+  try {
+    const query = db.prepare('delete from sessao where id = $id')
+    const { changes, lastInsertRowid } = query.run({ id })
+    return changes
+  } catch (e) {
+    //TODO criar mensagens para erros conhecidos. Ex: valor inválido. Erro desconhecido: printar todo erro e retornar undefined
+    console.error(e)
+    return undefined
+  }
+}
+export function apagarSessoesExpiradasDB(now) {
+  try {
+    const query = db.prepare('delete from sessao where expiracao < $now')
+    const { changes, lastInsertRowid } = query.run({ now })
+    return changes
+  } catch (e) {
+    //TODO criar mensagens para erros conhecidos. Ex: valor inválido. Erro desconhecido: printar todo erro e retornar undefined
+    console.error(e)
+    return undefined
+  }
+}
+//!###################################################################
+//* Usuário //!!
+export function verificarCredenciaisUsuario(email, senha) {
+  try {
+    const query = db.prepare('select * from usuario where email = $email')
+    const u = query.get({ email })
+    return u && bcrypt.compareSync(senha, u.senha) ? u : undefined
+  } catch (e) {
+    //TODO criar mensagens para erros conhecidos. Ex: valor inválido. Erro desconhecido: printar todo erro e retornar undefined
+    console.error(e)
+    return undefined
+
+  }
+}
+
+export function listarUsuarios() {
+  try {
+    const query = db.prepare('select u.*, c.nome as criador from usuario u left join usuario c on c.id = u.criador_id')
+    return query.all()
+  } catch (e) {
+    //TODO criar mensagens para erros conhecidos. Ex: valor inválido. Erro desconhecido: printar todo erro e retornar undefined
+    console.error(e)
     return undefined
   }
 }
 
-//* Sessão
-export function criarSessaoDB(id, expiracao, usuarioId) {
-  const query = db.prepare('insert into sessao (id, expiracao, usuario_id) values ($id, $expiracao, $usuarioId)')
-  return qr(query, { id, expiracao, usuarioId })?.lastInsertRowid
-}
-export function buscarSessaoDB(id) {
-  const query = db.prepare('select s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email email from sessao s left join usuario u on u.id = s.usuario_id where s.id = $id')
-  const row = query.get({ id })
-  return row ? row : undefined
-}
-export function apagarSessaoDB(id) {
-  const query = db.prepare('delete from sessao where id = $id')
-  return query.run({ id }).changes
-}
-export function apagarSessoesExpiradasDB(now) {
-  const query = db.prepare('delete from sessao where expiracao < $now')
-  return query.run({ now }).changes
-}
-//* Usuário
-export function criarUsuario(email, senha, dados) {
-  senha = bcrypt.hashSync(senha, 10)
-  const { nome } = dados
-  const query = db.prepare('insert into usuario (email, senha, nome) values ($email, $senha, $nome)')
-  return qr(query, { email, senha, nome })?.lastInsertRowid
-}
 
-export function listarUsuarios() {
-  const query = db.prepare('select u.*, c.nome as criador from usuario u left join usuario c on c.id = u.criador_id')
-  return query.all()
-}
-
-export function criarUsuarioAdmin(email, senha, dados) {
-  senha = bcrypt.hashSync(senha, 10)
-  const { nome, permUsuario, criador_id } = dados
-  const query = db.prepare('insert into usuario (email, senha, nome, permUsuario, criador_id) values ($email, $senha, $nome, $permUsuario, $criador_id)')
-  return qr(query, { email, senha, nome, permUsuario, criador_id })?.lastInsertRowid
-}
-
-export function verificarCredenciaisUsuario(email, senha) {
-  const query = db.prepare('select * from usuario where email = $email')
-  const rs = query.get({ email })
-  return rs && bcrypt.compareSync(senha, rs.senha) ? rs : undefined
+export function criarUsuario(usuario) {
+  let [dados, colunas, valores] = sqlValor({ ...usuario, senha: bcrypt.hashSync(usuario.senha, 10), senha_repetir: undefined })
+  let sql = `INSERT INTO usuario (${colunas}) VALUES (${valores})`
+  try {
+    const query = db.prepare(sql)
+    const { lastInsertRowid, changes } = query.run(dados)
+    if (changes > 0)
+      return { ok: true, id: lastInsertRowid, message: 'Usuário criado com sucesso.', type: 'success' }
+    else
+      return { ok: false, message: 'O usuário não foi criado. O serviço de dados não retornou erros.', type: 'error' }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
+        return { ok: false, message: 'Houve problemas em alguns campos.', fieldMessage: { email: ['Este e-mail já está em uso.'] }, type: 'warning' }
+      } else {
+        console.log({ ErroSqlite: { code: e.code, message: e.message } })
+      }
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    return { ok: false, message: 'Erro no servidor. Tente mais tarde.', type: 'error' }
+  }
 }

@@ -64,14 +64,5 @@ CREATE TABLE IF NOT EXISTS usuario_empresa(
 ) STRICT;
 
 -- Inserir novo usuário na tabela "usuario"
-INSERT INTO usuario (nome, email, senha, criador_id)
-VALUES ('NomeAleatorio', 'email@aleatorio.com', 'senhaAleatoria', 0);
-
--- Obter o ID do usuário recém-criado
-SELECT last_insert_rowid() AS novo_usuario_id;
-
---!Inserir uma pessoa relacionada ao usuário
-INSERT INTO pessoa (nome, email, usuario_id, criador_id)
-SELECT u.nome, u.email, last_insert_rowid(), 0
-FROM usuario u
-WHERE u.id = last_insert_rowid();
+INSERT OR IGNORE INTO usuario (nome, email, senha)
+VALUES ('NomeAleatorio', 'email@aleatorio.com', 'senhaAleatoria');

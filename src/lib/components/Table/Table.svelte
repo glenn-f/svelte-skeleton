@@ -104,8 +104,8 @@
   </tbody>
   <tfoot class="text-center">
     <tr>
-      <td colspan="100" class="text-center !p-1 bg-surface-300-600-token">
-        {$table.getPrePaginationRowModel().rows.length} registros
+      <td colspan="100" class="text-center !p-1 bg-surface-300-600-token normal-case">
+        Mostrando {$table.getRowModel().rows.length} de {rows?.length ?? 0} registros
       </td>
     </tr>
   </tfoot>

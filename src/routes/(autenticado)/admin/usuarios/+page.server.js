@@ -1,8 +1,9 @@
 import { listarUsuarios } from '$lib/server/db';
 import { PERM_APP } from '$lib/globals';
-import { superValidate } from 'sveltekit-superforms/server';
+import { setError, superValidate, message } from 'sveltekit-superforms/server';
 import { z } from 'zod';
 import { fail } from '@sveltejs/kit';
+import { criarUsuario } from '../../../../lib/server/db/index.js';
 
 function getUsuarios() {
   const u = listarUsuarios()
@@ -24,6 +25,9 @@ const schema = z.object({
   senha: z.string().nonempty("Digite a senha"),
   senha_repetir: z.string().nonempty("Digite a senha"),
   permUsuario: z.coerce.number(),
+}).refine((obj) => obj.senha === obj.senha_repetir, {
+  message: "As senhas não correspondem.",
+  path: ["senha_repetir"],
 })
 
 export async function load() {
@@ -35,10 +39,18 @@ export async function load() {
 export const actions = {
   addUser: async ({ request }) => {
     const form = await superValidate(request, schema);
-    console.log(form)
     if (form.valid) {
-      return { form }
+      const { ok, message: msg, type, fieldMessage, id } = criarUsuario(form.data)
+      if (ok) { message(form, { message: msg, type, id }) }
+      //* Erro no DB
+      for (const campo in fieldMessage ?? {}) {
+        const erroCampo = fieldMessage[campo];
+        setError(form, campo, erroCampo)
+      }
+      // delete form.data.senha
+      // delete form.data.senha
+      return message(form, { message: msg, type })
     }
-    return fail(400, { form })
+    return message(form, { message: 'Erro no preenchimento dos campos', type: 'error' })
   }
 }

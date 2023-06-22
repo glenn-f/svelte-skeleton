@@ -1,19 +1,34 @@
 <script>
   import { invalidateAll } from '$app/navigation'
   import { PERM_APP } from '$lib/globals.js'
-  import { modalStore } from '@skeletonlabs/skeleton'
+  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
   import { superForm } from 'sveltekit-superforms/client'
   export let formData
 
-  const { form, errors, enhance } = superForm(formData, {
-    onResult: ({ result, cancel }) => {
+  const { form, errors, enhance, reset } = superForm(formData, {
+    taintedMessage: false,
+    onResult: async ({ result, cancel, formEl }) => {
+      let { message, type } = result?.data?.form?.message ?? {}
+      type = type ? `variant-filled-${type}` : 'variant-filled-primary'
+      console.log({ message, type })
       if (result.type == 'success') {
-        cancel()
         invalidateAll()
         modalStore.close()
+        formEl.reset()
+        cancel()
+      }
+      if (message) {
+        toastStore.trigger({
+          message,
+          timeout: 5000,
+          hoverable: true,
+          background: type
+        })
       }
     }
   })
+  const selectList = Object.entries(PERM_APP)
+  let selectedValue = $form.permUsuario
 </script>
 
 <form class="card grid place-self-start w-modal p-2 pt-0 gap-2" action="?/addUser" method="POST" use:enhance>
@@ -42,8 +57,8 @@
       {#if $errors.senha_repetir} <span class="text-error-400">{$errors.senha_repetir}</span> {/if}
     </div>
     <div class="col-span-12">
-      <select bind:value={$form.permUsuario} name="permUsuario" class="select" class:input-error={$errors.permUsuario}>
-        {#each Object.entries(PERM_APP) as [id, rotulo]}
+      <select bind:value={selectedValue} name="permUsuario" class="select" class:input-error={$errors.permUsuario}>
+        {#each selectList as [id, rotulo]}
           <option value={id}>{rotulo}</option>
         {/each}
       </select>
@@ -52,6 +67,13 @@
   </section>
   <div class="card-footer flex justify-center gap-2">
     <button type="submit" class="btn variant-filled-primary">Salvar</button>
-    <button type="button" class="btn variant-filled-secondary" on:click={modalStore.close}>Cancelar</button>
+    <button
+      type="button"
+      class="btn variant-filled-secondary"
+      on:click={() => {
+        reset()
+        modalStore.close()
+      }}>Cancelar</button
+    >
   </div>
 </form>

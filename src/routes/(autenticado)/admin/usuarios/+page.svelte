@@ -4,6 +4,7 @@
   import { modalStore } from '@skeletonlabs/skeleton'
   import { renderComponent } from '@tanstack/svelte-table'
   import FormAdicionarUsuario from './FormAdicionarUsuario.svelte'
+  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   export let data
 
   let columns = [
@@ -15,13 +16,14 @@
     { accessorKey: 'criador', header: 'Criador', cell: (info) => info.getValue(), enableSorting: false },
     { header: 'Ações', cell: (info) => renderComponent(TableActions, { id: parseInt(info.row.getValue('id')) }), enableSorting: false }
   ]
+  const pageSizes = [10, 25, 50]
 
   function clickAdicionar() {
     modalStore.trigger({
       type: 'component',
       component: {
         ref: FormAdicionarUsuario,
-        props: { formData: data.form, background: 'bg-red-500' },
+        props: { formData: data.form },
         slot: '<p>Skeleton</p>'
       }
     })
@@ -37,6 +39,8 @@
     </button>
   </div>
   <div class="grid gap-2">
-    <Table rows={data.usuarios} {columns} />
+    {#key data}
+      <Table rows={data.usuarios} {columns} {pageSizes} />
+    {/key}
   </div>
 </div>
