@@ -36,6 +36,10 @@
           <MenuItem href="/produtos" titulo="Produtos" icon="fluent-mdl2:product-list" />
           <MenuItem href="/pessoas" titulo="Pessoas" icon="ph:user-list" />
         </Menu>
+
+        <Menu titulo="Testes" icon="mdi:test-tube">
+          <MenuItem href="/componentes" titulo="Componentes" />
+        </Menu>
       </div>
       <svelte:fragment slot="trail">
         <a href="/logout" class="btn variant-filled">
