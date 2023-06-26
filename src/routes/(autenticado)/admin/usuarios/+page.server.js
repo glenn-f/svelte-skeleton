@@ -1,9 +1,8 @@
 import { listarUsuarios } from '$lib/server/db';
 import { PERM_APP } from '$lib/globals';
 import { setError, superValidate, message } from 'sveltekit-superforms/server';
-import { z } from 'zod';
-import { fail } from '@sveltejs/kit';
-import { criarUsuario } from '../../../../lib/server/db/index.js';
+import { criarUsuario } from '$lib/server/db/index.js';
+import { addUsuarioSchema } from '$lib/zodSchemas.js';
 
 function getUsuarios() {
   const u = listarUsuarios()
@@ -19,38 +18,27 @@ function getUsuarios() {
   return u
 }
 
-const schema = z.object({
-  nome: z.string().trim().min(5),
-  email: z.string().email(),
-  senha: z.string().nonempty("Digite a senha"),
-  senha_repetir: z.string().nonempty("Digite a senha"),
-  permUsuario: z.coerce.number(),
-}).refine((obj) => obj.senha === obj.senha_repetir, {
-  message: "As senhas não correspondem.",
-  path: ["senha_repetir"],
-})
-
 export async function load() {
-  const form = await superValidate(schema)
+  const form = await superValidate(addUsuarioSchema)
   const usuarios = getUsuarios();
   return { usuarios, form, permOptions: PERM_APP };
 };
 
 export const actions = {
-  addUser: async ({ request }) => {
-    const form = await superValidate(request, schema);
+  addUser: async ({ request, locals }) => {
+    const form = await superValidate(request, addUsuarioSchema);
     if (form.valid) {
-      const { ok, message: msg, type, fieldMessage, id } = criarUsuario(form.data)
-      if (ok) { message(form, { message: msg, type, id }) }
+      const criador_id = locals.sessao.uid
+      const res = criarUsuario({ criador_id, ...form.data })
+      if (res.ok) { return message(form, res.message) }
       //* Erro no DB
-      for (const campo in fieldMessage ?? {}) {
-        const erroCampo = fieldMessage[campo];
-        setError(form, campo, erroCampo)
+      const camposMsg = res.fieldMessage ?? {}
+      for (const campo in camposMsg) {
+        const campoMsg = camposMsg[campo];
+        setError(form, campo, campoMsg)
       }
-      // delete form.data.senha
-      // delete form.data.senha
-      return message(form, { message: msg, type })
+      return message(form, res.message)
     }
-    return message(form, { message: 'Erro no preenchimento dos campos', type: 'error' })
+    return message(form, 'Erro no preenchimento dos campos')
   }
 }

@@ -15,7 +15,6 @@ export class Logger {
     this.dev = dev
     if (!dev) return
     this.numEvento = Logger.qntdEventos++
-    this.event = event;
     this.inicio = DateTime.now()
     this.fim = null
     const rota = event.route.id ? ` → ${this.ct("Rota", "magenta")} ${this.ct(event.route.id ?? "?", 'cyan')}` : ""

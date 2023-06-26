@@ -1,9 +1,12 @@
 import Database from 'better-sqlite3'
 import bcrypt from 'bcrypt'
 import path from 'node:path'
+import url from 'url';
 import { sqlValor } from './escape';
 const env = await import("$env/dynamic/private").then(r => r.env).catch(e => process.env); //eslint-disable-line
 
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const DB_SQLITE_PATH = env.DB_SQLITE_PATH ?? path.join(__dirname, '../../../../data/sqlite.db')
 export const db = new Database(DB_SQLITE_PATH, { verbose: console.log })
 //!###################################################################
@@ -87,19 +90,19 @@ export function criarUsuario(usuario) {
     const query = db.prepare(sql)
     const { lastInsertRowid, changes } = query.run(dados)
     if (changes > 0)
-      return { ok: true, id: lastInsertRowid, message: 'Usuário criado com sucesso.', type: 'success' }
+      return { ok: true, id: lastInsertRowid, message: 'Usuário criado com sucesso.' }
     else
-      return { ok: false, message: 'O usuário não foi criado. O serviço de dados não retornou erros.', type: 'error' }
+      return { ok: false, message: 'O usuário não foi criado. O serviço de dados não retornou erros.' }
   } catch (e) {
     if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
       if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
-        return { ok: false, message: 'Houve problemas em alguns campos.', fieldMessage: { email: ['Este e-mail já está em uso.'] }, type: 'warning' }
+        return { ok: false, message: 'Houve problemas em alguns campos.', fieldMessage: { email: ['Este e-mail já está em uso.'] } }
       } else {
         console.log({ ErroSqlite: { code: e.code, message: e.message } })
       }
     } else {
       console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
     }
-    return { ok: false, message: 'Erro no servidor. Tente mais tarde.', type: 'error' }
+    return { ok: false, message: 'Erro no servidor. Tente mais tarde.' }
   }
 }

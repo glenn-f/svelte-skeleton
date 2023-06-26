@@ -13,8 +13,8 @@
   {@html `<script>${autoModeWatcher.toString()} autoModeWatcher();</script>`}
 </svelte:head>
 
-<Modal />
-<Toast />
+<Toast position="t" />
+<Modal position="absolute top-20 !h-min" buttonTextCancel="Cancelar" buttonTextConfirm="Confirmar" buttonTextSubmit="Enviar" />
 <Drawer />
 
 <slot />

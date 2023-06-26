@@ -1,6 +1,7 @@
 <script>
   import { invalidateAll } from '$app/navigation'
   import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
   import InputEmail from '../../../../lib/components/Forms/InputEmail.svelte'
   import InputPassword from '../../../../lib/components/Forms/InputPassword.svelte'
@@ -13,7 +14,8 @@
     onResult: async ({ result, cancel, formEl }) => {
       let { message } = result?.data?.form?.message ?? {}
       if (result.type == 'success') {
-        invalidateAll()
+        cancel()
+        formEl.reset()
         modalStore.close()
         formEl.reset()
         cancel()
@@ -30,7 +32,7 @@
   })
 </script>
 
-<form class="card grid place-self-start w-modal p-2 pt-0 gap-2" action="?/addUser" method="POST" use:enhance>
+<form class="card w-modal p-2 pt-0 gap-2" action="?/addUser" method="POST" use:enhance>
   <div class="card-header">
     <h2 class="h2 text-center">Adicionar Usuário</h2>
   </div>
