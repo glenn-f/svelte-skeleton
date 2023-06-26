@@ -27,6 +27,22 @@ export function formatCPF(value) {
   return cpf.replace(regex, mask)
 }
 
+/**
+ * Transforma um número em texto no formato moeda BRL sem prefixo
+ * @param {number} value Número que representa o valor monetário
+ * @returns {string} Texto no formato moeda (BRL)
+ */
+export function formatMoeda(value, qntdAposVirgula = 2) {
+  const numberValue = parseFloat(value)
+  if (Number.isFinite(numberValue)) {
+    return numberValue.toLocaleString('pt-BR', { maximumFractionDigits: qntdAposVirgula})
+  } else {
+    console.log("Erro: formatMoeda(value) → `value` não é um número válido.")
+    // throw new TypeError("O valor não é um número válido")
+    return value?.toString() ?? ''
+  }
+}
+
 export function toNumericText(value, size, padChar = '0') {
   return value.toString().replace(/\D/g, '').padStart(size, padChar).slice(0, size)
 }

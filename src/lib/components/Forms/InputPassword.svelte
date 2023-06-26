@@ -48,6 +48,7 @@
       {required}
       bind:value
     />
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <span class='!px-2 grid place-items-center hover:bg-surface-hover-token' on:click={changeInputVisibility}>
       <Icon icon={x?.type === "password"?"ph:eye-closed":"ph:eye"} width="24px" height="24px" />
     </span>

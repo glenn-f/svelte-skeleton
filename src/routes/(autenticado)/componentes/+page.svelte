@@ -7,7 +7,7 @@
   import InputCPNJ from './../../../lib/components/Forms/InputCPNJ.svelte'
   let cpf = '015',
     cnpj = '',
-    tel = '', cep=''
+    tel = '', cep='12.0'
 </script>
 
 
