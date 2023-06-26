@@ -23,7 +23,7 @@
       type: 'component',
       component: {
         ref: FormAdicionarUsuario,
-        props: { formData: data.form },
+        props: { formData: data.form, permOptions: data.permOptions},
         slot: '<p>Skeleton</p>'
       }
     })

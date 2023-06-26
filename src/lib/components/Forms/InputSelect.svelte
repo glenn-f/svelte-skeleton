@@ -1,57 +1,65 @@
-<script context="module">
-  let id = 0
-</script>
-
 <script>
-  import { Autocomplete, popup } from '@skeletonlabs/skeleton'
-
+  import { objectToArray } from '$lib/helpers'
   import Label from './Label.svelte'
 
   /** @type {?string} */
-  export let label
-  /** @type {any} */
+  export let label = undefined
+  /** @type {?boolean} */
   export let required = undefined
   /** @type {?string} */
-  export let placeholder
+  export let placeholder = undefined
   /** @type {?string} */
-  export let name
+  export let name = undefined
   /** @type {?any} */
-  export let value = ''
+  export let value = undefined
   /** @type {?(string | string[])} */
-  export let error
+  export let error = undefined
   /** @type {?string} */
-  export let warning
+  export let warning = undefined
   /** @type {?string} */
-  export let success
+  export let success = undefined
   /** @type {true | false} Padrão `false` */
   export let errorSpacing = false
   /** @type {?string} */
   export let inputClass = ''
   /** @type {?string} */
   export let labelClass = ''
-  let selectPopup
-  const selectPopupId = 'InputSelect' + id++
-  let popupSettings = {
-    event: 'focus-click',
-    target: selectPopupId,
-    placement: 'bottom'
-  }
-  function onPopupDemoSelect(event) {
-    selectPopup = event.detail.label
-  }
-  const flavorOptions = [
-    { label: 'Vanilla', value: 'vanilla', keywords: 'plain, basic', meta: { healthy: false } },
-    { label: 'Chocolate', value: 'chocolate', keywords: 'dark, white', meta: { healthy: false } },
-    { label: 'Strawberry', value: 'strawberry', keywords: 'fruit', meta: { healthy: true } },
-    { label: 'Neapolitan', value: 'neapolitan', keywords: 'mix, strawberry, chocolate, vanilla', meta: { healthy: false } },
-    { label: 'Pineapple', value: 'pineapple', keywords: 'fruit', meta: { healthy: true } },
-    { label: 'Peach', value: 'peach', keywords: 'fruit', meta: { healthy: true } }
-  ]
+  /** @type {?{label: string value: any}[] | any[]]} Lista de opções do select. Pode possuir um campo label e outro value como padrão */
+  export let options = []
+  /**
+   * Função aplicada em cada opção do `select` para gerar o rótulo da opção.
+   * @param {any} option Uma opção da lista de opções `options`.
+   * @param {any} index O índice da opção na lista.
+   * @returns {string} O rótulo da opção.
+   */
+  export let getOptionLabel = (option, index) => option?.label ?? option
+  /**
+   * Função aplicada em cada opção do `select` para gerar o valor da opção.
+   * @param {any} option Uma opção da lista de opções `options`.
+   * @param {any} index O índice da opção na lista.
+   * @returns {any} O valor da opção.
+   */
+  export let getOptionValue = (option, index) => option?.value ?? index
+  const _options = objectToArray(options)
 </script>
 
-<Label>
-  <input class="input autocomplete" type="search" name="autocomplete-search" bind:value={selectPopup} {required} placeholder="Search..." use:popup={popupSettings} />
-  <div class="card w-full p-2 overflow-y-auto !mt-0" data-popup={selectPopupId}>
-    <Autocomplete bind:input={selectPopup} options={flavorOptions} on:selection={onPopupDemoSelect} />
-  </div>
+<Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
+  <select
+    class:input-success={success && !warning && !error}
+    class:input-warning={warning && !error}
+    class:input-error={error}
+    class:text-surface-500-400-token={value === undefined}
+    class={'select ' + inputClass}
+    {placeholder}
+    {name}
+    {required}
+    bind:value
+  >
+    {#if placeholder !== undefined}
+      <option value={undefined} disabled selected>{placeholder}</option>
+    {/if}
+    {#each _options as [index, option]}
+      <option class="text-token" value={getOptionValue(option, index)}>{getOptionLabel(option, index)}</option>
+    {/each}
+  </select>
 </Label>

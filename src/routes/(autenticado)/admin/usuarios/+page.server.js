@@ -33,7 +33,7 @@ const schema = z.object({
 export async function load() {
   const form = await superValidate(schema)
   const usuarios = getUsuarios();
-  return { usuarios, form };
+  return { usuarios, form, permOptions: PERM_APP };
 };
 
 export const actions = {

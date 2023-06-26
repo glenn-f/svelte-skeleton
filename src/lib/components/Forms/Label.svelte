@@ -1,15 +1,15 @@
 <script>
   export let labelClass = ''
   /** @type {?string} */
-  export let label
-  /** @type {any} */
+  export let label = ''
+  /** @type {?boolean} */
   export let required = undefined
   /** @type {?(string | string[])} */
-  export let error
+  export let error = undefined
   /** @type {?string} */
-  export let warning
+  export let warning = undefined
   /** @type {?string} */
-  export let success
+  export let success = undefined
   /** @type {true | false} Padrão `false` */
   export let errorSpacing = false
   let errorMsg = ''
@@ -31,15 +31,15 @@
   </span>
   <slot />
   {#if errorMsg}
-    <span class="text-error-500">
+    <span class="text-error-500-400-token text-sm">
       {errorMsg}
     </span>
   {:else if warning && typeof warning == 'string'}
-    <span class="text-warning-500">
+    <span class="text-warning-500-400-token text-sm">
       {warning}
     </span>
   {:else if success && typeof success == 'string'}
-    <span class="text-success-500">
+    <span class="text-success-500-400-token text-sm">
       {success}
     </span>
   {:else if errorSpacing}

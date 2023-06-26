@@ -1,34 +1,33 @@
 <script>
   import { invalidateAll } from '$app/navigation'
-  import { PERM_APP } from '$lib/globals.js'
   import { modalStore, toastStore } from '@skeletonlabs/skeleton'
   import { superForm } from 'sveltekit-superforms/client'
-  export let formData
+  import InputEmail from '../../../../lib/components/Forms/InputEmail.svelte'
+  import InputPassword from '../../../../lib/components/Forms/InputPassword.svelte'
+  import InputSelect from './../../../../lib/components/Forms/InputSelect.svelte'
+  import InputText from './../../../../lib/components/Forms/InputText.svelte'
+  export let formData, permOptions
 
   const { form, errors, enhance, reset } = superForm(formData, {
     taintedMessage: false,
     onResult: async ({ result, cancel, formEl }) => {
-      let { message, type } = result?.data?.form?.message ?? {}
-      type = type ? `variant-filled-${type}` : 'variant-filled-primary'
-      console.log({ message, type })
+      let { message } = result?.data?.form?.message ?? {}
       if (result.type == 'success') {
         invalidateAll()
         modalStore.close()
         formEl.reset()
         cancel()
-      }
-      if (message) {
-        toastStore.trigger({
-          message,
-          timeout: 5000,
-          hoverable: true,
-          background: type
-        })
+        if (message) {
+          toastStore.trigger({
+            message,
+            timeout: 5000,
+            hoverable: true,
+            background: 'variant-filled-success'
+          })
+        }
       }
     }
   })
-  const selectList = Object.entries(PERM_APP)
-  let selectedValue = $form.permUsuario
 </script>
 
 <form class="card grid place-self-start w-modal p-2 pt-0 gap-2" action="?/addUser" method="POST" use:enhance>
@@ -36,33 +35,21 @@
     <h2 class="h2 text-center">Adicionar Usuário</h2>
   </div>
   <hr />
-  <section class="grid grid-cols-12 gap-2 px-3 pb-2">
+  <section class="grid grid-cols-12 gap-1 px-3 pb-2">
     <div class="col-span-12">
-      <label class="label">
-        <span>Nome</span>
-        <input bind:value={$form.nome} name="nome" placeholder="Nome" type="text" class="input" class:input-error={$errors.nome} autocomplete="off" />
-        {#if $errors.nome} <span class="text-error-400">{$errors.nome}</span> {/if}
-      </label>
+      <InputText label="Nome Completo" placeholder="Ex: Enzo Gabriel" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
     </div>
     <div class="col-span-12">
-      <input bind:value={$form.email} name="email" placeholder="E-mail" type="email" class="input" class:input-error={$errors.email} autocomplete="off" />
-      {#if $errors.email} <span class="text-error-400">{$errors.email}</span> {/if}
+      <InputEmail label="E-mail" placeholder="Ex: enzo.gabriel@email.com" name="email" bind:value={$form.email} error={$errors.email} errorSpacing required />
     </div>
     <div class="col-span-6">
-      <input bind:value={$form.senha} name="senha" placeholder="Senha" type="password" class="input" class:input-error={$errors.senha} autocomplete="off" />
-      {#if $errors.senha} <span class="text-error-400">{$errors.senha}</span> {/if}
+      <InputPassword label="Senha" name="senha" bind:value={$form.senha} error={$errors.senha} errorSpacing required />
     </div>
     <div class="col-span-6">
-      <input bind:value={$form.senha_repetir} name="senha_repetir" placeholder="Repetir Senha" type="password" class="input" class:input-error={$errors.senha_repetir} autocomplete="off" />
-      {#if $errors.senha_repetir} <span class="text-error-400">{$errors.senha_repetir}</span> {/if}
+      <InputPassword label="Repetir Senha" name="senha_repetir" bind:value={$form.senha_repetir} error={$errors.senha_repetir} errorSpacing required />
     </div>
     <div class="col-span-12">
-      <select bind:value={selectedValue} name="permUsuario" class="select" class:input-error={$errors.permUsuario}>
-        {#each selectList as [id, rotulo]}
-          <option value={id}>{rotulo}</option>
-        {/each}
-      </select>
-      {#if $errors.permUsuario} <span class="text-error-400">{$errors.permUsuario}</span> {/if}
+      <InputSelect label="Permissão na Aplicação" name="permUsuario" bind:value={$form.permUsuario} options={permOptions} error={$errors.permUsuario} errorSpacing required />
     </div>
   </section>
   <div class="card-footer flex justify-center gap-2">
@@ -70,7 +57,7 @@
     <button
       type="button"
       class="btn variant-filled-secondary"
-      on:click={() => {
+      on:click={(e) => {
         reset()
         modalStore.close()
       }}>Cancelar</button

@@ -11,7 +11,7 @@ export const db = new Database(DB_SQLITE_PATH, { verbose: console.log })
 export function criarSessaoDB(id, expiracao, usuarioId) {
   try {
     const query = db.prepare('insert into sessao (id, expiracao, usuario_id) values ($id, $expiracao, $usuarioId)')
-    const values = sqlValor({ id, expiracao, usuarioId })
+    const [values] = sqlValor({ id, expiracao, usuarioId })
     const { changes, lastInsertRowid } = query.run(values)
     return changes ? lastInsertRowid : undefined
   } catch (e) {
