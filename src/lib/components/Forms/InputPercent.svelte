@@ -2,6 +2,7 @@
   import { formatMoeda } from '$lib/helpers'
   import { onMount } from 'svelte'
   import Label from './Label.svelte'
+  import Icon from '@iconify/svelte'
 
   const verificarZerosEsquerda = (val) => {
     const match = /^([0\.]+)(?=\d)/g.exec(val)
@@ -128,13 +129,26 @@
           finalCursorPos++
         }
       }
+      if (e.data == '0' && finalCursorPos == 0 && finalValue.at(0) == '0') {
+        finalCursorPos++
+      }
     } else {
       return
     }
 
     value = parseFloat(finalValue.replaceAll('.', '').replace(',', '.')) || 0
-    input.value = finalValue
-    input.setSelectionRange(finalCursorPos, finalCursorPos)
+    if (min !== undefined && value < min) {
+      value = min
+      input.value = minMask
+      input.setSelectionRange(100, 100)
+    } else if (min !== undefined && value > max) {
+      value = max
+      input.value = maxMask
+      input.setSelectionRange(100, 100)
+    } else {
+      input.value = finalValue
+      input.setSelectionRange(finalCursorPos, finalCursorPos)
+    }
   }
   /** Impede a entrada de caracteres diferentes de [0123456789.,]
    *  @param {InputEvent} e
@@ -175,12 +189,16 @@
   export let labelClass = ''
   /** O padrão de alinhamento interno é 'right' @type {'right' | 'center' | 'left'} */
   export let align = 'right'
+  export let qntdAposVirgula = 2
+  export let max = 100
+  let maxMask = formatMoeda(max, qntdAposVirgula)
+  export let min = 0
+  let minMask = formatMoeda(min, qntdAposVirgula)
   /** @type {?string} */
   export let autocomplete = 'off'
   export let label = undefined
   export let required = undefined
-  export let name
-  export let qntdAposVirgula = undefined
+  export let name = undefined
   export let value = undefined
   if (typeof value == 'string') value = value ? parseFloat(value) : undefined
 
@@ -194,19 +212,24 @@
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
-  <input
-    bind:this={maskInput}
-    class:input-success={success && !warning && !error}
-    class:input-warning={warning && !error}
-    class:input-error={error}
-    type="text"
-    class={'input ' + inputClass}
-    id={'InputMoeda' + name}
-    style={`text-align: ${align};`}
-    {required}
-    {autocomplete}
-    on:input={onInput}
-    on:blur={onBlur}
-  />
+  <div class="input-group flex">
+    <input
+      bind:this={maskInput}
+      class:input-success={success && !warning && !error}
+      class:input-warning={warning && !error}
+      class:input-error={error}
+      type="text"
+      class={'input ' + inputClass}
+      id={'InputMoeda' + name}
+      style={`text-align: ${align};`}
+      {required}
+      {autocomplete}
+      on:input={onInput}
+      on:blur={onBlur}
+    />
+    <span class='grid border-l-[1px] border-surface-400-500-token place-items-center px-1 input-group-shim'>
+      <Icon icon={"mdi:percent"} width="24px" height="24px" />
+    </span>
+  </div>
 </Label>
 <input type="hidden" {name} bind:value />

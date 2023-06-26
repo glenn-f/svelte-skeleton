@@ -34,8 +34,9 @@ export function formatCPF(value) {
  */
 export function formatMoeda(value, qntdAposVirgula = 2) {
   const numberValue = parseFloat(value)
+  let options = qntdAposVirgula == undefined ? {} : { minimumFractionDigits: qntdAposVirgula, maximumFractionDigits: qntdAposVirgula }
   if (Number.isFinite(numberValue)) {
-    return numberValue.toLocaleString('pt-BR', { maximumFractionDigits: qntdAposVirgula})
+    return numberValue.toLocaleString('pt-BR', options)
   } else {
     console.log("Erro: formatMoeda(value) → `value` não é um número válido.")
     // throw new TypeError("O valor não é um número válido")

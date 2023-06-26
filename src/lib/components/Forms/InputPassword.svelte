@@ -22,12 +22,12 @@
   export let inputClass = ''
   /** @type {?string} */
   export let labelClass = ''
-  let x
+  let input
   function changeInputVisibility() {
-    if (x.type === "password") {
-      x.type = "text";
+    if (input.type === 'password') {
+      input.type = 'text'
     } else {
-      x.type = "password";
+      input.type = 'password'
     }
   }
 </script>
@@ -38,7 +38,7 @@
       <Icon icon="mdi:lock" width="28px" height="28px" />
     </div>
     <input
-      bind:this={x}
+      bind:this={input}
       class:input-success={success && !warning && !error}
       class:input-warning={warning && !error}
       class:input-error={error}
@@ -49,8 +49,8 @@
       bind:value
     />
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <span class='!px-2 grid place-items-center hover:bg-surface-hover-token' on:click={changeInputVisibility}>
-      <Icon icon={x?.type === "password"?"ph:eye-closed":"ph:eye"} width="24px" height="24px" />
+    <span class="!px-2 grid place-items-center hover:bg-surface-hover-token" on:click={changeInputVisibility}>
+      <Icon icon={input?.type === 'password' ? 'ph:eye-closed' : 'ph:eye'} width="24px" height="24px" />
     </span>
   </div>
 </Label>
