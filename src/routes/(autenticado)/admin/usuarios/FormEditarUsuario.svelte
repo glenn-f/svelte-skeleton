@@ -4,9 +4,14 @@
   import { superForm } from 'sveltekit-superforms/client'
   import InputEmail from '../../../../lib/components/Forms/InputEmail.svelte'
   import InputPassword from '../../../../lib/components/Forms/InputPassword.svelte'
-  import InputSelect from './../../../../lib/components/Forms/InputSelect.svelte'
-  import InputText from './../../../../lib/components/Forms/InputText.svelte'
-  export let formData, permOptions
+  import InputSelect from '../../../../lib/components/Forms/InputSelect.svelte'
+  import InputText from '../../../../lib/components/Forms/InputText.svelte'
+  export let dataRow, permOptions, data
+
+  let id = dataRow.getValue("id")
+  let nome = dataRow.getValue("nome")
+  let email = dataRow.getValue("email")
+  let permUsuario = dataRow.getValue("permUsuario")
 
   const { form, errors, enhance, reset } = superForm(formData, {
     taintedMessage: false,
@@ -27,7 +32,7 @@
           })
         }
       }
-    }
+    },
   })
 </script>
 

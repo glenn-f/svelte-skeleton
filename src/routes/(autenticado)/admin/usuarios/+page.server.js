@@ -7,10 +7,8 @@ import { addUsuarioSchema } from '$lib/zodSchemas.js';
 function getUsuarios() {
   const u = listarUsuarios()
   u?.forEach((u) => {
-    if (u.id === 0) {
-      u.permUsuario = "Administrador"
-    } else if (u.permUsuario in PERM_APP) {
-      u.permUsuario = PERM_APP[u.permUsuario]
+    if (PERM_APP.has(u.permUsuario)) {
+      u.permUsuario = PERM_APP.get(u.permUsuario)
     } else {
       console.log(`Permissão não encontrada ou nula: ${u.permUsuario}`)
     }
@@ -30,6 +28,7 @@ export const actions = {
     if (form.valid) {
       const criador_id = locals.sessao.uid
       const res = criarUsuario({ criador_id, ...form.data })
+      console.log(res)
       if (res.ok) { return message(form, res.message) }
       //* Erro no DB
       const camposMsg = res.fieldMessage ?? {}

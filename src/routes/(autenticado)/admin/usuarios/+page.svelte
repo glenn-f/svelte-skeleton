@@ -1,10 +1,10 @@
 <script>
-  import { Table, TableActions } from '$lib/components/Table'
+  import { Table } from '$lib/components/Table'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
   import { renderComponent } from '@tanstack/svelte-table'
+  import ColAcoes from './ColAcoes.svelte'
   import FormAdicionarUsuario from './FormAdicionarUsuario.svelte'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   export let data
 
   let columns = [
@@ -12,9 +12,9 @@
     { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
     { accessorKey: 'nome', header: 'Nome', cell: (info) => info.getValue() },
     { accessorKey: 'email', header: 'E-mail', cell: (info) => info.getValue() },
-    { accessorKey: 'permUsuario', header: 'Permissão', cell: (info) => info.getValue() },
+    { accessorKey: 'permUsuario', header: 'Permissão', cell: (info) => info.getValue()?.label },
     { accessorKey: 'criador', header: 'Criador', cell: (info) => info.getValue(), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(TableActions, { id: parseInt(info.row.getValue('id')) }), enableSorting: false }
+    { header: 'Ações', cell: (info) => renderComponent(ColAcoes, { data, dataRow: info.row, permOptions: data.permOptions }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
 
@@ -23,7 +23,7 @@
       type: 'component',
       component: {
         ref: FormAdicionarUsuario,
-        props: { formData: data.form, permOptions: data.permOptions},
+        props: { formData: data.form, permOptions: data.permOptions },
         slot: '<p>Skeleton</p>'
       }
     })

@@ -140,11 +140,11 @@
     if (min !== undefined && value < min) {
       value = min
       input.value = minMask
-      input.setSelectionRange(100, 100)
+      input.setSelectionRange(0, 100)
     } else if (min !== undefined && value > max) {
       value = max
       input.value = maxMask
-      input.setSelectionRange(100, 100)
+      input.setSelectionRange(0, 100)
     } else {
       input.value = finalValue
       input.setSelectionRange(finalCursorPos, finalCursorPos)
@@ -173,6 +173,17 @@
     let mask = (e.target.value ?? '0').replaceAll('.', '').replace(',', '.')
     value = parseFloat(mask)
     maskInput.value = formatMoeda(mask, qntdAposVirgula)
+  }
+
+  /**
+   *
+   * @param {InputEvent} e
+   */
+  function onFocus(e) {
+    /** @type {HTMLInputElement} */
+    const input = e.target
+    console.log(input)
+    input.setSelectionRange(0,100)
   }
 
   /** @type {?(string | string[])} */
@@ -226,6 +237,7 @@
       {autocomplete}
       on:input={onInput}
       on:blur={onBlur}
+      on:focus={onFocus}
     />
     <span class='grid border-l-[1px] border-surface-400-500-token place-items-center px-1 input-group-shim'>
       <Icon icon={"mdi:percent"} width="24px" height="24px" />

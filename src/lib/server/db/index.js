@@ -9,6 +9,23 @@ const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_SQLITE_PATH = env.DB_SQLITE_PATH ?? path.join(__dirname, '../../../../data/sqlite.db')
 export const db = new Database(DB_SQLITE_PATH, { verbose: console.log })
+const begin = db.prepare('BEGIN');
+const commit = db.prepare('COMMIT');
+const rollback = db.prepare('ROLLBACK');
+
+// Higher order function - returns a function that always runs in a transaction
+export function dbTransaction(func) {
+  return function (...args) {
+    begin.run();
+    try {
+      const result = func(...args);
+      commit.run();
+      return result
+    } finally {
+      if (db.inTransaction) rollback.run();
+    }
+  };
+}
 //!###################################################################
 //* Sessão
 export function criarSessaoDB(id, expiracao, usuarioId) {
@@ -82,17 +99,26 @@ export function listarUsuarios() {
   }
 }
 
-
-export function criarUsuario(usuario) {
+const criarUsuarioEPessoa = dbTransaction((usuario) => {
   let [dados, colunas, valores] = sqlValor({ ...usuario, senha: bcrypt.hashSync(usuario.senha, 10), senha_repetir: undefined })
   let sql = `INSERT INTO usuario (${colunas}) VALUES (${valores})`
+  const query = db.prepare(sql)
+  const { lastInsertRowid: usuario_id, changes } = query.run(dados)
+  if (changes == 0) throw new Error("Usuário não foi criado")
+  let { criador_id, nome, email } = dados
+  let [dados2, colunas2, valores2] = sqlValor({ criador_id, usuario_id, nome, email })
+  let sql2 = `INSERT INTO pessoa (${colunas2}) VALUES (${valores2})`
+  const query2 = db.prepare(sql2)
+  const { lastInsertRowid: pessoa_id, changes: changes2 } = query2.run(dados2)
+  if (changes2 == 0) throw new Error("Pessoa não foi criada")
+  return { pessoa_id, usuario_id }
+})
+
+
+export function criarUsuario(usuario) {
   try {
-    const query = db.prepare(sql)
-    const { lastInsertRowid, changes } = query.run(dados)
-    if (changes > 0)
-      return { ok: true, id: lastInsertRowid, message: 'Usuário criado com sucesso.' }
-    else
-      return { ok: false, message: 'O usuário não foi criado. O serviço de dados não retornou erros.' }
+    const { usuario_id, pessoa_id } = criarUsuarioEPessoa(usuario)
+    return { ok: true, id: usuario_id, message: 'Usuário criado com sucesso.' }
   } catch (e) {
     if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
       if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {

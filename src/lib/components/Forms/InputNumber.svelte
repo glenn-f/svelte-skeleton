@@ -160,7 +160,16 @@
     value = parseFloat(mask)
     maskInput.value = formatMoeda(mask, qntdAposVirgula)
   }
-
+  /**
+   *
+   * @param {InputEvent} e
+   */
+   function onFocus(e) {
+    /** @type {HTMLInputElement} */
+    const input = e.target
+    console.log(input)
+    input.setSelectionRange(0,100)
+  }
   /** @type {?(string | string[])} */
   export let error = undefined
   /** @type {?string} */
@@ -207,6 +216,7 @@
     {autocomplete}
     on:input={onInput}
     on:blur={onBlur}
+    on:focus={onFocus}
   />
 </Label>
 <input type="hidden" {name} bind:value />

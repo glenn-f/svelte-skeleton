@@ -4,9 +4,14 @@
   import { superForm } from 'sveltekit-superforms/client'
   import InputEmail from '../../../../lib/components/Forms/InputEmail.svelte'
   import InputPassword from '../../../../lib/components/Forms/InputPassword.svelte'
-  import InputSelect from './../../../../lib/components/Forms/InputSelect.svelte'
-  import InputText from './../../../../lib/components/Forms/InputText.svelte'
-  export let formData, permOptions
+  import InputSelect from '../../../../lib/components/Forms/InputSelect.svelte'
+  import InputText from '../../../../lib/components/Forms/InputText.svelte'
+  export let formData
+  export let rowData
+  export let permOptions
+  /** @type {"?/adicionar" | "?/editar"} */
+  export let action = '?/adicionar'
+  let formId = action == '?/editar' ? 'editar' : 'adicionar'
 
   const { form, errors, enhance, reset } = superForm(formData, {
     taintedMessage: false,
@@ -31,9 +36,11 @@
   })
 </script>
 
-<form class="card w-modal p-2 pt-0 gap-2" action="?/addUser" method="POST" use:enhance>
+<form class="card w-modal p-2 pt-0 gap-2" {action} method="POST" use:enhance>
   <div class="card-header">
-    <h2 class="h2 text-center">Adicionar Usuário</h2>
+    <h2 class="h2 text-center">
+      {formId == 'adicionar' ? 'Adicionar Usuário' : 'Editar Usuário'}
+    </h2>
   </div>
   <hr />
   <section class="grid grid-cols-12 gap-1 px-3 pb-2">
@@ -54,7 +61,7 @@
     </div>
   </section>
   <div class="card-footer flex justify-center gap-2">
-    <button type="submit" class="btn variant-filled-primary">Salvar</button>
+    <button type="submit" class="btn variant-filled-primary">Enviar</button>
     <button
       type="button"
       class="btn variant-filled-secondary"
