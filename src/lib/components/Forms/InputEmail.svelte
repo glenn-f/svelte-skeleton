@@ -36,7 +36,7 @@
       class:input-warning={warning && !error}
       class:input-error={error}
       type="email"
-      class={'input ' + inputClass}
+      class={inputClass}
       {placeholder}
       {name}
       bind:value

@@ -6,7 +6,7 @@
   export let label = undefined
   /** @type {?boolean} */
   export let required = undefined
-  /** @type {?string} */
+  /** @type {?string} Nome do formulpario*/
   export let name = undefined
   /** @type {?any} */
   export let value = undefined
@@ -43,7 +43,7 @@
       class:input-warning={warning && !error}
       class:input-error={error}
       type="password"
-      class={'input ' + inputClass}
+      class={inputClass}
       {name}
       {required}
       bind:value

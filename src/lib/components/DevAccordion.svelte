@@ -6,8 +6,8 @@
 </script>
 
 {#if dev}
-  <div class="bg-secondary-300-600-token">
-    <Accordion>
+  <div>
+    <Accordion regionControl="bg-surface-300-600-token">
       <AccordionItem>
         <svelte:fragment slot="lead">🧪</svelte:fragment>
         <svelte:fragment slot="summary">SuperDebug <b class="text-warning-600-300-token bg-gradient-to-br">$page</b> - <b>{$page.route.id}</b></svelte:fragment>

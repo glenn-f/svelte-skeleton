@@ -36,7 +36,7 @@
       class:input-warning={warning && !error}
       class:input-error={error}
       type="url"
-      class={'input ' + inputClass}
+      class={inputClass}
       {placeholder}
       {name}
       {required}

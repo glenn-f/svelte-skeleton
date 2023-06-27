@@ -24,7 +24,7 @@
     <AppBar gridColumns="grid-cols-3" slotDefault="place-self-center" slotTrail="place-content-end" background="bg-primary-300-600-token">
       <svelte:fragment slot="lead">
         <a href="/inicio" class="anchor no-underline">
-          <h5 class="h5 uppercase text-primary-50-900-token">📊[Nome da Aplicação]</h5>
+          <h5 class="h5 uppercase text-bold text-surface-700-200-token">📊App Name</h5>
         </a>
       </svelte:fragment>
       <div class="flex flex-row gap-1">
