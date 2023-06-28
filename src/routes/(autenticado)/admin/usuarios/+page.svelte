@@ -33,7 +33,7 @@
 <div class="grid gap-3">
   <div class="flex items-center">
     <h1 class="h1 text-center mr-3">Usuários</h1>
-    <button class="btn variant-filled-tertiary h-min" on:click={clickAdicionar}>
+    <button class="btn variant-filled-primary h-min" on:click={clickAdicionar}>
       <Icon icon="fa6-solid:plus" />
       <span>Adicionar</span>
     </button>
