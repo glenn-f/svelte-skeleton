@@ -22,6 +22,10 @@
   export let inputClass = ''
   /** @type {?string} */
   export let labelClass = ''
+  /** @type {?string} */
+  export let autocomplete = 'off'
+  /** @type {?string} */
+  export let placeholder
   let input
   function changeInputVisibility() {
     if (input.type === 'password') {
@@ -43,6 +47,8 @@
       class:input-warning={warning && !error}
       class:input-error={error}
       type="password"
+      {autocomplete}
+      {placeholder}
       class={inputClass}
       {name}
       {required}

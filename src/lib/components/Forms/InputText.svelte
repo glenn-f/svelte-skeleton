@@ -23,6 +23,8 @@
   export let inputClass = ''
   /** @type {?string} */
   export let labelClass = ''
+  /** @type {?string} */
+  export let autocomplete = 'off'
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
@@ -32,6 +34,7 @@
     class:input-error={error}
     type="text"
     class={'input ' + inputClass}
+    {autocomplete}
     {placeholder}
     {name}
     {required}

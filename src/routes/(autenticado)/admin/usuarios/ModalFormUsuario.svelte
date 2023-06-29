@@ -1,4 +1,6 @@
 <script>
+  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
+  import HelperMessage from './../../../../lib/components/Forms/HelperMessage.svelte'
   import { invalidateAll } from '$app/navigation'
   import { modalStore, toastStore } from '@skeletonlabs/skeleton'
   import { superForm } from 'sveltekit-superforms/client'
@@ -7,11 +9,22 @@
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   import CardModal from '$lib/components/CardModal.svelte'
-  export let formData, permOptions
-  /** @type {'adicionar' | 'editar' | 'apagar'} */
+  /** Modo em que o modal será aberto
+   * @type {'adicionar' | 'editar' | 'apagar'} */
   export let modo = 'adicionar'
+  /** Dados do formulário recebidos do superValidate pelo lado do servidor */
+  export let formData
+  /** Lista de opções de permissões que um usuário pode ter
+   * @type {Map<number, {label: string}>} */
+  export let permOptions
+  /** Preenchimento inicial do formulário. Varia de acordo com o `modo` deste componente*/
+  export let initialData = { senha: '', senha_repetir: '', nome: '', email: '', permUsuario: 0 }
 
-  const { form, errors, enhance } = superForm(formData, {
+  formData.data = { ...initialData }
+  formData.errors = {}
+
+  const { form, errors, enhance, reset, message } = superForm(formData, {
+    resetForm: true,
     taintedMessage: false,
     onResult: async ({ result, cancel, formEl }) => {
       const message = result.data?.form?.message
@@ -31,17 +44,25 @@
       }
     }
   })
-  let action, titulo
+
+  let action, titulo, pw_placeholder
   $: if (modo == 'editar') {
     action = '?/editar'
     titulo = 'Editar'
+    pw_placeholder = 'Não alterado'
   } else if (modo == 'apagar') {
     action = '?/apagar'
     titulo = 'Apagar'
   } else {
     action = '?/adicionar'
     titulo = 'Adicionar'
+    pw_placeholder = ''
   }
+
+  function onClose() {
+    modalStore.close()
+  }
+  console.log(initialData)
 </script>
 
 <form {action} method="POST" use:enhance>
@@ -59,26 +80,37 @@
           <InputEmail label="E-mail" placeholder="Ex: enzo.gabriel@email.com" name="email" bind:value={$form.email} error={$errors.email} errorSpacing required />
         </div>
         <div class="col-span-6">
-          <InputPassword label="Senha" name="senha" bind:value={$form.senha} error={$errors.senha} errorSpacing required />
+          <InputPassword label="Senha" placeholder={pw_placeholder} name="senha" bind:value={$form.senha} error={$errors.senha} errorSpacing required />
         </div>
         <div class="col-span-6">
-          <InputPassword label="Repetir Senha" name="senha_repetir" bind:value={$form.senha_repetir} error={$errors.senha_repetir} errorSpacing required />
+          <InputPassword label="Repetir Senha" placeholder={pw_placeholder} name="senha_repetir" bind:value={$form.senha_repetir} error={$errors.senha_repetir} errorSpacing required />
         </div>
         <div class="col-span-12">
           <InputSelect label="Permissão na Aplicação" name="permUsuario" bind:value={$form.permUsuario} options={permOptions} error={$errors.permUsuario} errorSpacing required />
         </div>
       </section>
     {:else}
-      <section class="grid place-items-center p-2">Tem certeza que deseja apagar o seguinte usuário: ....</section>
+      <section class="grid place-items-center p-2 gap-2">
+        Tem certeza que deseja apagar o seguinte usuário: <br />
+        <h4 class=" h4 text-red-500 font-bold">
+          {initialData.nome}
+        </h4>
+        <p>E-mail: <b>{initialData.email}</b></p>
+      </section>
     {/if}
 
-    <svelte:fragment slot="footer">
-      {#if modo != 'apagar'}
-        <button type="submit" class="btn variant-filled-primary">Enviar</button>
-      {:else}
-        <button type="submit" class="btn variant-filled-error">Confirmar</button>
+    <div class="grid place-items-center gap-2" slot="footer">
+      {#if $message}
+        <HelperMessage error={$message} spaceHolding={true} />
       {/if}
-      <button type="button" class="btn variant-filled-secondary" on:click={modalStore.close}>Cancelar</button>
-    </svelte:fragment>
+      <div class="flex gap-2">
+        {#if modo != 'apagar'}
+          <button name="id" value={initialData.id} type="submit" class="btn variant-filled-primary">Enviar</button>
+        {:else}
+          <button type="submit" class="btn variant-filled-error">Confirmar</button>
+        {/if}
+        <button type="button" class="btn variant-filled-secondary" on:click={onClose}>Cancelar</button>
+      </div>
+    </div>
   </CardModal>
 </form>

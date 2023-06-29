@@ -24,6 +24,8 @@
   export let inputClass = ''
   /** @type {?string} */
   export let labelClass = ''
+  /** @type {?string} */
+  export let autocomplete = 'off'
   const maskData = { mask: '__.___.___/____-__', tam: 14, pos: [2, 5, 8, 12] }
   let maskValue = value ? toCNPJMask(value.toString()) : maskData.mask
   let inputMasked, selectionPos
@@ -94,6 +96,7 @@
     type="text"
     class={'input ' + inputClass}
     id={'InputMask' + name}
+    {autocomplete}
     {placeholder}
     {required}
     on:input={mask}

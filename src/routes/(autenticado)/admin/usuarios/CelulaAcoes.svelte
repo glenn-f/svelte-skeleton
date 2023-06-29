@@ -2,21 +2,28 @@
   import { modalStore } from '@skeletonlabs/skeleton'
   import IconButton from '$lib/components/IconButton.svelte'
   import ModalFormUsuario from './ModalFormUsuario.svelte'
-  export let row, permOptions
+  export let formData, initialData, permOptions
 
-  let formData = { data: row }
+  const initial = {
+    id: initialData.id,
+    senha: undefined,
+    senha_repetir: undefined,
+    nome: initialData.nome,
+    email: initialData.email,
+    permUsuario: initialData.permUsuario
+  }
 
   function handleEditar() {
     modalStore.trigger({
       type: 'component',
-      component: { ref: ModalFormUsuario, props: { modo: 'editar', formData, permOptions } }
+      component: { ref: ModalFormUsuario, props: { modo: 'editar', initialData: initial, permOptions, formData } }
     })
   }
 
   function handleApagar() {
     modalStore.trigger({
       type: 'component',
-      component: { ref: ModalFormUsuario, props: { modo: 'apagar', formData, permOptions } }
+      component: { ref: ModalFormUsuario, props: { modo: 'apagar', initialData: initial, permOptions, formData } }
     })
   }
 </script>

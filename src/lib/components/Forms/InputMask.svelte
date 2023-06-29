@@ -61,6 +61,8 @@
   /** @type {?boolean} */
   export let required = undefined
   /** @type {?string} */
+  export let autocomplete = 'off'
+  /** @type {?string} */
   export let name = undefined
   /** @type {?(string | string[])} */
   export let error = undefined
@@ -111,6 +113,7 @@
     class:input-error={error}
     type="text"
     class={'input ' + inputClass}
+    {autocomplete}
     id={'InputMask' + name}
     {required}
     on:input={handleInput}

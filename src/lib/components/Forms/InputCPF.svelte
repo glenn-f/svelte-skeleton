@@ -21,6 +21,8 @@
   /** @type {true | false} Padrão `false` */
   export let errorSpacing = false
   /** @type {?string} */
+  export let autocomplete = 'off'
+  /** @type {?string} */
   export let inputClass = ''
   /** @type {?string} */
   export let labelClass = ''
@@ -92,6 +94,7 @@
     class:input-warning={warning && !error}
     class:input-error={error}
     type="text"
+    {autocomplete}
     class={'input ' + inputClass}
     id={'InputMask' + name}
     {placeholder}

@@ -9,10 +9,3 @@ const __dirname = path.dirname(__filename);
 const sqlPath = path.join(__dirname, 'schema.sql')
 const sql = fs.readFileSync(sqlPath, { encoding: 'utf8' })
 db.exec(sql)
-
-try {
-  const u = criarUsuario({ email: "glenn@adm.cossms", senha: "senha", nome: "Glenn Fonseca" })
-  console.log(u)
-} catch (e) {
-  console.error(e)
-}

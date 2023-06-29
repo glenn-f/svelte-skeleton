@@ -4,21 +4,9 @@ import { setError, superValidate, message } from 'sveltekit-superforms/server';
 import { criarUsuario } from '$lib/server/db/index.js';
 import { addUsuarioSchema } from '$lib/zodSchemas.js';
 
-function getUsuarios() {
-  const u = listarUsuarios()
-  u?.forEach((u) => {
-    if (PERM_APP.has(u.permUsuario)) {
-      u.permUsuario = PERM_APP.get(u.permUsuario)
-    } else {
-      console.log(`Permissão não encontrada ou nula: ${u.permUsuario}`)
-    }
-  })
-  return u
-}
-
 export async function load() {
   const form = await superValidate(addUsuarioSchema)
-  const usuarios = getUsuarios();
+  const usuarios = listarUsuarios();
   return { usuarios, form, permOptions: PERM_APP };
 };
 
@@ -39,5 +27,14 @@ export const actions = {
       return message(form, res.message)
     }
     return message(form, 'Erro no preenchimento dos campos')
+  },
+
+  editar: async ({ request, locals }) => {
+    const form = await superValidate(request, addUsuarioSchema);
+  },
+
+  apagar: async ({ request, locals }) => {
+    const form = await superValidate(request, addUsuarioSchema);
+    console.log(form)
   }
 }

@@ -62,7 +62,3 @@ CREATE TABLE IF NOT EXISTS usuario_empresa(
     FOREIGN KEY (usuario_id) REFERENCES usuario(id),
     FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 ) STRICT;
-
--- Inserir novo usuário na tabela "usuario"
-INSERT OR IGNORE INTO usuario (nome, email, senha)
-VALUES ('NomeAleatorio', 'email@aleatorio.com', 'senhaAleatoria');

@@ -13,9 +13,9 @@
     { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
     { accessorKey: 'nome', header: 'Nome', cell: (info) => info.getValue() },
     { accessorKey: 'email', header: 'E-mail', cell: (info) => info.getValue() },
-    { accessorKey: 'permUsuario', header: 'Permissão', cell: (info) => info.getValue()?.label },
+    { accessorKey: 'permUsuario', header: 'Permissão', cell: (info) => data.permOptions.get(info.getValue())?.label },
     { accessorKey: 'criador', header: 'Criador', cell: (info) => info.getValue() },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { row: info.row.original, permOptions: data.permOptions }), enableSorting: false }
+    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
 
@@ -30,7 +30,6 @@
   }
 </script>
 
-<SuperDebug data={data.form} />
 <div class="grid gap-3">
   <div class="flex items-center">
     <h1 class="h1 text-center mr-3">Usuários</h1>

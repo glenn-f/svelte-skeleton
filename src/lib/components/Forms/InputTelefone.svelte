@@ -24,6 +24,8 @@
   export let inputClass = ''
   /** @type {?string} */
   export let labelClass = ''
+  /** @type {?string} */
+  export let autocomplete = 'off'
   const maskData = {
     [8]: { mask: '(__) ____-____', tam: 10, pos: [0, 2, 2, 6] },
     [9]: { mask: '(__) _ ____-____', tam: 11, pos: [0, 2, 2, 3, 7] }
@@ -105,6 +107,7 @@
     type="text"
     class={'input ' + inputClass}
     id={'InputMask' + name}
+    {autocomplete}
     {placeholder}
     {required}
     on:input={mask}
