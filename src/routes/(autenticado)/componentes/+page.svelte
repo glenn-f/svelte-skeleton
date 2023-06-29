@@ -9,7 +9,7 @@
 </script>
 
 <!-- <InputMask name="cep" mask="000-000-000" bind:value={cep} /> -->
-<form class="grid place-items-center " method="POST">
+<form class="grid place-items-center" method="POST">
   <div class="grid grid-cols-12 w-40 gap-2">
     <div class="col-span-full">
       <InputPercent label="Perc Exemplo" min={0} max={100} qntdAposVirgula={2} required name="perc" bind:value={perc} />

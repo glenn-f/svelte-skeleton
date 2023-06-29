@@ -23,7 +23,7 @@ export async function load() {
 };
 
 export const actions = {
-  addUser: async ({ request, locals }) => {
+  adicionar: async ({ request, locals }) => {
     const form = await superValidate(request, addUsuarioSchema);
     if (form.valid) {
       const criador_id = locals.sessao.uid

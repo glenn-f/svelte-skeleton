@@ -3,8 +3,9 @@
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
   import { renderComponent } from '@tanstack/svelte-table'
-  import ColAcoes from './ColAcoes.svelte'
-  import FormAdicionarUsuario from './FormAdicionarUsuario.svelte'
+  import CelulaAcoes from './CelulaAcoes.svelte'
+  import ModalFormUsuario from './ModalFormUsuario.svelte'
+  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   export let data
 
   let columns = [
@@ -13,27 +14,27 @@
     { accessorKey: 'nome', header: 'Nome', cell: (info) => info.getValue() },
     { accessorKey: 'email', header: 'E-mail', cell: (info) => info.getValue() },
     { accessorKey: 'permUsuario', header: 'Permissão', cell: (info) => info.getValue()?.label },
-    { accessorKey: 'criador', header: 'Criador', cell: (info) => info.getValue(), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(ColAcoes, { data, dataRow: info.row, permOptions: data.permOptions }), enableSorting: false }
+    { accessorKey: 'criador', header: 'Criador', cell: (info) => info.getValue() },
+    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { row: info.row.original, permOptions: data.permOptions }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
 
-  function clickAdicionar() {
+  function handleAdicionar() {
     modalStore.trigger({
       type: 'component',
       component: {
-        ref: FormAdicionarUsuario,
-        props: { formData: data.form, permOptions: data.permOptions },
-        slot: '<p>Skeleton</p>'
+        ref: ModalFormUsuario,
+        props: { modo: 'adicionar', formData: data.form, permOptions: data.permOptions }
       }
     })
   }
 </script>
 
+<SuperDebug data={data.form} />
 <div class="grid gap-3">
   <div class="flex items-center">
     <h1 class="h1 text-center mr-3">Usuários</h1>
-    <button class="btn variant-filled-primary h-min" on:click={clickAdicionar}>
+    <button class="btn variant-filled-primary h-min" on:click={handleAdicionar}>
       <Icon icon="fa6-solid:plus" />
       <span>Adicionar</span>
     </button>
