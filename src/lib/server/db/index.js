@@ -77,7 +77,7 @@ export function apagarSessoesExpiradasDB(now) {
 //* Usuário //!!
 export function verificarCredenciaisUsuario(email, senha) {
   try {
-    const query = db.prepare('select * from usuario where email = $email')
+    const query = db.prepare('select * from usuario where email = $email and delecao is null')
     const u = query.get({ email })
     return u && bcrypt.compareSync(senha, u.senha) ? u : undefined
   } catch (e) {
@@ -90,7 +90,7 @@ export function verificarCredenciaisUsuario(email, senha) {
 
 export function listarUsuarios() {
   try {
-    const query = db.prepare('select u.*, c.nome as criador from usuario u left join usuario c on c.id = u.criador_id')
+    const query = db.prepare('select u.*, c.nome as criador from usuario u left join usuario c on c.id = u.criador_id where u.delecao is null')
     return query.all()
   } catch (e) {
     //TODO criar mensagens para erros conhecidos. Ex: valor inválido. Erro desconhecido: printar todo erro e retornar undefined
@@ -114,6 +114,9 @@ const criarUsuarioEPessoa = dbTransaction((usuario) => {
   return { pessoa_id, usuario_id }
 })
 
+const alterarUsuarioEPessoa = dbTransaction((usuario) => {
+  throw new Error("Em construção")
+})
 
 export function criarUsuario(usuario) {
   try {
@@ -126,6 +129,51 @@ export function criarUsuario(usuario) {
       } else {
         console.log({ ErroSqlite: { code: e.code, message: e.message } })
       }
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.log(e)
+    return { ok: false, message: e?.message ?? 'Erro no servidor. Tente mais tarde.' }
+  }
+}
+
+export function alterarUsuario(usuario) {
+  try {
+    const { usuario_id, pessoa_id } = alterarUsuarioEPessoa(usuario)
+    return { ok: true, id: usuario_id, message: 'Usuário criado com sucesso.' }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
+        return { ok: false, message: 'Houve problemas em alguns campos.', fieldMessage: { email: ['Este e-mail já está em uso.'] } }
+      } else {
+        console.log({ ErroSqlite: { code: e.code, message: e.message } })
+      }
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.log(e)
+    return { ok: false, message: e?.message ?? 'Erro no servidor. Tente mais tarde.' }
+  }
+}
+
+export function apagarUsuario({ uid, id }) {
+  try {
+    const query = db.prepare("SELECT criador_id, id FROM usuario WHERE id = $id")
+    const usuario = query.get({ id })
+    if (uid != null && usuario.criador_id === uid) {
+      const agora = Date.now()
+      const query = db.prepare("UPDATE usuario SET delecao = $agora WHERE id = $id")
+      const res = query.run({ id, agora })
+      console.log(res)
+      console.log({ uid, id, usuario })
+      if (res.changes == 0) { return { ok: false, message: "Usuário não foi apagado" } }
+    } else {
+      return { ok: false, message: "Permissão negada" }
+    }
+    return { ok: true, message: 'Usuário apagado com sucesso' }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      console.log({ ErroSqlite: { code: e.code, message: e.message } })
     } else {
       console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
     }

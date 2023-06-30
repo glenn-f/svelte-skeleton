@@ -80,10 +80,18 @@
           <InputEmail label="E-mail" placeholder="Ex: enzo.gabriel@email.com" name="email" bind:value={$form.email} error={$errors.email} errorSpacing required />
         </div>
         <div class="col-span-6">
-          <InputPassword label="Senha" placeholder={pw_placeholder} name="senha" bind:value={$form.senha} error={$errors.senha} errorSpacing required />
+          <InputPassword label="Senha" placeholder={pw_placeholder} name="senha" bind:value={$form.senha} error={$errors.senha} errorSpacing required={modo == 'adicionar'} />
         </div>
         <div class="col-span-6">
-          <InputPassword label="Repetir Senha" placeholder={pw_placeholder} name="senha_repetir" bind:value={$form.senha_repetir} error={$errors.senha_repetir} errorSpacing required />
+          <InputPassword
+            label="Repetir Senha"
+            placeholder={pw_placeholder}
+            name="senha_repetir"
+            bind:value={$form.senha_repetir}
+            error={$errors.senha_repetir}
+            errorSpacing
+            required={modo == 'adicionar'}
+          />
         </div>
         <div class="col-span-12">
           <InputSelect label="Permissão na Aplicação" name="permUsuario" bind:value={$form.permUsuario} options={permOptions} error={$errors.permUsuario} errorSpacing required />
@@ -105,9 +113,9 @@
       {/if}
       <div class="flex gap-2">
         {#if modo != 'apagar'}
-          <button name="id" value={initialData.id} type="submit" class="btn variant-filled-primary">Enviar</button>
+          <button type="submit" class="btn variant-filled-primary">Enviar</button>
         {:else}
-          <button type="submit" class="btn variant-filled-error">Confirmar</button>
+          <button type="submit" class="btn variant-filled-error" name="id" value={initialData.id}>Confirmar</button>
         {/if}
         <button type="button" class="btn variant-filled-secondary" on:click={onClose}>Cancelar</button>
       </div>

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS usuario (
     permUsuario INTEGER NOT NULL DEFAULT(0),
     criador_id INTEGER NULL,
     criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+    delecao INTEGER,
     FOREIGN KEY (criador_id) REFERENCES usuario(id)
 ) STRICT;
 CREATE TABLE IF NOT EXISTS sessao (
@@ -46,18 +47,24 @@ CREATE TABLE IF NOT EXISTS pessoa (
     sexo TEXT,
     --DATA NASCIMENTO
     dn INTEGER,
+    criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+    delecao INTEGER,
     FOREIGN KEY (criador_id) REFERENCES usuario(id),
     FOREIGN KEY (usuario_id) REFERENCES usuario(id)
 ) STRICT;
 CREATE TABLE IF NOT EXISTS empresa (
     id INTEGER NOT NULL primary key autoincrement,
     dono_id INTEGER NOT NULL UNIQUE,
+    criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+    delecao INTEGER,
     FOREIGN KEY (dono_id) REFERENCES usuario(id)
 ) STRICT;
 CREATE TABLE IF NOT EXISTS usuario_empresa(
     usuario_id INTEGER NOT NULL,
     empresa_id INTEGER NOT NULL,
     permEmpresa INTEGER NOT NULL DEFAULT(0),
+    criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+    delecao INTEGER,
     PRIMARY KEY (usuario_id, empresa_id),
     FOREIGN KEY (usuario_id) REFERENCES usuario(id),
     FOREIGN KEY (empresa_id) REFERENCES empresa(id)
