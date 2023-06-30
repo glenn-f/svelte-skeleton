@@ -5,8 +5,8 @@
       "type": "node",
       "request": "launch",
       "name": "Executar com Vite-Node",
-      "runtimeExecutable": "vite-node",
-      "args": ["${file}"],
+      "runtimeExecutable": "npx",
+      "args": ["vite-node","${file}"],
       "console": "integratedTerminal"
     }
   ]
