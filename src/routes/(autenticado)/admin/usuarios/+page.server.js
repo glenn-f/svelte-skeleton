@@ -56,5 +56,16 @@ export const actions = {
       return message(form, res.message, { status: 500 })
     }
     return message(form, 'Usuário inválido', { status: 400 })
+  },
+  alternarStatus: async ({ request, locals }) => {
+    const form = await superValidate(request, deleteIdSchema);
+    console.log(form)
+    if (form.valid) {
+      const res = apagarUsuario({ uid: locals.sessao.uid, id: form.data.id })
+      if (res.ok) { return message(form, res.message) }
+      //* Erro no banco
+      return message(form, res.message, { status: 500 })
+    }
+    return message(form, 'Usuário inválido', { status: 400 })
   }
 }

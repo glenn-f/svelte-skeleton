@@ -16,13 +16,13 @@
 
 {#if $$slots.default}
   <!-- button -->
-  <a {href} class="btn btn-sm hover:variant-soft-primary" use:popup={{ target, event: 'click', placement: 'bottom', closeQuery: 'a' }}>
+  <a {href} class="btn btn-sm variant-soft-surface hover:variant-soft-primary" use:popup={{ target, event: 'click', placement: 'bottom', closeQuery: 'a' }}>
     {#if icon} <Icon {icon} width="24px" height="24px" /> {/if}
     <span class="h6">{titulo}</span>
     <Icon icon="fa6-solid:caret-down" />
   </a>
   <!-- popup -->
-  <div class={'card p-2 shadow-xl ' + width} data-popup={target}>
+  <div class={'card p-2 shadow-xl bg-surface-200-700-token ' + width} data-popup={target}>
     <nav class="list-nav">
       <ul>
         <slot>

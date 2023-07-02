@@ -25,15 +25,19 @@
   export let labelClass = ''
   /** @type {?string} */
   export let autocomplete = 'off'
+  export let readonly = undefined
+  export let input = undefined
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
   <input
+    bind:this={input}
     class:input-success={success && !warning && !error}
     class:input-warning={warning && !error}
     class:input-error={error}
     type="text"
-    class={'input ' + inputClass}
+    class={'input read-only:variant-filled-surface ' + inputClass}
+    {readonly}
     {autocomplete}
     {placeholder}
     {name}

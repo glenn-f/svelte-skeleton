@@ -16,13 +16,15 @@
   export let errorSpacing = false
 </script>
 
-<label class={'label ' + labelClass}>
+<label class={'label text-xs ' + labelClass}>
   <!-- Label + Required Indicator (*) -->
   <span>
-    {label}
-    {#if label && (required === '' || Boolean(required))}
-      <span class="text-red-400">&nbsp;*</span>
-    {/if}
+    <b>
+      {label}
+      {#if label && (required === '' || Boolean(required))}
+        <span class="text-red-400">&nbsp;*</span>
+      {/if}
+    </b>
   </span>
   <!-- Input -->
   <slot />

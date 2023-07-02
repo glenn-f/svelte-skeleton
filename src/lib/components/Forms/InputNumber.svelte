@@ -185,6 +185,7 @@
   /** O padrão de alinhamento interno é 'right' @type {'right' | 'center' | 'left'} */
   export let align = 'right'
   /** @type {?string} */
+  export let readonly = undefined
   export let autocomplete = 'off'
   export let label = undefined
   export let required = undefined
@@ -209,7 +210,8 @@
     class:input-warning={warning && !error}
     class:input-error={error}
     type="text"
-    class={'input ' + inputClass}
+    class={'input read-only:variant-filled-surface ' + inputClass}
+    {readonly}
     id={'InputMoeda' + name}
     style={`text-align: ${align};`}
     {required}

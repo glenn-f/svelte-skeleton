@@ -25,7 +25,8 @@
   /** @type {?string} */
   export let autocomplete = 'off'
   /** @type {?string} */
-  export let placeholder
+  export let placeholder = undefined
+  export let readonly = undefined
   let input
   function changeInputVisibility() {
     if (input.type === 'password') {
@@ -47,9 +48,10 @@
       class:input-warning={warning && !error}
       class:input-error={error}
       type="password"
+      {readonly}
       {autocomplete}
       {placeholder}
-      class={inputClass}
+      class={"read-only:variant-filled-surface " + inputClass}
       {name}
       {required}
       bind:value

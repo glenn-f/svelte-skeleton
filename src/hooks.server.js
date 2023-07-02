@@ -18,7 +18,7 @@ async function lerCookies({ event, resolve }) {
   const sid = cookies.get('sid')
   locals.sessao = sid ? buscarSessao(sid) : null;
 
-  if (!locals.sessao) { cookies.delete('sid') }
+  if (!locals.sessao) { cookies.delete('sid', { path: '/' }) }
 
   return resolve(event)
 }

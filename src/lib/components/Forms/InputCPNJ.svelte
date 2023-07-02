@@ -26,6 +26,7 @@
   export let labelClass = ''
   /** @type {?string} */
   export let autocomplete = 'off'
+  export let readonly = undefined
   const maskData = { mask: '__.___.___/____-__', tam: 14, pos: [2, 5, 8, 12] }
   let maskValue = value ? toCNPJMask(value.toString()) : maskData.mask
   let inputMasked, selectionPos
@@ -85,6 +86,14 @@
   afterUpdate(() => {
     inputMasked.setSelectionRange(selectionPos, selectionPos)
   })
+  $: if (readonly) {
+    const [maskedText, unmaskedText] = toCNPJMask(maskData.mask, maskValue)
+    console.log({ value, unmaskedText, maskValue })
+    if (unmaskedText != value) {
+      const [_masked, _value] = toCNPJMask(maskData.mask, value)
+      maskValue = _masked
+    }
+  }
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
@@ -94,8 +103,9 @@
     class:input-warning={warning && !error}
     class:input-error={error}
     type="text"
-    class={'input ' + inputClass}
+    class={'input read-only:variant-filled-surface ' + inputClass}
     id={'InputMask' + name}
+    {readonly}
     {autocomplete}
     {placeholder}
     {required}

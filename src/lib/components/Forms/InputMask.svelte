@@ -3,6 +3,7 @@
   import Label from './Label.svelte'
 
   function applyMask(pattern, text, cursorPosition = 0) {
+    text = text ?? ''
     let maskedText = ''
     let unmaskedText = ''
     let maskedCursorPosition = cursorPosition
@@ -80,6 +81,7 @@
   export let value = undefined
   /** @type {string} */
   export let mask = '00000-000'
+  export let readonly = undefined
   let maskValue = applyMask(mask, value)[0]
   let inputMasked, selectionPos
 
@@ -103,6 +105,14 @@
   afterUpdate(() => {
     inputMasked.setSelectionRange(selectionPos, selectionPos)
   })
+  $: if (readonly) {
+    const [maskedText, unmaskedText] = applyMask(mask, maskValue)
+    console.log({ value, unmaskedText, maskValue })
+    if (unmaskedText != value) {
+      const [_masked, _value] = applyMask(mask, value)
+      maskValue = _masked
+    }
+  }
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
@@ -112,7 +122,8 @@
     class:input-warning={warning && !error}
     class:input-error={error}
     type="text"
-    class={'input ' + inputClass}
+    class={'input read-only:variant-filled-surface ' + inputClass}
+    {readonly}
     {autocomplete}
     id={'InputMask' + name}
     {required}

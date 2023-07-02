@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS usuario (
     nome TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     senha TEXT NOT NULL,
-    permUsuario INTEGER NOT NULL DEFAULT(0),
+    perm_usuario INTEGER NOT NULL DEFAULT(0),
     criador_id INTEGER NULL,
     criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
     delecao INTEGER,
@@ -19,13 +19,14 @@ CREATE TABLE IF NOT EXISTS sessao (
     FOREIGN KEY (usuario_id) REFERENCES usuario(id)
 ) STRICT;
 INSERT
-    OR REPLACE INTO usuario (id, nome, email, senha)
+    OR REPLACE INTO usuario (id, nome, email, senha, perm_usuario)
 VALUES
     (
         0,
         'Administrador',
         'a@d.min',
-        '$2b$10$kgAkctImz3V8beH8rUcp5eUxa8N4FUWrI4DQ2J30sePHSVmzNqj9C'
+        '$2b$10$kgAkctImz3V8beH8rUcp5eUxa8N4FUWrI4DQ2J30sePHSVmzNqj9C',
+        99
     );
 --senha123
 CREATE TABLE IF NOT EXISTS pessoa (
@@ -55,6 +56,18 @@ CREATE TABLE IF NOT EXISTS pessoa (
 CREATE TABLE IF NOT EXISTS empresa (
     id INTEGER NOT NULL primary key autoincrement,
     dono_id INTEGER NOT NULL UNIQUE,
+    nome_fantasia TEXT NOT NULL,
+    razao_social TEXT,
+    cnpj TEXT,
+    inscricao_estadual TEXT,
+    codigo_regime_tributario TEXT,
+    pais TEXT,
+    uf TEXT,
+    municipio TEXT,
+    bairro TEXT,
+    cep TEXT,
+    endereco TEXT,
+    telefone TEXT,
     criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
     delecao INTEGER,
     FOREIGN KEY (dono_id) REFERENCES usuario(id)
@@ -62,7 +75,7 @@ CREATE TABLE IF NOT EXISTS empresa (
 CREATE TABLE IF NOT EXISTS usuario_empresa(
     usuario_id INTEGER NOT NULL,
     empresa_id INTEGER NOT NULL,
-    permEmpresa INTEGER NOT NULL DEFAULT(0),
+    perm_empresa INTEGER NOT NULL DEFAULT(0),
     criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
     delecao INTEGER,
     PRIMARY KEY (usuario_id, empresa_id),

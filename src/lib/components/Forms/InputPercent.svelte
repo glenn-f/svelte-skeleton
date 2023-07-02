@@ -211,6 +211,7 @@
   export let required = undefined
   export let name = undefined
   export let value = undefined
+  export let readonly = undefined
   if (typeof value == 'string') value = value ? parseFloat(value) : undefined
 
   /** @type {HTMLInputElement} */
@@ -230,9 +231,10 @@
       class:input-warning={warning && !error}
       class:input-error={error}
       type="text"
-      class={'input ' + inputClass}
+      class={'input read-only:variant-filled-surface ' + inputClass}
       id={'InputMoeda' + name}
       style={`text-align: ${align};`}
+      {readonly}
       {required}
       {autocomplete}
       on:input={onInput}

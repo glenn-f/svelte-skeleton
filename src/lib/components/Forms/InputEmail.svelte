@@ -26,6 +26,7 @@
   export let labelClass = ''
   /** @type {?string} */
   export let autocomplete = 'off'
+  export let readonly = undefined
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
@@ -38,7 +39,8 @@
       class:input-warning={warning && !error}
       class:input-error={error}
       type="email"
-      class={inputClass}
+      class={"read-only:variant-filled-surface " + inputClass}
+      {readonly}
       {autocomplete}
       {placeholder}
       {name}

@@ -13,6 +13,10 @@ const begin = db.prepare('BEGIN');
 const commit = db.prepare('COMMIT');
 const rollback = db.prepare('ROLLBACK');
 
+export function encriptar(text, rounds = 10) {
+  return bcrypt.hashSync(text, rounds)
+}
+
 // Higher order function - returns a function that always runs in a transaction
 export function dbTransaction(func) {
   return function (...args) {
@@ -40,9 +44,13 @@ export function criarSessaoDB(id, expiracao, usuarioId) {
     return undefined
   }
 }
+
 export function buscarSessaoDB(id) {
   try {
-    const query = db.prepare('select s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email email from sessao s left join usuario u on u.id = s.usuario_id where s.id = $id')
+    const query = db.prepare("\
+      SELECT s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email, u.perm_usuario perm, e.id empresa_id, e.nome_fantasia empresa_nome_fantasia, ue.perm_empresa empresa_perm\
+      FROM sessao s LEFT JOIN usuario u ON u.id = s.usuario_id LEFT JOIN usuario_empresa ue ON ue.usuario_id = s.usuario_id LEFT JOIN empresa e ON e.id = ue.empresa_id\
+      WHERE s.id = $id")
     const row = query.get({ id })
     return row ? row : undefined
   } catch (e) {
@@ -51,6 +59,7 @@ export function buscarSessaoDB(id) {
     return undefined
   }
 }
+
 export function apagarSessaoDB(id) {
   try {
     const query = db.prepare('delete from sessao where id = $id')
@@ -67,6 +76,24 @@ export function apagarSessoesExpiradasDB(now) {
     const query = db.prepare('delete from sessao where expiracao < $now')
     const { changes, lastInsertRowid } = query.run({ now })
     return changes
+  } catch (e) {
+    //TODO criar mensagens para erros conhecidos. Ex: valor inválido. Erro desconhecido: printar todo erro e retornar undefined
+    console.error(e)
+    return undefined
+  }
+}
+
+export function limparSessoesUsuarioDB(uid) {
+  try {
+    const query = db.prepare('select id from sessao where usuario_id = $id')
+    const sessoes = query.pluck().all({ id: uid })
+
+    const mutateDelete = db.prepare('delete from sessao where usuario_id = $id')
+    const resDelete = mutateDelete.run({ id: uid })
+
+    if (resDelete.changes < sessoes.length) console.log(`UID ${uid}: ${resDelete.changes} de ${sessoes.length} sessões apagadas.`)
+    return sessoes
+
   } catch (e) {
     //TODO criar mensagens para erros conhecidos. Ex: valor inválido. Erro desconhecido: printar todo erro e retornar undefined
     console.error(e)
@@ -90,7 +117,7 @@ export function verificarCredenciaisUsuario(email, senha) {
 
 export function listarUsuarios() {
   try {
-    const query = db.prepare('select u.*, c.nome as criador from usuario u left join usuario c on c.id = u.criador_id where u.delecao is null')
+    const query = db.prepare('select u.*, c.nome as criador from usuario u left join usuario c on c.id = u.criador_id')
     return query.all()
   } catch (e) {
     //TODO criar mensagens para erros conhecidos. Ex: valor inválido. Erro desconhecido: printar todo erro e retornar undefined
@@ -157,6 +184,10 @@ export function alterarUsuario(usuario) {
 }
 
 export function apagarUsuario({ uid, id }) {
+  if (id === 0 || uid === 0) {
+    console.log("Tentaram apagar o Master. :O")
+    return { ok: false, message: "Permissão negada" }
+  }
   try {
     const query = db.prepare("SELECT criador_id, id FROM usuario WHERE id = $id")
     const usuario = query.get({ id })
@@ -178,5 +209,23 @@ export function apagarUsuario({ uid, id }) {
       console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
     }
     return { ok: false, message: 'Erro no servidor. Tente mais tarde.' }
+  }
+}
+
+export function alterarSenhaUsuario(usuario) {
+  const { id, senha } = usuario
+  try {
+    const query = db.prepare("UPDATE usuario SET senha = $senha WHERE id = $id")
+    const { changes } = query.run({ id, senha })
+    if (changes > 0) return { ok: true, message: 'Senha alterada com sucesso.' }
+    return { ok: false, message: "A senha não foi alterada." }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      console.log({ ErroSqlite: { code: e.code, message: e.message } })
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+    return { ok: false, message: e?.message ?? 'Erro no servidor. Tente mais tarde.' }
   }
 }

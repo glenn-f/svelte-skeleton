@@ -40,6 +40,7 @@
    * @returns {any} O valor da opção.
    */
   export let getOptionValue = (option, index) => option?.value ?? index
+  export let readonly = undefined
   const _options = objectToArray(options)
 </script>
 
@@ -49,7 +50,8 @@
     class:input-warning={warning && !error}
     class:input-error={error}
     class:text-surface-500-400-token={value === undefined}
-    class={'select ' + inputClass}
+    class={'select read-only:variant-filled-surface ' + inputClass}
+    {readonly}
     {placeholder}
     {name}
     {required}

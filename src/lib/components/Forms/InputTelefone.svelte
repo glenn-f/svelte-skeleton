@@ -26,6 +26,8 @@
   export let labelClass = ''
   /** @type {?string} */
   export let autocomplete = 'off'
+  export let readonly = undefined
+  if (!value) value = ''
   const maskData = {
     [8]: { mask: '(__) ____-____', tam: 10, pos: [0, 2, 2, 6] },
     [9]: { mask: '(__) _ ____-____', tam: 11, pos: [0, 2, 2, 3, 7] }
@@ -96,6 +98,14 @@
   afterUpdate(() => {
     inputMasked.setSelectionRange(selectionPos, selectionPos)
   })
+  $: if (readonly) {
+    const [maskedText, unmaskedText] = toTelMask(maskValue)
+    console.log({ value, unmaskedText, maskValue })
+    if (unmaskedText != value) {
+      const [_masked, _value] = toTelMask(value)
+      maskValue = _masked
+    }
+  }
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
@@ -105,7 +115,8 @@
     class:input-warning={warning && !error}
     class:input-error={error}
     type="text"
-    class={'input ' + inputClass}
+    class={'input read-only:variant-filled-surface ' + inputClass}
+    {readonly}
     id={'InputMask' + name}
     {autocomplete}
     {placeholder}

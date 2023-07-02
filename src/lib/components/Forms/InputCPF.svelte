@@ -26,6 +26,7 @@
   export let inputClass = ''
   /** @type {?string} */
   export let labelClass = ''
+  export let readonly = undefined
   const maskData = { mask: '___.___.___-__', tam: 11, pos: [3,6,9] }
   let maskValue = value ? toCPFMask(value.toString()) : maskData.mask
   let inputMasked, selectionPos
@@ -85,6 +86,14 @@
   afterUpdate(() => {
     inputMasked.setSelectionRange(selectionPos, selectionPos)
   })
+  $: if (readonly) {
+    const [maskedText, unmaskedText] = toCPFMask(maskData.mask, maskValue)
+    console.log({ value, unmaskedText, maskValue })
+    if (unmaskedText != value) {
+      const [_masked, _value] = toCPFMask(maskData.mask, value)
+      maskValue = _masked
+    }
+  }
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
@@ -95,8 +104,9 @@
     class:input-error={error}
     type="text"
     {autocomplete}
-    class={'input ' + inputClass}
+    class={'input read-only:variant-filled-surface ' + inputClass}
     id={'InputMask' + name}
+    {readonly}
     {placeholder}
     {required}
     on:input={mask}

@@ -1,6 +1,13 @@
 import { randomBytes } from 'node:crypto'
-import { apagarSessaoDB, apagarSessoesExpiradasDB, buscarSessaoDB, criarSessaoDB, verificarCredenciaisUsuario } from './db'
+import { apagarSessaoDB, apagarSessoesExpiradasDB, buscarSessaoDB, criarSessaoDB, limparSessoesUsuarioDB, verificarCredenciaisUsuario } from './db'
+import { dev } from '$app/environment'
 
+export const sessionCookieSettings = {
+  path: '/',
+  httpOnly: true,
+  sameSite: 'strict',
+  secure: !dev,
+}
 /** Tempo inicial em **milissegundos** de uma sessão de usuário na aplicação. */
 export const tempoSessaoMS = 60 * (60 * 1000)
 let proximaLimpezaSessoes = Date.now() + (tempoSessaoMS / 2)
@@ -23,20 +30,23 @@ function limparSessoes() {
  * @param {object} usuarioDados Dados do usuário que serão mesclados com os dados da sessão
  * @returns {Sessao} Sessão do usuário
  */
-export function criarSessao(uid, usuarioDados) {
-  // Criar token da sessão
-  let sid = ''
-  do { sid = randomBytes(32).toString('hex') } while (cacheSessoes.has(sid))
-  // Definir expiração da sessão
+export function criarSessao(uid) {
+  let sid = '', sessao
   const expiracao = Date.now() + tempoSessaoMS
-  // Salvar sessão no banco de dados
-  criarSessaoDB(sid, expiracao, uid)
-  // Cachear sessão em memória
-  const sessao = { sid, uid, expiracao, ...usuarioDados }
+
+  // Criar e salvar sessão em BD
+  do {
+    do { sid = randomBytes(32).toString('hex') } while (cacheSessoes.has(sid))
+    criarSessaoDB(sid, expiracao, uid)
+    sessao = buscarSessaoDB(sid)
+  } while (!sessao);
+
+  // Salvar sessão em memória
   cacheSessoes.set(sid, sessao)
+
   // Verificar limpeza do cache de sessões
   if (Date.now() > proximaLimpezaSessoes) { setTimeout(limparSessoes, 5000) }
-  // Devolver sessão criada
+
   return sessao
 }
 
@@ -48,12 +58,29 @@ export function criarSessao(uid, usuarioDados) {
  */
 export async function efetuarLogin(email, senha) {
   const usuario = await verificarCredenciaisUsuario(email, senha)
-  // Usuário válido: devolver sessão com dados do usuário //TODO incluir mais dados
-  if (usuario) {
-    return criarSessao(usuario.id, { nome: usuario.nome, email: usuario.email })
-  }
+  
+  // Usuário válido: devolver sessão com dados do usuário
+  if (usuario) return criarSessao(usuario.id)
+
   // Usuário inválido: retornar
   return undefined
+}
+
+export function resetarSessoesUsuario(uid) {
+  const sessoes = limparSessoesUsuarioDB(uid)
+  apagarSessoes(sessoes)
+  return criarSessao(uid)
+}
+
+function apagarSessoes(sessoes) {
+  if (Array.isArray(sessoes)) {
+    for (let i = 0; i < sessoes.length; i++) {
+      const sid = sessoes[i];
+      cacheSessoes.delete(sid)
+    }
+  } else if (typeof sessoes == 'string') {
+    cacheSessoes.delete(sessoes)
+  }
 }
 
 /**

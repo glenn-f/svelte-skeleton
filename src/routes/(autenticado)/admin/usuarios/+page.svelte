@@ -6,15 +6,18 @@
   import CelulaAcoes from './CelulaAcoes.svelte'
   import ModalFormUsuario from './ModalFormUsuario.svelte'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
+  import CelulaStatus from './CelulaStatus.svelte'
   export let data
 
   let columns = [
     { accessorKey: 'id', header: 'ID', cell: (info) => info.getValue().toString() },
     { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
+    { accessorKey: 'delecao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
     { accessorKey: 'nome', header: 'Nome', cell: (info) => info.getValue() },
     { accessorKey: 'email', header: 'E-mail', cell: (info) => info.getValue() },
-    { accessorKey: 'permUsuario', header: 'Permissão', cell: (info) => data.permOptions.get(info.getValue())?.label },
+    { accessorKey: 'perm_usuario', header: 'Permissão', cell: (info) => data.permOptions.get(info.getValue())?.label },
     { accessorKey: 'criador', header: 'Criador', cell: (info) => info.getValue() },
+    { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
