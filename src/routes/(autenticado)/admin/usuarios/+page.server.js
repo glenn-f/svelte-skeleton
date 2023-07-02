@@ -4,7 +4,7 @@ import { setError, superValidate, message } from 'sveltekit-superforms/server';
 import { criarUsuario } from '$lib/server/db/index.js';
 import { addUsuarioSchema } from '$lib/zodSchemas.js';
 import { deleteIdSchema, editUsuarioSchema } from '../../../../lib/zodSchemas.js';
-import { alterarUsuario, apagarUsuario } from '../../../../lib/server/db/index.js';
+import { alterarUsuario, alterarStatusUsuarioDB } from '../../../../lib/server/db/index.js';
 
 export async function load() {
   const form = await superValidate(addUsuarioSchema)
@@ -50,7 +50,7 @@ export const actions = {
     const form = await superValidate(request, deleteIdSchema);
     console.log(form)
     if (form.valid) {
-      const res = apagarUsuario({ uid: locals.sessao.uid, id: form.data.id })
+      const res = alterarStatusUsuarioDB({ uid: locals.sessao.uid, id: form.data.id })
       if (res.ok) { return message(form, res.message) }
       //* Erro no banco
       return message(form, res.message, { status: 500 })
@@ -61,7 +61,7 @@ export const actions = {
     const form = await superValidate(request, deleteIdSchema);
     console.log(form)
     if (form.valid) {
-      const res = apagarUsuario({ uid: locals.sessao.uid, id: form.data.id })
+      const res = alterarStatusUsuarioDB({ uid: locals.sessao.uid, id: form.data.id })
       if (res.ok) { return message(form, res.message) }
       //* Erro no banco
       return message(form, res.message, { status: 500 })

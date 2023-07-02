@@ -183,25 +183,35 @@ export function alterarUsuario(usuario) {
   }
 }
 
-export function apagarUsuario({ uid, id }) {
-  if (id === 0 || uid === 0) {
+export function alterarStatusUsuarioDB({ uid, id }) {
+  if (id === 0) {
     console.log("Tentaram apagar o Master. :O")
     return { ok: false, message: "Permissão negada" }
   }
+  if (uid !== 0) {
+    console.log("Tentaram apagar usuarios sem ser na conta do master")
+    return { ok: false, message: "Permissão negada" }
+  }
   try {
-    const query = db.prepare("SELECT criador_id, id FROM usuario WHERE id = $id")
+    const query = db.prepare("SELECT criador_id, id, delecao FROM usuario WHERE id = $id")
     const usuario = query.get({ id })
     if (uid != null && usuario.criador_id === uid) {
       const agora = Date.now()
-      const query = db.prepare("UPDATE usuario SET delecao = $agora WHERE id = $id")
-      const res = query.run({ id, agora })
-      console.log(res)
-      console.log({ uid, id, usuario })
-      if (res.changes == 0) { return { ok: false, message: "Usuário não foi apagado" } }
+      let query, res, message
+      if (usuario.delecao) {
+        query = db.prepare("UPDATE usuario SET delecao = NULL WHERE id = $id")
+        res = query.run({ id })
+        message = 'Usuário ativado com sucesso'
+      } else {
+        query = db.prepare("UPDATE usuario SET delecao = $agora WHERE id = $id")
+        res = query.run({ id, agora })
+        message = 'Usuário desativado com sucesso'
+      }
+      if (res.changes == 0) { return { ok: false, message: "O status não foi alterado" } }
+      return { ok: true, message }
     } else {
       return { ok: false, message: "Permissão negada" }
     }
-    return { ok: true, message: 'Usuário apagado com sucesso' }
   } catch (e) {
     if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
       console.log({ ErroSqlite: { code: e.code, message: e.message } })
