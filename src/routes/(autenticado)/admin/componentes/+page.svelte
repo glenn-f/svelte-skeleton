@@ -1,6 +1,6 @@
 <script>
-  import InputNumber from '../../../lib/components/Forms/InputNumber.svelte'
-  import InputPercent from '../../../lib/components/Forms/InputPercent.svelte'
+  import InputNumber from '$lib/components/Forms/InputNumber.svelte'
+  import InputPercent from '$lib/components/Forms/InputPercent.svelte'
   let cpf = '015',
     cnpj = '',
     tel = '',

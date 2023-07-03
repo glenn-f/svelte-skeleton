@@ -4,6 +4,7 @@
   import { DevAccordion, Menu, MenuItem } from '$lib/components'
   import { AppBar, AppShell, LightSwitch } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
+  import { PERM_APP_MASTER } from '$lib/globals'
 
   export let data
   onMount(() => {
@@ -28,51 +29,77 @@
         </a>
       </svelte:fragment>
       <div class="flex flex-row gap-1">
-        <Menu titulo="Administração" icon="fa6-solid:gears">
-          <MenuItem href="/admin/usuarios" titulo="Usuários" icon="fa-solid:user-cog" />
-        </Menu>
-        <Menu titulo="Cadatros" icon="mdi:book-cog">
-          <MenuItem href="/produtos" titulo="Produtos" icon="fluent-mdl2:product-list" />
-          <MenuItem href="/pessoas" titulo="Pessoas" icon="ph:user-list" />
-        </Menu>
-
-        <Menu titulo="Testes" icon="mdi:test-tube">
-          <MenuItem href="/componentes" titulo="Componentes" />
-        </Menu>
+        {#if data.sessao?.perm == PERM_APP_MASTER}
+          <Menu titulo="Administração" icon="fa6-solid:crown">
+            <MenuItem href="/admin/usuarios" titulo="Usuários" icon="fa-solid:user-cog" />
+            <MenuItem href="/admin/componentes" titulo="Componentes" />
+          </Menu>
+        {/if}
+        {#if data.sessao.empresa_id}
+          <Menu titulo="Loja" icon="fa6-solid:store" width="w-64">
+            <MenuItem href="/loja/vender" titulo="Iniciar Venda" icon="mdi:point-of-sale" />
+            <MenuItem href="/loja/disponivel" titulo="Estoque Disponível" icon="mdi:cart-check" />
+            <MenuItem href="/loja/histórico" titulo="Histórico de Vendas" icon="mdi:receipt-text-clock" />
+          </Menu>
+          <Menu titulo="Estoque" icon="mdi:warehouse">
+            <MenuItem href="/estoque/entrada" titulo="Entrada" icon="mdi:package-variant-closed-plus" />
+            <MenuItem href="/estoque/entrada" titulo="Entrada" icon="mdi:package-variant-closed-plus" />
+            <MenuItem href="/estoque/entrada" titulo="Saída" icon="mdi:package-variant-closed-minus" />
+          </Menu>
+          <Menu titulo="Cadatros" icon="carbon:catalog">
+            <MenuItem href="/cadastros/usuarios" titulo="Usuários" icon="mdi:user-key" />
+            <MenuItem href="/cadastros/contas" titulo="Contas" icon="guidance:bank" />
+            <MenuItem href="/cadastros/produtos" titulo="Produtos" icon="fluent-mdl2:product-variant" />
+            <MenuItem href="/cadastros/pessoas" titulo="Pessoas" icon="mdi:account-group" />
+          </Menu>
+        {:else}
+          <Menu href="/perfil/empresas" titulo="Cadastre a sua empresa para ver as opções" icon="mdi:registered-trademark" />
+        {/if}
       </div>
       <svelte:fragment slot="trail">
         {#if data?.sessao?.empresa_nome_fantasia}
-           <a href class="btn btn-sm variant-soft-surface hover:variant-soft-primary grid place-items-center">
-             <h5 class="h5 text-center flex gap-1 items-center">
-               <Icon icon="fa6-solid:shop" />
-               {data.sessao.empresa_nome_fantasia}
-             </h5>
-             <!-- <div class="flex items-center gap-1 italic text-xs text-secondary-500-400-token">
+          <a href class="btn btn-sm variant-soft-surface hover:variant-soft-primary grid place-items-center">
+            <h5 class="h5 text-center flex gap-1 items-center">
+              <Icon icon="fa6-solid:shop" />
+              {data.sessao.empresa_nome_fantasia}
+            </h5>
+            <!-- <div class="flex items-center gap-1 italic text-xs text-secondary-500-400-token">
                <Icon icon="fa6-solid:rotate" />
                <span>Trocar Empresa</span>
              </div> -->
-           </a>
+          </a>
         {/if}
-        <a href="/perfil" class="btn btn-sm variant-soft-surface hover:variant-soft-primary">
-          <div class="flex flex-col">
-            <div class="flex justify-center font-bold gap-1">
-              <Icon icon="fa6-solid:circle-user" width="20px" height="20px" />
-              Minha Conta
-            </div>
-            <span class="italic text-xs text-secondary-500-400-token">
-              {#if primeiroNome}{primeiroNome}{/if}
+        <div class="flex flex-col items-center">
+          <div class="flex flex-nowrap gap-2">
+            <a href="/perfil" class="btn btn-sm variant-soft-surface hover:variant-soft-primary">
+              <div class="flex flex-col">
+                <div class="flex justify-center gap-1">
+                  <Icon icon="fa6-solid:circle-user" width="20px" height="20px" />
+                  Minha Conta
+                </div>
+              </div>
+            </a>
+            <a href="/logout" class="btn btn-sm variant-soft-surface hover:variant-soft-primary">
+              <div class="flex flex-col">
+                <div class="flex justify-center gap-1">
+                  <Icon icon="mdi:logout" width="20px" height="20px" />
+                  Sair
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="italic text-primary-700-200-token text-xs text-ellipsis whitespace-nowrap flex flex-nowrap items-center gap-1">
+            {#if data.sessao?.perm == PERM_APP_MASTER}
+              <Icon icon="fa6-solid:crown" />
+            {/if}
+            <span>
+              {#if primeiroNome}Olá, {primeiroNome}{/if} ({data.sessao?.email})
             </span>
           </div>
-        </a>
-        <a href="/logout" class="btn btn-sm variant-soft-surface hover:variant-soft-primary">
-          <div class="flex flex-col">
-            <div class="flex justify-center font-bold gap-1">
-              <Icon icon="mdi:logout" width="20px" height="20px" />
-              Sair
-            </div>
-          </div>
-        </a>
-        <LightSwitch rounded="rounded-full" />
+        </div>
+        <div>
+          <LightSwitch rounded="rounded-full" />
+        </div>
       </svelte:fragment>
     </AppBar>
   </svelte:fragment>
