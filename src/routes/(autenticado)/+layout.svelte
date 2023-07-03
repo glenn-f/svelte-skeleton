@@ -41,10 +41,15 @@
             <MenuItem href="/loja/disponivel" titulo="Estoque Disponível" icon="mdi:cart-check" />
             <MenuItem href="/loja/histórico" titulo="Histórico de Vendas" icon="mdi:receipt-text-clock" />
           </Menu>
-          <Menu titulo="Estoque" icon="mdi:warehouse">
-            <MenuItem href="/estoque/entrada" titulo="Entrada" icon="mdi:package-variant-closed-plus" />
-            <MenuItem href="/estoque/entrada" titulo="Entrada" icon="mdi:package-variant-closed-plus" />
-            <MenuItem href="/estoque/entrada" titulo="Saída" icon="mdi:package-variant-closed-minus" />
+          <Menu titulo="Inventário" icon="mdi:warehouse">
+            <MenuItem href="/estoque" titulo="Estoque" icon="fluent-mdl2:product-list" />
+            <MenuItem href="/estoque/entradas" titulo="Entradas" icon="ri:inbox-archive-fill" />
+            <MenuItem href="/estoque/saidas" titulo="Saídas" icon="ri:inbox-unarchive-fill" />
+          </Menu>
+          <Menu titulo="Transações" icon="ic:round-currency-exchange">
+            <MenuItem href="/transacoes/saldo" titulo="Saldo" icon="fa6-solid:coins" />
+            <MenuItem href="/transacoes/entrada" titulo="Receitas" icon="iconoir:receive-dollars" />
+            <MenuItem href="/transacoes/saida" titulo="Despesas" icon="iconoir:send-dollars" />
           </Menu>
           <Menu titulo="Cadatros" icon="carbon:catalog">
             <MenuItem href="/cadastros/usuarios" titulo="Usuários" icon="mdi:user-key" />
