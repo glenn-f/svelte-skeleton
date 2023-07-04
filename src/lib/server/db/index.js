@@ -34,7 +34,8 @@ export function dbTransaction(func) {
 //* Sessão
 export function criarSessaoDB(id, expiracao, usuarioId) {
   try {
-    const query = db.prepare('insert into sessao (id, expiracao, usuario_id) values ($id, $expiracao, $usuarioId)')
+    // console.log({id, expiracao, usuarioId})
+    const query = db.prepare('INSERT INTO sessao (id, expiracao, usuario_id) VALUES ($id, $expiracao, $usuarioId);')
     const [values] = sqlValor({ id, expiracao, usuarioId })
     const { changes, lastInsertRowid } = query.run(values)
     return changes ? lastInsertRowid : undefined
@@ -48,9 +49,9 @@ export function criarSessaoDB(id, expiracao, usuarioId) {
 export function buscarSessaoDB(id) {
   try {
     const query = db.prepare("\
-      SELECT s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email, u.perm_usuario perm, e.id empresa_id, e.nome_fantasia empresa_nome_fantasia, ue.perm_empresa empresa_perm\
-      FROM sessao s LEFT JOIN usuario u ON u.id = s.usuario_id LEFT JOIN usuario_empresa ue ON ue.usuario_id = s.usuario_id LEFT JOIN empresa e ON e.id = ue.empresa_id\
-      WHERE s.id = $id")
+SELECT s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email, u.perm_usuario perm, e.id empresa_id, e.nome_fantasia empresa_nome_fantasia, ue.gpe_id gpe_id \
+FROM sessao s LEFT JOIN usuario u ON u.id = s.usuario_id LEFT JOIN usuario_empresa ue ON ue.usuario_id = s.usuario_id LEFT JOIN empresa e ON e.id = ue.empresa_id \
+WHERE s.id = $id")
     const row = query.get({ id })
     return row ? row : undefined
   } catch (e) {
@@ -62,7 +63,7 @@ export function buscarSessaoDB(id) {
 
 export function apagarSessaoDB(id) {
   try {
-    const query = db.prepare('delete from sessao where id = $id')
+    const query = db.prepare('DELETE FROM sessao WHERE id = $id')
     const { changes, lastInsertRowid } = query.run({ id })
     return changes
   } catch (e) {
@@ -73,7 +74,7 @@ export function apagarSessaoDB(id) {
 }
 export function apagarSessoesExpiradasDB(now) {
   try {
-    const query = db.prepare('delete from sessao where expiracao < $now')
+    const query = db.prepare('DELETE FROM sessao WHERE expiracao < $now')
     const { changes, lastInsertRowid } = query.run({ now })
     return changes
   } catch (e) {
@@ -85,10 +86,10 @@ export function apagarSessoesExpiradasDB(now) {
 
 export function limparSessoesUsuarioDB(uid) {
   try {
-    const query = db.prepare('select id from sessao where usuario_id = $id')
+    const query = db.prepare('SELECT id FROM sessao WHERE usuario_id = $id')
     const sessoes = query.pluck().all({ id: uid })
 
-    const mutateDelete = db.prepare('delete from sessao where usuario_id = $id')
+    const mutateDelete = db.prepare('DELETE FROM sessao WHERE usuario_id = $id')
     const resDelete = mutateDelete.run({ id: uid })
 
     if (resDelete.changes < sessoes.length) console.log(`UID ${uid}: ${resDelete.changes} de ${sessoes.length} sessões apagadas.`)
@@ -104,7 +105,7 @@ export function limparSessoesUsuarioDB(uid) {
 //* Usuário //!!
 export function verificarCredenciaisUsuario(email, senha) {
   try {
-    const query = db.prepare('select * from usuario where email = $email and delecao is null')
+    const query = db.prepare('SELECT * FROM usuario WHERE email = $email AND delecao IS NULL;')
     const u = query.get({ email })
     return u && bcrypt.compareSync(senha, u.senha) ? u : undefined
   } catch (e) {
@@ -117,7 +118,7 @@ export function verificarCredenciaisUsuario(email, senha) {
 
 export function listarUsuarios() {
   try {
-    const query = db.prepare('select u.*, c.nome as criador from usuario u left join usuario c on c.id = u.criador_id')
+    const query = db.prepare('SELECT u.*, c.nome as criador FROM usuario u left join usuario c on c.id = u.criador_id')
     return query.all()
   } catch (e) {
     //TODO criar mensagens para erros conhecidos. Ex: valor inválido. Erro desconhecido: printar todo erro e retornar undefined
@@ -237,5 +238,24 @@ export function alterarSenhaUsuario(usuario) {
     }
     console.error(e)
     return { ok: false, message: e?.message ?? 'Erro no servidor. Tente mais tarde.' }
+  }
+}
+
+export function criarGPEInicial(empresa_id) {
+  try {
+    const query = db.prepare("INSERT OR IGNORE INTO grupo_permissao_empresa (empresa_id,nome,pode_iniciar_venda,pode_ver_estoque_disponivel,pode_ver_historico_vendas,pode_ver_estoque,pode_entrada_estoque,pode_saida_estoque,pode_ver_saldo,pode_transacao_receita,pode_transacao_despesa,pode_cadastrar_produto,pode_cadastrar_pessoa,pode_cadastrar_conta,pode_cadastrar_usuario)\
+VALUES ( $empresa_id ,'Básico',1,1,1,1,0,0,0,0,0,0,0,0,0),( $empresa_id ,'Gerência',1,1,1,1,1,1,0,0,1,1,1,0,0),( $empresa_id ,'Direção',1,1,1,1,1,1,1,1,1,1,1,1,1)")
+    const res = query.run({ empresa_id })
+    const select = db.prepare("SELECT id FROM grupo_permissao_empresa g WHERE g.nome = 'Direção' AND g.empresa_id = $empresa_id")
+    const direcao_id = select.pluck().get({ empresa_id })
+    return direcao_id
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      console.log({ ErroSqlite: { code: e.code, message: e.message } })
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+    return undefined
   }
 }

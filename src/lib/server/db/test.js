@@ -1,4 +1,6 @@
-import { atualizarSessaoDB } from '.'
+import { criarGPEInicial } from '.'
 
 
-atualizarSessaoDB(1)
+const res = criarGPEInicial(8)
+
+console.log(res)

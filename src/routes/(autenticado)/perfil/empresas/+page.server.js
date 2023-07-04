@@ -1,5 +1,5 @@
 import { message, superValidate } from 'sveltekit-superforms/server'
-import { db, dbTransaction } from '../../../../lib/server/db'
+import { criarGPEInicial, db, dbTransaction } from '../../../../lib/server/db'
 import { resetarSessoesUsuario, sessionCookieSettings } from '../../../../lib/server/session'
 import { criarEmpresaSchema, editarEmpresaSchema } from '../../../../lib/zodSchemas'
 
@@ -71,7 +71,7 @@ pais = $pais, uf = $uf, municipio = $municipio, bairro = $bairro, cep = $cep, en
             if (result.changes > 0) {
                 //* Atualizar sessão
                 const sessao = resetarSessoesUsuario(dono_id)
-                cookies.set('sid', sessao.sid, {  ...sessionCookieSettings, maxAge: sessao.expiracao / 1000 })
+                cookies.set('sid', sessao.sid, { ...sessionCookieSettings, maxAge: sessao.expiracao / 1000 })
 
                 //* OK
                 return message(form, "Empresa atualizada com sucesso.")
@@ -90,26 +90,42 @@ pais = $pais, uf = $uf, municipio = $municipio, bairro = $bairro, cep = $cep, en
  * @returns {{ok: boolean message: string}}
  */
 function cadastrarEmpresa(dados) {
-    return dbTransaction(d => {
-        const queryEmpresa = db.prepare(
-            "INSERT INTO empresa (dono_id, nome_fantasia, razao_social, cnpj, inscricao_estadual, codigo_regime_tributario, pais, uf, municipio, bairro, cep, endereco, telefone)\
+    return dbTransaction(() => {
+        const queryEmpresa = db.prepare("INSERT INTO empresa (dono_id, nome_fantasia, razao_social, cnpj, inscricao_estadual, codigo_regime_tributario, pais, uf, municipio, bairro, cep, endereco, telefone)\
 VALUES ($dono_id, $nome_fantasia, $razao_social, $cnpj, $inscricao_estadual, $codigo_regime_tributario, $pais, $uf, $municipio, $bairro, $cep, $endereco, $telefone)")
-        const resEmpresa = queryEmpresa.run(d)
+        const resEmpresa = queryEmpresa.run(dados)
         if (resEmpresa.changes > 0) {
-            const usuario_id = d.dono_id
+            const usuario_id = dados.dono_id
             const empresa_id = resEmpresa.lastInsertRowid
-            const perm_empresa = 99
-            const queryUsuarioEmpresa = db.prepare(
-                "INSERT INTO usuario_empresa (usuario_id, empresa_id, perm_empresa)\
-VALUES ($usuario_id, $empresa_id, $perm_empresa)")
-            const resUsuarioEmpresa = queryUsuarioEmpresa.run({ usuario_id, empresa_id, perm_empresa })
+
+            const gpe_id = criarGPEInicial(empresa_id)
+            if (!gpe_id) return { ok: false, message: "Empresa não foi criada (gpe)" }
+
+            const pessoa_id = criarColaboradorViaUsuario(usuario_id, empresa_id)
+            if (!pessoa_id) return { ok: false, message: "Empresa não foi criada (pessoa)" }
+
+            const queryUsuarioEmpresa = db.prepare("INSERT INTO usuario_empresa (usuario_id, empresa_id, gpe_id, pessoa_id)\
+VALUES ($usuario_id, $empresa_id, $gpe_id, $pessoa_id)")
+            const resUsuarioEmpresa = queryUsuarioEmpresa.run({ usuario_id, empresa_id, gpe_id, pessoa_id })
             if (resUsuarioEmpresa.changes > 0) {
                 return { ok: true, message: "Empresa criada com sucesso." }
             }
             console.log({ erro: "cadastrarEmpresa", evento: "Tabela intermediária" })
-            return { ok: false, message: "Empresa não foi criada (intermediária)" }
+            return { ok: false, message: "Empresa não foi criada (user_empr)" }
         }
         console.log({ erro: "cadastrarEmpresa", evento: "Tabela inicial" })
-        return { ok: false, message: "Empresa não foi criada (inicial)" }
-    })(dados)
-} 
+        return { ok: false, message: "Empresa não foi criada (empr)" }
+    })()
+}
+
+function criarColaboradorViaUsuario(criador_id, empresa_id) {
+    const query = db.prepare("SELECT nome, email FROM usuario WHERE id = $id")
+    const { nome, email } = query.get({ id: criador_id })
+    const mutate = db.prepare("INSERT INTO pessoa (empresa_id, criador_id, eh_colaborador, nome, email)\
+VALUES ($empresa_id, $criador_id, $eh_colaborador, $nome, $email)")
+    const res = mutate.run({ empresa_id, criador_id, eh_colaborador: 1, nome, email })
+    if (res.changes > 0) {
+        return res.lastInsertRowid
+    }
+    return undefined
+}

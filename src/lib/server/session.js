@@ -35,11 +35,15 @@ export function criarSessao(uid) {
   const expiracao = Date.now() + tempoSessaoMS
 
   // Criar e salvar sessão em BD
-  do {
+  for (let i = 0; i < 1 && !sessao; i++) {
     do { sid = randomBytes(32).toString('hex') } while (cacheSessoes.has(sid))
     criarSessaoDB(sid, expiracao, uid)
     sessao = buscarSessaoDB(sid)
-  } while (!sessao);
+  }
+  if (!sessao) {
+    console.log("Não foi possível criar a sessão!")
+    return undefined
+  }
 
   // Salvar sessão em memória
   cacheSessoes.set(sid, sessao)

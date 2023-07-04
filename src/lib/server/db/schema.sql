@@ -3,13 +3,14 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS usuario (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     nome TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
+    email TEXT NOT NULL,
     senha TEXT NOT NULL,
     perm_usuario INTEGER NOT NULL DEFAULT(0),
     criador_id INTEGER NULL,
     criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
     delecao INTEGER,
-    FOREIGN KEY (criador_id) REFERENCES usuario(id)
+    FOREIGN KEY (criador_id) REFERENCES usuario(id),
+    UNIQUE (email)
 ) STRICT;
 CREATE TABLE IF NOT EXISTS sessao (
     id TEXT NOT NULL PRIMARY KEY,
@@ -29,33 +30,9 @@ VALUES
         99
     );
 --senha123
-CREATE TABLE IF NOT EXISTS pessoa (
-    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    criador_id INTEGER NOT NULL,
-    usuario_id INTEGER UNIQUE,
-    --DUPLICADO DE USUARIO
-    nome TEXT NOT NULL,
-    email TEXT,
-    --DOCUMENTOS
-    cpf TEXT,
-    cpnj TEXT,
-    rg TEXT,
-    --OUTROS
-    apelido TEXT,
-    endereco TEXT,
-    cep TEXT,
-    --MASCULINO OU FEMININO
-    sexo TEXT,
-    --DATA NASCIMENTO
-    dn INTEGER,
-    criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
-    delecao INTEGER,
-    FOREIGN KEY (criador_id) REFERENCES usuario(id),
-    FOREIGN KEY (usuario_id) REFERENCES usuario(id)
-) STRICT;
 CREATE TABLE IF NOT EXISTS empresa (
     id INTEGER NOT NULL primary key autoincrement,
-    dono_id INTEGER NOT NULL UNIQUE,
+    dono_id INTEGER NOT NULL,
     nome_fantasia TEXT NOT NULL,
     razao_social TEXT,
     cnpj TEXT,
@@ -70,15 +47,66 @@ CREATE TABLE IF NOT EXISTS empresa (
     telefone TEXT,
     criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
     delecao INTEGER,
-    FOREIGN KEY (dono_id) REFERENCES usuario(id)
+    FOREIGN KEY (dono_id) REFERENCES usuario(id),
+    UNIQUE (dono_id)
+) STRICT;
+CREATE TABLE IF NOT EXISTS pessoa (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    empresa_id INTEGER NOT NULL,
+    criador_id INTEGER NOT NULL,
+    eh_colaborador INTEGER NOT NULL DEFAULT(0),
+    eh_fornecedor INTEGER NOT NULL DEFAULT(0),
+    eh_cliente INTEGER NOT NULL DEFAULT(0),
+    nome TEXT NOT NULL,
+    email TEXT,
+    cpf TEXT,
+    cnpj TEXT,
+    rg TEXT,
+    apelido TEXT,
+    endereco TEXT,
+    cep TEXT,
+    sexo TEXT,
+    dn INTEGER,
+    criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+    delecao INTEGER,
+    FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    FOREIGN KEY (criador_id) REFERENCES usuario(id),
+    UNIQUE (cpf, empresa_id),
+    UNIQUE (cnpj, empresa_id)
+) STRICT;
+CREATE TABLE IF NOT EXISTS grupo_permissao_empresa (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    empresa_id INTEGER NOT NULL,
+    nome TEXT NOT NULL,
+    pode_iniciar_venda INTEGER NOT NULL DEFAULT(0),
+    pode_ver_estoque_disponivel INTEGER NOT NULL DEFAULT(0),
+    pode_ver_historico_vendas INTEGER NOT NULL DEFAULT(0),
+    pode_ver_estoque INTEGER NOT NULL DEFAULT(0),
+    pode_entrada_estoque INTEGER NOT NULL DEFAULT(0),
+    pode_saida_estoque INTEGER NOT NULL DEFAULT(0),
+    pode_ver_saldo INTEGER NOT NULL DEFAULT(0),
+    pode_transacao_receita INTEGER NOT NULL DEFAULT(0),
+    pode_transacao_despesa INTEGER NOT NULL DEFAULT(0),
+    pode_cadastrar_produto INTEGER NOT NULL DEFAULT(0),
+    pode_cadastrar_pessoa INTEGER NOT NULL DEFAULT(0),
+    pode_cadastrar_conta INTEGER NOT NULL DEFAULT(0),
+    pode_cadastrar_usuario INTEGER NOT NULL DEFAULT(0),
+    criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+    delecao INTEGER,
+    FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    UNIQUE (empresa_id, nome)
 ) STRICT;
 CREATE TABLE IF NOT EXISTS usuario_empresa(
     usuario_id INTEGER NOT NULL,
     empresa_id INTEGER NOT NULL,
-    perm_empresa INTEGER NOT NULL DEFAULT(0),
+    pessoa_id INTEGER NOT NULL,
+    gpe_id INTEGER NOT NULL DEFAULT(0),
     criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
     delecao INTEGER,
     PRIMARY KEY (usuario_id, empresa_id),
     FOREIGN KEY (usuario_id) REFERENCES usuario(id),
-    FOREIGN KEY (empresa_id) REFERENCES empresa(id)
+    FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    FOREIGN KEY (pessoa_id) REFERENCES pessoa(id),
+    FOREIGN KEY (gpe_id) REFERENCES grupo_permissao_empresa(id),
+    UNIQUE (pessoa_id)
 ) STRICT;
