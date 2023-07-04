@@ -94,7 +94,17 @@
           />
         </div>
         <div class="col-span-12">
-          <InputSelect label="Permissão na Aplicação" name="perm_usuario" bind:value={$form.perm_usuario} options={permOptions} error={$errors.perm_usuario} errorSpacing required />
+          <InputSelect
+            label="Grupo de Permissão"
+            name="gpe_id"
+            bind:value={$form.gpe_id}
+            options={permOptions}
+            getOptionValue={(option) => option.id}
+            getOptionLabel={(option) => option.nome}
+            error={$errors.gpe_id}
+            errorSpacing
+            required
+          />
         </div>
       </section>
     {:else}

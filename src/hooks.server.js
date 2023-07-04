@@ -3,6 +3,7 @@ import { Logger } from '$lib/logger'
 import { dev } from '$app/environment'
 import { sequence } from '@sveltejs/kit/hooks'
 import { redirect } from '@sveltejs/kit'
+import { buscarEmpresa, buscarGPE } from './lib/server/cache'
 
 async function iniciarLog({ event, resolve }) {
   event.locals.log = new Logger(event, dev)
@@ -18,7 +19,17 @@ async function lerCookies({ event, resolve }) {
   const sid = cookies.get('sid')
   locals.sessao = sid ? buscarSessao(sid) : null;
 
-  if (!locals.sessao) { cookies.delete('sid', { path: '/' }) }
+  if (!locals.sessao) {
+    //* Sessão Expirada: comer cookie
+    cookies.delete('sid', { path: '/' })
+  }
+  else {
+    //* Sessão Válida: Carregar dados do Cache
+    //? EMPRESA + GRUPO DE PERMISSÃO NA EMPRESA
+    locals.sessao.empresa = buscarEmpresa(locals.sessao.empresa_id)
+    locals.sessao.gpe = buscarGPE(locals.sessao.gpe_id)
+    // locals.sessao.pessoa = buscarPessoa(locals.sessao.pessoa_id)
+  }
 
   return resolve(event)
 }

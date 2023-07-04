@@ -8,17 +8,17 @@
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import CelulaStatus from './CelulaStatus.svelte'
   export let data
-
+  const GPEs = new Map(data.permOptions.map((v, i) => [v.id, v]))
   let columns = [
-    { accessorKey: 'id', header: 'ID', cell: (info) => info.getValue().toString() },
+    { accessorKey: 'id', header: 'ID' },
     { accessorKey: 'associacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
     { accessorKey: 'desativacao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
-    { accessorKey: 'nome', header: 'Nome', cell: (info) => info.getValue() },
-    { accessorKey: 'email', header: 'E-mail', cell: (info) => info.getValue() },
-    { accessorKey: 'perm_empresa', header: 'Permissão', cell: (info) => data.permOptions.get(info.getValue())?.label },
-    { accessorKey: 'criador_nome', header: 'Criador', cell: (info) => info.getValue() },
-    { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false }
+    { accessorKey: 'nome', header: 'Nome' },
+    { accessorKey: 'email', header: 'E-mail' },
+    { accessorKey: 'gpe_id', header: 'Permissão', cell: (info) => GPEs.get(info.getValue()).nome },
+    { accessorKey: 'criador_nome', header: 'Criador' },
+    { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original, permOptions: GPEs }), enableSorting: false },
+    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original, permOptions: GPEs }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
 

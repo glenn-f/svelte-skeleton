@@ -38,6 +38,16 @@ export const addUsuarioSchema = usuarioSchema.omit({
   return obj
 })
 
+export const addUsuarioEmpresaSchema = usuarioSchema.omit({
+  id: true, perm_usuario: true
+}).extend({
+  gpe_id: z.coerce.number().int(),
+  senha_repetir: usuarioSchema.shape.senha,
+}).refine((obj) => obj.senha === obj.senha_repetir, {
+  message: "As senhas não correspondem",
+  path: ["senha_repetir"],
+})
+
 export const editUsuarioSchema = usuarioSchema.extend({
   senha: stringUndefined(usuarioSchema.shape.senha.optional()),
   senha_repetir: stringUndefined(usuarioSchema.shape.senha.optional()),

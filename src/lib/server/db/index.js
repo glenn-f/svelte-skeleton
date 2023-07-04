@@ -49,9 +49,8 @@ export function criarSessaoDB(id, expiracao, usuarioId) {
 export function buscarSessaoDB(id) {
   try {
     const query = db.prepare("\
-SELECT s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email, u.perm_usuario perm, e.id empresa_id, e.nome_fantasia empresa_nome_fantasia, ue.gpe_id gpe_id \
-FROM sessao s LEFT JOIN usuario u ON u.id = s.usuario_id LEFT JOIN usuario_empresa ue ON ue.usuario_id = s.usuario_id LEFT JOIN empresa e ON e.id = ue.empresa_id \
-WHERE s.id = $id")
+SELECT s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email, u.perm_usuario perm, ue.empresa_id, ue.pessoa_id, ue.gpe_id \
+FROM sessao s LEFT JOIN usuario u ON u.id = s.usuario_id LEFT JOIN usuario_empresa ue ON ue.usuario_id = s.usuario_id WHERE s.id = $id")
     const row = query.get({ id })
     return row ? row : undefined
   } catch (e) {
@@ -133,13 +132,13 @@ const criarUsuarioEPessoa = dbTransaction((usuario) => {
   const query = db.prepare(sql)
   const { lastInsertRowid: usuario_id, changes } = query.run(dados)
   if (changes == 0) throw new Error("Usuário não foi criado")
-  let { criador_id, nome, email } = dados
-  let [dados2, colunas2, valores2] = sqlValor({ criador_id, usuario_id, nome, email })
-  let sql2 = `INSERT INTO pessoa (${colunas2}) VALUES (${valores2})`
-  const query2 = db.prepare(sql2)
-  const { lastInsertRowid: pessoa_id, changes: changes2 } = query2.run(dados2)
-  if (changes2 == 0) throw new Error("Pessoa não foi criada")
-  return { pessoa_id, usuario_id }
+  // let { criador_id, nome, email } = dados
+  // let [dados2, colunas2, valores2] = sqlValor({ criador_id, usuario_id, nome, email })
+  // let sql2 = `INSERT INTO pessoa (${colunas2}) VALUES (${valores2})`
+  // const query2 = db.prepare(sql2)
+  // const { lastInsertRowid: pessoa_id, changes: changes2 } = query2.run(dados2)
+  // if (changes2 == 0) throw new Error("Pessoa não foi criada")
+  return { usuario_id }
 })
 
 const alterarUsuarioEPessoa = dbTransaction((usuario) => {
