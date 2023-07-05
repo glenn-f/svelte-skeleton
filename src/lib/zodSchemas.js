@@ -9,7 +9,7 @@ function deleteUndefined(obj) {
 }
 
 function stringUndefined(schema) {
-  return z.preprocess(senha => senha || undefined, schema)
+  return z.preprocess(text => text === '' ? undefined : text, schema)
 }
 
 //* Esquemas genéricos
@@ -47,6 +47,19 @@ export const addUsuarioEmpresaSchema = usuarioSchema.omit({
   message: "As senhas não correspondem",
   path: ["senha_repetir"],
 })
+
+export const editUsuarioEmpresaSchema = usuarioSchema.omit({
+  perm_usuario: true
+}).extend({
+  nome: usuarioSchema.shape.nome.optional(),
+  email: usuarioSchema.shape.email.optional(),
+  senha: stringUndefined(usuarioSchema.shape.senha.optional()),
+  senha_repetir: stringUndefined(usuarioSchema.shape.senha.optional()),
+  gpe_id: z.coerce.number().int(),
+}).refine((obj) => obj.senha === obj.senha_repetir, {
+  message: "As senhas não correspondem",
+  path: ["senha_repetir"],
+}).transform(deleteUndefined)
 
 export const editUsuarioSchema = usuarioSchema.extend({
   senha: stringUndefined(usuarioSchema.shape.senha.optional()),

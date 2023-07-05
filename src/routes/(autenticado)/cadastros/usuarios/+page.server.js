@@ -2,10 +2,12 @@ import { PERM_APP } from '$lib/globals';
 import { alterarStatusUsuarioDB, alterarUsuario, criarUsuario, listarUsuarios, db } from '$lib/server/db';
 import { addUsuarioEmpresaSchema, deleteIdSchema, editUsuarioSchema } from '$lib/zodSchemas';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
+import { toggleStatusUsuarioEmpresa, alterarUsuarioEmpresa, criarUsuarioEmpresa, dbInsert, dbTransaction, encriptar } from '../../../../lib/server/db/index.js';
+import { editUsuarioEmpresaSchema } from '../../../../lib/zodSchemas.js';
 
 export async function load({ locals }) {
   const form = await superValidate(addUsuarioEmpresaSchema)
-  const { empresa_id: eid, empresa_perm, gpe_id, uid } = locals.sessao
+  const { empresa_id: eid } = locals.sessao
 
   //* Pegar usuários desta empresa
   const query = db.prepare('SELECT ue.gpe_id, ue.criacao associacao, ue.delecao desativacao, u.id, u.nome, u.email, u.perm_usuario, u.criador_id, c.nome criador_nome FROM usuario u JOIN usuario_empresa ue ON ue.usuario_id = u.id left join usuario c on c.id = u.criador_id WHERE ue.empresa_id = $eid')
@@ -16,64 +18,56 @@ export async function load({ locals }) {
   return { usuarios, form, permOptions: gpes };
 };
 
+
+
 export const actions = {
   adicionar: async ({ request, locals }) => {
     const form = await superValidate(request, addUsuarioEmpresaSchema);
     if (form.valid) {
-      const { senha, gpe_id, nome, email } = form.data
       const criador_id = locals.sessao.uid
-      const perm_usuario = 0 // usuário criado para uma empresa tem nível de permissão 0
-      console.log({ senha, gpe_id, nome, email, criador_id, perm_usuario })
-      return message(form, 'Calmou', { status: 500 })
-      const res = criarUsuario({ criador_id, ...form.data })
-      if (res.ok) { return message(form, res.message) }
-      //* Erro no DB
-      const camposMsg = res.fieldMessage ?? {}
-      for (const campo in camposMsg) {
-        const campoMsg = camposMsg[campo];
-        setError(form, campo, campoMsg)
+      const empresa_id = locals.sessao.empresa_id
+      const { nome, email, senha, gpe_id } = form.data
+      const res = criarUsuarioEmpresa({ nome, email, senha, gpe_id, criador_id, empresa_id })
+      if (res.ok) { return message(form, "Usuário criado com sucesso") }
+      if (res.errors) {
+        for (let [field, text] of Object.entries(res.errors)) setError(form, field, text)
+        return message(form, 'Houve problemas em alguns campos', { status: 400 })
       }
-      return message(form, res.message)
+      return message(form, 'Erro no servidor. Não foi possível criar o usuário', { status: 500 })
     }
     return message(form, 'Erro no preenchimento dos campos')
   },
 
   editar: async ({ request, locals }) => {
-    const form = await superValidate(request, editUsuarioSchema);
+    const form = await superValidate(request, editUsuarioEmpresaSchema);
     if (form.valid) {
-      const criador_id = locals.sessao.uid
-      const res = alterarUsuario({ criador_id, ...form.data })
-      if (res.ok) { return message(form, res.message) }
-      const camposMsg = res.fieldMessage ?? {}
-      for (const campo in camposMsg) {
-        const campoMsg = camposMsg[campo];
-        setError(form, campo, campoMsg)
+      const { id, nome, email, senha, gpe_id } = form.data
+      const eid = locals.sessao.empresa_id
+      console.log({ id, nome, email, senha, gpe_id })
+      const res = alterarUsuarioEmpresa({ id, nome, email, senha, gpe_id, eid })
+      if (res.ok) { return message(form, "Usuário alterado com sucesso") }
+      if (res.errors) {
+        for (let [field, text] of Object.entries(res.errors)) setError(form, field, text)
+        return message(form, 'Houve problemas em alguns campos', { status: 400 })
       }
-      return message(form, res.message)
+      return message(form, 'Erro no servidor. Não foi possível alterar o usuário', { status: 500 })
     }
     return message(form, 'Erro no preenchimento dos campos')
   },
 
-  apagar: async ({ request, locals }) => {
-    const form = await superValidate(request, deleteIdSchema);
-    console.log(form)
-    if (form.valid) {
-      const res = alterarStatusUsuarioDB({ uid: locals.sessao.uid, id: form.data.id })
-      if (res.ok) { return message(form, res.message) }
-      //* Erro no banco
-      return message(form, res.message, { status: 500 })
-    }
-    return message(form, 'Usuário inválido', { status: 400 })
-  },
   alternarStatus: async ({ request, locals }) => {
     const form = await superValidate(request, deleteIdSchema);
-    console.log(form)
     if (form.valid) {
-      const res = alterarStatusUsuarioDB({ uid: locals.sessao.uid, id: form.data.id })
+      const uid = form.data.id
+      const eid = locals.sessao.empresa_id
+      const res = toggleStatusUsuarioEmpresa({ uid, eid })
       if (res.ok) { return message(form, res.message) }
-      //* Erro no banco
-      return message(form, res.message, { status: 500 })
+      if (res.errors) {
+        for (let [field, text] of Object.entries(res.errors)) setError(form, field, text)
+        return message(form, 'Houve problemas em alguns campos', { status: 400 })
+      }
+      return message(form, 'Erro no servidor. Não foi possível alterar o usuário', { status: 500 })
     }
-    return message(form, 'Usuário inválido', { status: 400 })
+    return message(form, 'Erro no preenchimento dos campos')
   }
 }

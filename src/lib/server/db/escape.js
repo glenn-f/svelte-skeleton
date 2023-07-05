@@ -54,3 +54,20 @@ export function sqlTabela(tabela) {
   if (typeof coluna == "string") return `'${coluna.replace(`'`, `''`)}'`
   else throw new Error("Apenas strings são aceitas nesta função.")
 } */
+
+export function sqlValorUpdate(obj) {
+  const novoObj = {}
+  let stringKV = []
+  //* criar novo objeto com valores formatados para os tipos de dados válidos em SQLite3
+  for (const chave in obj) {
+    const valor = obj[chave]
+    //* se algum item do objeto inicial for undefined, não inserir no novo objeto *Regra de Negócio*
+    if (valor === undefined) continue;
+    novoObj[chave] = sqlValorInterna(valor)
+    stringKV.push(`${chave} = $${chave}`)
+  }
+  //* criar strings de colunas e valores para o código SQL conforme as colunas do novoObj (prepare sql statement)
+  const setKV = stringKV.join(" , ")
+
+  return [novoObj, setKV]
+}

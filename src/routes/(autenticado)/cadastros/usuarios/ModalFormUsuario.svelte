@@ -22,6 +22,7 @@
 
   formData.data = { ...initialData }
   formData.errors = {}
+  console.log(initialData)
 
   const { form, errors, enhance, reset, message } = superForm(formData, {
     resetForm: true,
@@ -73,26 +74,29 @@
 
     {#if modo != 'apagar'}
       <section class="grid grid-cols-12 gap-1 px-3">
-        <div class="col-span-12">
-          <InputText label="Nome Completo" placeholder="Ex: Enzo Gabriel" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
-        </div>
-        <div class="col-span-12">
-          <InputEmail label="E-mail" placeholder="Ex: enzo.gabriel@email.com" name="email" bind:value={$form.email} error={$errors.email} errorSpacing required />
-        </div>
-        <div class="col-span-6">
-          <InputPassword label="Senha" placeholder={pw_placeholder} name="senha" bind:value={$form.senha} error={$errors.senha} errorSpacing required={modo == 'adicionar'} />
-        </div>
-        <div class="col-span-6">
-          <InputPassword
-            label="Repetir Senha"
-            placeholder={pw_placeholder}
-            name="senha_repetir"
-            bind:value={$form.senha_repetir}
-            error={$errors.senha_repetir}
-            errorSpacing
-            required={modo == 'adicionar'}
-          />
-        </div>
+        {#if initialData.perm_usuario == 0}
+          <div class="col-span-12">
+            <InputText label="Nome Completo" placeholder="Ex: Enzo Gabriel" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
+          </div>
+          <div class="col-span-12">
+            <InputEmail label="E-mail" placeholder="Ex: enzo.gabriel@email.com" name="email" bind:value={$form.email} error={$errors.email} errorSpacing required />
+          </div>
+          <div class="col-span-6">
+            <InputPassword label="Senha" placeholder={pw_placeholder} name="senha" bind:value={$form.senha} error={$errors.senha} errorSpacing required={modo == 'adicionar'} />
+          </div>
+          <div class="col-span-6">
+            <InputPassword
+              label="Repetir Senha"
+              placeholder={pw_placeholder}
+              name="senha_repetir"
+              bind:value={$form.senha_repetir}
+              error={$errors.senha_repetir}
+              errorSpacing
+              required={modo == 'adicionar'}
+            />
+          </div>
+        {/if}
+
         <div class="col-span-12">
           <InputSelect
             label="Grupo de Permissão"
@@ -122,11 +126,10 @@
         <HelperMessage error={$message} spaceHolding={true} />
       {/if}
       <div class="flex gap-2">
-        {#if modo != 'apagar'}
-          <button type="submit" class="btn variant-filled-primary">Enviar</button>
-        {:else}
-          <button type="submit" class="btn variant-filled-error" name="id" value={initialData.id}>Confirmar</button>
+        {#if modo == 'editar'}
+          <input type="hidden" name="id" value={initialData.id} />
         {/if}
+        <button type="submit" class="btn variant-filled-primary">Enviar</button>
         <button type="button" class="btn variant-filled-secondary" on:click={onClose}>Cancelar</button>
       </div>
     </div>

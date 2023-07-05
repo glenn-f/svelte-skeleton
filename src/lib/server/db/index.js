@@ -2,7 +2,7 @@ import Database from 'better-sqlite3'
 import bcrypt from 'bcrypt'
 import path from 'node:path'
 import url from 'url';
-import { sqlValor } from './escape';
+import { sqlTabela, sqlValor, sqlValorUpdate } from './escape';
 const env = await import("$env/dynamic/private").then(r => r.env).catch(e => process.env); //eslint-disable-line
 
 const __filename = url.fileURLToPath(import.meta.url);
@@ -14,7 +14,7 @@ const commit = db.prepare('COMMIT');
 const rollback = db.prepare('ROLLBACK');
 
 export function encriptar(text, rounds = 10) {
-  return bcrypt.hashSync(text, rounds)
+  return text ? bcrypt.hashSync(text, rounds) : undefined
 }
 
 // Higher order function - returns a function that always runs in a transaction
@@ -126,6 +126,70 @@ export function listarUsuarios() {
   }
 }
 
+export function dbInsert(tabela, dados) {
+  tabela = sqlTabela(tabela)
+  const [valores, colunas, templateValores] = sqlValor(dados)
+  const mutation = db.prepare(`INSERT INTO ${tabela} (${colunas}) VALUES (${templateValores})`)
+  return mutation.run(valores)
+}
+
+/**
+ * @param {{nome:string email:string senha:string criador_id:number empresa_id:number gpe_id:number}} dados
+ * @returns {number} usuario_empresa.id
+ */
+export function criarUsuarioEmpresa({ nome, email, senha, criador_id, empresa_id, gpe_id }) {
+  begin.run();
+  try {
+    senha = encriptar(senha)
+    const perm_usuario = 0 // usuário criado para uma empresa tem nível de permissão 0
+    const resUsuario = dbInsert('usuario', { nome, email, senha, perm_usuario, criador_id })
+    if (resUsuario.changes === 0) throw new Error("Não foi possível criar o usuário")
+
+    const eh_colaborador = 1 // criado como colaborador para aparecer na listagem de vendedor e outras
+    const resPessoa = dbInsert('pessoa', { nome, email, eh_colaborador, empresa_id, criador_id })
+    if (resPessoa.changes === 0) throw new Error("Não foi possível criar a pessoa")
+
+    const pessoa_id = resPessoa.lastInsertRowid
+    const usuario_id = resUsuario.lastInsertRowid
+    const resUsuarioEmpresa = dbInsert('usuario_empresa', { usuario_id, empresa_id, pessoa_id, gpe_id })
+    if (resUsuarioEmpresa.changes === 0) throw new Error("Não foi possível criar a relação usuário-empresa")
+
+    commit.run();
+    return { ok: true, id: resUsuarioEmpresa.lastInsertRowid }
+  } catch (e) {
+    rollback.run();
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
+        return { ok: false, errors: { email: "Este e-mail já está em uso" } }
+      } else {
+        console.log({ ErroSqlite: { code: e.code, message: e.message } })
+      }
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+  } finally {
+    if (db.inTransaction) {
+      rollback.run();
+      return { ok: false }
+    }
+  }
+}
+
+export const alterarUsuarioEmpresa = dbTransaction((usuario) => {
+  const { id, nome, email, senha, gpe_id, eid } = usuario
+  if (nome || email || senha) {
+    const [dados, colunas] = sqlValorUpdate({ nome, email, senha: encriptar(senha) })
+    const query = db.prepare(`UPDATE usuario SET ${colunas} WHERE id = $id `)
+    const resUsuario = query.run({ ...dados, id })
+    if (resUsuario.changes === 0) throw new Error("Não foi possível atualizar o usuario")
+  }
+  const query = db.prepare("UPDATE usuario_empresa SET gpe_id = $gpe_id WHERE usuario_id = $id AND empresa_id = $eid")
+  const resUE = query.run({ id, gpe_id, eid })
+  if (resUE.changes === 0) throw new Error("Não foi possível atualizar o usuario")
+  return { ok: true }
+})
+
 const criarUsuarioEPessoa = dbTransaction((usuario) => {
   let [dados, colunas, valores] = sqlValor({ ...usuario, senha: bcrypt.hashSync(usuario.senha, 10), senha_repetir: undefined })
   let sql = `INSERT INTO usuario (${colunas}) VALUES (${valores})`
@@ -141,9 +205,6 @@ const criarUsuarioEPessoa = dbTransaction((usuario) => {
   return { usuario_id }
 })
 
-const alterarUsuarioEPessoa = dbTransaction((usuario) => {
-  throw new Error("Em construção")
-})
 
 export function criarUsuario(usuario) {
   try {
@@ -256,5 +317,37 @@ VALUES ( $empresa_id ,'Básico',1,1,1,1,0,0,0,0,0,0,0,0,0),( $empresa_id ,'Gerê
     }
     console.error(e)
     return undefined
+  }
+}
+
+export function toggleStatusUsuarioEmpresa({ eid, uid }) {
+  try {
+    const query = db.prepare("SELECT delecao FROM usuario_empresa WHERE usuario_id = $uid AND empresa_id = $eid")
+    const usuario = query.get({ eid, uid })
+    if (usuario) {
+      const agora = Date.now()
+      let query, res, message
+      if (usuario.delecao) {
+        query = db.prepare("UPDATE usuario_empresa SET delecao = NULL WHERE usuario_id = $uid AND empresa_id = $eid")
+        res = query.run({ uid, eid })
+        message = 'Usuário ativado com sucesso'
+      } else {
+        query = db.prepare("UPDATE usuario_empresa SET delecao = $agora WHERE usuario_id = $uid AND empresa_id = $eid")
+        res = query.run({ uid, eid, agora })
+        message = 'Usuário desativado com sucesso'
+      }
+      if (res.changes == 0) { return { ok: false, message: "O status não foi alterado" } }
+      return { ok: true, message }
+    } else {
+      return { ok: false, message: "Permissão negada" }
+    }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      console.log({ ErroSqlite: { code: e.code, message: e.message } })
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+    return { ok: false, message: 'Erro no servidor. Tente mais tarde.' }
   }
 }

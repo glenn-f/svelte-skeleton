@@ -8,7 +8,7 @@
     e.preventDefault()
     form.requestSubmit()
   }
-  const checked = !initialData.delecao
+  const checked = !initialData.desativacao
 </script>
 
 <div class="flex flex-nowrap gap-3">

@@ -10,7 +10,8 @@
     senha_repetir: undefined,
     nome: initialData.nome,
     email: initialData.email,
-    perm_usuario: initialData.perm_usuario
+    perm_usuario: initialData.perm_usuario,
+    gpe_id: initialData.gpe_id
   }
 
   function handleEditar() {
@@ -30,7 +31,7 @@
 </script>
 
 <div class="flex flex-nowrap gap-3">
-  <IconButton href="usuarios/1" icon="fa6-solid:arrow-up-right-from-square">Abrir Detalhes</IconButton>
+  <!-- <IconButton href="usuarios/1" icon="fa6-solid:arrow-up-right-from-square">Abrir Detalhes</IconButton> -->
   <IconButton on:click={handleEditar} icon="fa6-solid:pen-to-square">Editar</IconButton>
-  <IconButton href="usuarios/1" icon="fa6-solid:lock">Alterar Senha</IconButton>
+  <!-- <IconButton href="usuarios/1" icon="fa6-solid:lock">Alterar Senha</IconButton> -->
 </div>
