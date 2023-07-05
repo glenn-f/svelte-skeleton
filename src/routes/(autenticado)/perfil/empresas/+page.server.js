@@ -2,6 +2,7 @@ import { message, superValidate } from 'sveltekit-superforms/server'
 import { criarGPEInicial, db, dbTransaction } from '../../../../lib/server/db'
 import { resetarSessoesUsuario, sessionCookieSettings } from '../../../../lib/server/session'
 import { criarEmpresaSchema, editarEmpresaSchema } from '../../../../lib/zodSchemas'
+import { resetarEmpresa } from '../../../../lib/server/cache'
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ locals }) {
@@ -70,6 +71,7 @@ pais = $pais, uf = $uf, municipio = $municipio, bairro = $bairro, cep = $cep, en
             const result = query.run({ ...form.data })
             if (result.changes > 0) {
                 //* Atualizar sessão
+                const empresa = resetarEmpresa(form.data.id)
                 const sessao = resetarSessoesUsuario(dono_id)
                 cookies.set('sid', sessao.sid, { ...sessionCookieSettings, maxAge: sessao.expiracao / 1000 })
 
