@@ -1,5 +1,5 @@
 import { listarUsuarios } from '$lib/server/db';
-import { PERM_APP } from '$lib/globals';
+import { TIPO_USUARIO } from '$lib/globals';
 import { setError, superValidate, message } from 'sveltekit-superforms/server';
 import { criarUsuario } from '$lib/server/db/index.js';
 import { addUsuarioSchema } from '$lib/zodSchemas.js';
@@ -9,7 +9,7 @@ import { alterarUsuario, alterarStatusUsuarioDB } from '../../../../lib/server/d
 export async function load() {
   const form = await superValidate(addUsuarioSchema)
   const usuarios = listarUsuarios();
-  return { usuarios, form, permOptions: PERM_APP };
+  return { usuarios, form, permOptions: TIPO_USUARIO };
 };
 
 export const actions = {

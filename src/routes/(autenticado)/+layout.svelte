@@ -4,7 +4,7 @@
   import { DevAccordion, Menu, MenuItem } from '$lib/components'
   import { AppBar, AppShell, LightSwitch } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
-  import { PERM_APP_MASTER } from '$lib/globals'
+  import { TIPO_USUARIO_ADMINISTRADOR } from '$lib/globals'
 
   export let data
   onMount(() => {
@@ -29,7 +29,7 @@
         </a>
       </svelte:fragment>
       <div class="flex flex-row gap-1">
-        {#if data.sessao?.perm == PERM_APP_MASTER}
+        {#if data.sessao?.perm == TIPO_USUARIO_ADMINISTRADOR}
           <Menu titulo="Administração" icon="fa6-solid:crown">
             <MenuItem href="/admin/usuarios" titulo="Usuários" icon="fa-solid:user-cog" />
             <MenuItem href="/admin/componentes" titulo="Componentes" />
@@ -128,7 +128,7 @@
             </a>
           </div>
           <div class="italic text-primary-700-200-token text-xs text-ellipsis whitespace-nowrap flex flex-nowrap items-center gap-1">
-            {#if data?.sessao?.perm == PERM_APP_MASTER}
+            {#if data?.sessao?.perm == TIPO_USUARIO_ADMINISTRADOR}
               <Icon icon="fa6-solid:crown" />
             {/if}
             <span>

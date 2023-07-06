@@ -76,14 +76,14 @@
 
     <section class="grid grid-cols-12 gap-1 px-3">
       <Label label="Associação com a Empresa" labelClass="col-span-7 flex flex-col items-center" error={$errors.tipo_associacao} required>
-        <RadioGroup active='bg-primary-500' background="variant-glass" hover="variant-soft hover:variant-soft-primary">
+        <RadioGroup active="bg-primary-500" background="variant-glass" hover="variant-soft hover:variant-soft-primary">
           <RadioItem bind:group={$form.tipo_associacao} name="tipo_associacao" value={1}>Colaborador</RadioItem>
           <RadioItem bind:group={$form.tipo_associacao} name="tipo_associacao" value={2}>Cliente</RadioItem>
           <RadioItem bind:group={$form.tipo_associacao} name="tipo_associacao" value={3}>Fornecedor</RadioItem>
         </RadioGroup>
       </Label>
       <Label label="Tipo de Pessoa" labelClass="col-span-5 flex flex-col items-center" error={$errors.tipo_pessoa} required>
-        <RadioGroup active='bg-primary-500' background="variant-glass" hover="variant-soft hover:variant-soft-primary">
+        <RadioGroup active="bg-primary-500" background="variant-glass" hover="variant-soft hover:variant-soft-primary">
           <RadioItem title="Pessoa Física" bind:group={$form.tipo_pessoa} name="tipo_pessoa" value={1}>Física</RadioItem>
           <RadioItem title="Pessoa Jurídica" bind:group={$form.tipo_pessoa} name="tipo_pessoa" value={2}>Jurídica</RadioItem>
         </RadioGroup>
@@ -104,13 +104,15 @@
         <InputText label="RG" name="rg" bind:value={$form.rg} error={$errors.rg} errorSpacing required />
       </div>
       <Label label="Sexo Biológico" labelClass="col-span-6 flex flex-col items-center" error={$errors.sexo} required>
-        <RadioGroup active='bg-primary-500' background="variant-glass" hover="variant-soft hover:variant-soft-primary">
+        <RadioGroup active="bg-primary-500" background="variant-glass" hover="variant-soft hover:variant-soft-primary">
           <RadioItem bind:group={$form.sexo} name="sexo" value={1}>Masculino</RadioItem>
           <RadioItem bind:group={$form.sexo} name="sexo" value={2}>Feminino</RadioItem>
         </RadioGroup>
       </Label>
       <div class="col-span-3">
-        <InputMask mask="00/00/0000" label="Data de Nascimento" name="dn" bind:value={$form.dn} error={$errors.dn} errorSpacing required />
+        <Label label="Data de Nascimento" errorSpacing >
+          <input class='input' pattern="\d{4}-\d{2}-\d{2}" min={'2023-07-01'} max={'2023-07-10'} type="date" name="dn" />
+        </Label>
       </div>
       <div class="col-span-3">
         <InputMask mask="00000-000" label="CEP" name="cep" bind:value={$form.cep} error={$errors.cep} errorSpacing required />

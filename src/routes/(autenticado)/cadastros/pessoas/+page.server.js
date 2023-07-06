@@ -1,4 +1,4 @@
-import { PERM_APP } from '$lib/globals';
+import { TIPO_USUARIO } from '$lib/globals';
 import { alterarStatusUsuarioDB, alterarUsuario, criarUsuario, listarUsuarios, db } from '$lib/server/db';
 import { addUsuarioEmpresaSchema, deleteIdSchema, editUsuarioSchema } from '$lib/zodSchemas';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
