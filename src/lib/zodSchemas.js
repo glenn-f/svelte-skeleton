@@ -47,7 +47,10 @@ export const pessoaSchema = z.object({
   dn: zDate.or(zOptionalInput),
 })
 
-export const criarPessoaSchema = pessoaSchema.omit({ id: true, empresa_id: true, criador_id: true })
+export const criarPessoaSchema = pessoaSchema.omit({ id: true, empresa_id: true, criador_id: true }).extend({
+  tipo_pessoa: pessoaSchema.shape.tipo_pessoa.default(PESSOA_FISICA),
+  tipo_relacionamento: pessoaSchema.shape.tipo_relacionamento.default(RELACIONAMENTO_CLIENTE),
+})
 export const editarPessoaSchema = pessoaSchema.omit({ empresa_id: true, criador_id: true })
 
 //* Esquemas de Usuário

@@ -3,10 +3,12 @@ import { alterarStatusUsuarioDB, alterarUsuario, criarUsuario, listarUsuarios, d
 import { addUsuarioEmpresaSchema, deleteIdSchema, editUsuarioSchema } from '$lib/zodSchemas';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
 import { toggleStatusUsuarioEmpresa, alterarUsuarioEmpresa, criarUsuarioEmpresa, dbInsert, dbTransaction, encriptar } from '../../../../lib/server/db/index.js';
-import { editUsuarioEmpresaSchema } from '../../../../lib/zodSchemas.js';
+import { criarPessoaSchema, editUsuarioEmpresaSchema, editarPessoaSchema } from '../../../../lib/zodSchemas.js';
+import { PESSOA_JURIDICA } from '../../../../lib/globals.js';
 
 export async function load({ locals }) {
-  const form = await superValidate(addUsuarioEmpresaSchema)
+  const formAdicionar = await superValidate({ tipo_pessoa: PESSOA_JURIDICA }, criarPessoaSchema)
+  const formEditar = await superValidate(editarPessoaSchema)
   const { empresa_id: eid } = locals.sessao
 
   //* Pegar usuários desta empresa
@@ -15,14 +17,14 @@ export async function load({ locals }) {
 
   const queryGPE = db.prepare('SELECT * FROM grupo_permissao_empresa WHERE empresa_id = $eid AND delecao IS NULL')
   const gpes = queryGPE.all({ eid })
-  return { usuarios, form, permOptions: gpes };
+  return { usuarios, formAdicionar, formEditar, permOptions: gpes };
 };
 
 
 
 export const actions = {
   adicionar: async ({ request, locals }) => {
-    const form = await superValidate(request, addUsuarioEmpresaSchema);
+    const form = await superValidate(request, criarPessoaSchema);
     if (form.valid) {
       const criador_id = locals.sessao.uid
       const empresa_id = locals.sessao.empresa_id
@@ -39,7 +41,7 @@ export const actions = {
   },
 
   editar: async ({ request, locals }) => {
-    const form = await superValidate(request, editUsuarioEmpresaSchema);
+    const form = await superValidate(request, editarPessoaSchema);
     if (form.valid) {
       const { id, nome, email, senha, gpe_id } = form.data
       const eid = locals.sessao.empresa_id

@@ -21,12 +21,6 @@
    * @type {Map<number, {label: string}>} */
   export let permOptions
   /** Preenchimento inicial do formulário. Varia de acordo com o `modo` deste componente*/
-  export let initialData = { senha: '', senha_repetir: '', nome: '', email: '', perm_usuario: 0 }
-
-  formData.data = { ...initialData }
-  formData.errors = {}
-  console.log(initialData)
-
   const { form, errors, enhance, reset, message } = superForm(formData, {
     resetForm: true,
     taintedMessage: false,
@@ -64,9 +58,9 @@
   }
 
   function onClose() {
+    reset()
     modalStore.close()
   }
-  console.log(initialData)
 </script>
 
 <form {action} method="POST" use:enhance>
@@ -74,13 +68,13 @@
     <svelte:fragment slot="header">
       <h2 class="h2">{titulo} Pessoa</h2>
     </svelte:fragment>
-
+    <!-- <SuperDebug data={$form} /> -->
     <section class="grid grid-cols-12 gap-1 px-3">
       <Label label="Associação com a Empresa" labelClass="col-span-7 flex flex-col items-center" error={$errors.tipo_associacao} required>
         <RadioGroup active="bg-primary-500" background="variant-glass" hover="variant-soft hover:variant-soft-primary">
-          <RadioItem bind:group={$form.tipo_associacao} name="tipo_associacao" value={1}>Colaborador</RadioItem>
-          <RadioItem bind:group={$form.tipo_associacao} name="tipo_associacao" value={2}>Cliente</RadioItem>
-          <RadioItem bind:group={$form.tipo_associacao} name="tipo_associacao" value={3}>Fornecedor</RadioItem>
+          <RadioItem bind:group={$form.tipo_relacionamento} name="tipo_relacionamento" value={1}>Colaborador</RadioItem>
+          <RadioItem bind:group={$form.tipo_relacionamento} name="tipo_relacionamento" value={2}>Cliente</RadioItem>
+          <RadioItem bind:group={$form.tipo_relacionamento} name="tipo_relacionamento" value={3}>Fornecedor</RadioItem>
         </RadioGroup>
       </Label>
       <Label label="Tipo de Pessoa" labelClass="col-span-5 flex flex-col items-center" error={$errors.tipo_pessoa} required>
@@ -127,7 +121,7 @@
       {/if}
       <div class="flex gap-2">
         {#if modo == 'editar'}
-          <input type="hidden" name="id" value={initialData.id} />
+          <input type="hidden" name="id" value={formData.id} />
         {/if}
         <button type="submit" class="btn variant-filled-primary">Enviar</button>
         <button type="button" class="btn variant-filled-secondary" on:click={onClose}>Cancelar</button>

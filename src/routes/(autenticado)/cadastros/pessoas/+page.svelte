@@ -25,8 +25,8 @@
     },
     { accessorKey: 'tipo_pessoa', header: 'Tipo Pessoa', cell: (info) => mapTipoPessoa.get(info.getValue()) },
     { accessorKey: 'tipo_relacionamento', header: 'Relação', cell: (info) => mapRelacionamento.get(info.getValue()) },
-    { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original }), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original }), enableSorting: false }
+    { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false },
+    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
 
@@ -35,7 +35,7 @@
       type: 'component',
       component: {
         ref: ModalFormPessoa,
-        props: { modo: 'adicionar', formData: data.form, permOptions: data.permOptions }
+        props: { modo: 'adicionar', formData: data.formAdicionar, permOptions: data.permOptions }
       }
     })
   }
