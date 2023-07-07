@@ -84,9 +84,9 @@ function ptBrErrorMap(issue, ctx) {
           util.assertNever(issue.validation);
         }
       } else if (issue.validation !== 'regex') {
-        message = `Inválido: ${issue.validation}`;
+        message = `${issue.validation} inválido`;
       } else {
-        message = 'Inválido: Regex';
+        message = 'Expressão Regular Inválida';
       }
       break;
     case ZodIssueCode.too_small:

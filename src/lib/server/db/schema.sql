@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS pessoa (
     empresa_id INTEGER NOT NULL,
     criador_id INTEGER NOT NULL,
     tipo_pessoa INTEGER NOT NULL DEFAULT(1),
-    tipo_associacao INTEGER NOT NULL DEFAULT(1),
+    tipo_relacionamento INTEGER NOT NULL DEFAULT(1),
     nome TEXT NOT NULL,
     email TEXT,
     cpf TEXT,

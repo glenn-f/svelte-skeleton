@@ -7,26 +7,24 @@
   import ModalFormPessoa from './ModalFormPessoa.svelte'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import CelulaStatus from './CelulaStatus.svelte'
+  import { mapRelacionamento, mapTipoPessoa, PESSOA_JURIDICA } from '$lib/globals'
   export let data
   const GPEs = new Map(data.permOptions.map((v, i) => [v.id, v]))
   let columns = [
     { accessorKey: 'id', header: 'ID' },
     { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue())?.toLocaleString() },
     { accessorKey: 'nome', header: 'Nome' },
-    { accessorKey: 'cpf', header: 'CPF' },
-    { accessorKey: 'cnpj', header: 'CNPJ' },
     {
-      accessorKey: 'tipo',
-      header: 'Tipo',
+      header: 'Documento',
       cell: (info) => {
-        let linha = info.row.original
-        let res = ''
-        if (linha.eh_colaborador) res += 'Colaborador'
-        if (linha.eh_cliente) res += (res ? ' / ' : '') + 'Cliente'
-        if (linha.eh_fornecedor) res += (res ? ' / ' : '') + 'Fornecedor'
-        return res
+        if (info.row.original.tipo_pessoa == PESSOA_JURIDICA) {
+          return info.row.original.cnpj
+        }
+        return info.row.original.cpf
       }
     },
+    { accessorKey: 'tipo_pessoa', header: 'Tipo Pessoa', cell: (info) => mapTipoPessoa.get(info.getValue()) },
+    { accessorKey: 'tipo_relacionamento', header: 'Relação', cell: (info) => mapRelacionamento.get(info.getValue()) },
     { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original }), enableSorting: false },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original }), enableSorting: false }
   ]

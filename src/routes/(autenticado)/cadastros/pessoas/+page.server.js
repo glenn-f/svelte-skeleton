@@ -10,7 +10,7 @@ export async function load({ locals }) {
   const { empresa_id: eid } = locals.sessao
 
   //* Pegar usuários desta empresa
-  const query = db.prepare('SELECT id, criacao, nome, cpf, cnpj, eh_colaborador, eh_fornecedor, eh_cliente FROM pessoa WHERE empresa_id = $eid')
+  const query = db.prepare('SELECT id, criacao, nome, cpf, cnpj, tipo_relacionamento, tipo_pessoa FROM pessoa WHERE empresa_id = $eid')
   const usuarios = query.all({ eid })
 
   const queryGPE = db.prepare('SELECT * FROM grupo_permissao_empresa WHERE empresa_id = $eid AND delecao IS NULL')

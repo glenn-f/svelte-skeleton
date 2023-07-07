@@ -11,6 +11,7 @@
   import InputText from '$lib/components/Forms/InputText.svelte'
   import CardModal from '$lib/components/CardModal.svelte'
   import Label from '../../../../lib/components/Forms/Label.svelte'
+  import InputDate from '../../../../lib/components/Forms/InputDate.svelte'
   /** Modo em que o modal será aberto
    * @type {'adicionar' | 'editar' | 'apagar'} */
   export let modo = 'adicionar'
@@ -110,9 +111,7 @@
         </RadioGroup>
       </Label>
       <div class="col-span-3">
-        <Label label="Data de Nascimento" errorSpacing >
-          <input class='input' pattern="\d{4}-\d{2}-\d{2}" min={'2023-07-01'} max={'2023-07-10'} type="date" name="dn" />
-        </Label>
+        <InputDate name="dn" label="Data de Nascimento" error={$errors.sexo} errorSpacing />
       </div>
       <div class="col-span-3">
         <InputMask mask="00000-000" label="CEP" name="cep" bind:value={$form.cep} error={$errors.cep} errorSpacing required />

@@ -3,6 +3,7 @@ import { criarGPEInicial, db, dbTransaction } from '../../../../lib/server/db'
 import { resetarSessoesUsuario, sessionCookieSettings } from '../../../../lib/server/session'
 import { criarEmpresaSchema, editarEmpresaSchema } from '../../../../lib/zodSchemas'
 import { resetarEmpresa } from '../../../../lib/server/cache'
+import { RELACIONAMENTO_COLABORADOR } from '../../../../lib/globals'
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ locals }) {
@@ -123,9 +124,9 @@ VALUES ($usuario_id, $empresa_id, $gpe_id, $pessoa_id)")
 function criarColaboradorViaUsuario(criador_id, empresa_id) {
     const query = db.prepare("SELECT nome, email FROM usuario WHERE id = $id")
     const { nome, email } = query.get({ id: criador_id })
-    const mutate = db.prepare("INSERT INTO pessoa (empresa_id, criador_id, eh_colaborador, nome, email)\
-VALUES ($empresa_id, $criador_id, $eh_colaborador, $nome, $email)")
-    const res = mutate.run({ empresa_id, criador_id, eh_colaborador: 1, nome, email })
+    const mutate = db.prepare("INSERT INTO pessoa (empresa_id, criador_id, tipo_relacionamento, nome, email)\
+VALUES ($empresa_id, $criador_id, $tipo_relacionamento, $nome, $email)")
+    const res = mutate.run({ empresa_id, criador_id, tipo_relacionamento: RELACIONAMENTO_COLABORADOR, nome, email })
     if (res.changes > 0) {
         return res.lastInsertRowid
     }
