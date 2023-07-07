@@ -87,18 +87,18 @@
         <InputText label="Nome" placeholder="Ex: Enzo Gabriel" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
       </div>
       <div class="col-span-5">
-        <InputMask mask="000.000.000-00" label="CPF" name="cpf" bind:value={$form.cpf} error={$errors.cpf} errorSpacing required />
+        <InputMask mask="000.000.000-00" label="CPF" name="cpf" bind:value={$form.cpf} error={$errors.cpf} errorSpacing  />
       </div>
       <div class="col-span-7">
-        <InputMask mask="00.000.000/0000-00" label="CNPJ" name="cnpj" bind:value={$form.cnpj} error={$errors.cnpj} errorSpacing required />
+        <InputMask mask="00.000.000/0000-00" label="CNPJ" name="cnpj" bind:value={$form.cnpj} error={$errors.cnpj} errorSpacing  />
       </div>
       <div class="col-span-6">
-        <InputEmail label="E-mail" placeholder="Ex: enzo.gabriel@email.com" name="email" bind:value={$form.email} error={$errors.email} errorSpacing required />
+        <InputEmail label="E-mail" placeholder="Ex: enzo.gabriel@email.com" name="email" bind:value={$form.email} error={$errors.email} errorSpacing  />
       </div>
       <div class="col-span-6">
-        <InputText label="RG" name="rg" bind:value={$form.rg} error={$errors.rg} errorSpacing required />
+        <InputText label="RG" name="rg" bind:value={$form.rg} error={$errors.rg} errorSpacing  />
       </div>
-      <Label label="Sexo Biológico" labelClass="col-span-6 flex flex-col items-center" error={$errors.sexo} required>
+      <Label label="Sexo Biológico" labelClass="col-span-6 flex flex-col items-center" error={$errors.sexo} >
         <RadioGroup active="bg-primary-500" background="variant-glass" hover="variant-soft hover:variant-soft-primary">
           <RadioItem bind:group={$form.sexo} name="sexo" value={1}>Masculino</RadioItem>
           <RadioItem bind:group={$form.sexo} name="sexo" value={2}>Feminino</RadioItem>
@@ -108,10 +108,10 @@
         <InputDate name="dn" label="Data de Nascimento" error={$errors.sexo} errorSpacing />
       </div>
       <div class="col-span-3">
-        <InputMask mask="00000-000" label="CEP" name="cep" bind:value={$form.cep} error={$errors.cep} errorSpacing required />
+        <InputMask mask="00000-000" label="CEP" name="cep" bind:value={$form.cep} error={$errors.cep} errorSpacing  />
       </div>
       <div class="col-span-12">
-        <InputText label="Endereço" name="endereco" bind:value={$form.endereco} error={$errors.endereco} errorSpacing required />
+        <InputText label="Endereço" name="endereco" bind:value={$form.endereco} error={$errors.endereco} errorSpacing  />
       </div>
     </section>
 

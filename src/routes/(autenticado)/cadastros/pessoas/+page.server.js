@@ -7,7 +7,7 @@ import { criarPessoaSchema, editUsuarioEmpresaSchema, editarPessoaSchema } from 
 import { PESSOA_JURIDICA } from '../../../../lib/globals.js';
 
 export async function load({ locals }) {
-  const formAdicionar = await superValidate({ tipo_pessoa: PESSOA_JURIDICA }, criarPessoaSchema)
+  const formAdicionar = await superValidate({ tipo_pessoa: PESSOA_JURIDICA }, criarPessoaSchema, { errors: false })
   const formEditar = await superValidate(editarPessoaSchema)
   const { empresa_id: eid } = locals.sessao
 
@@ -25,6 +25,8 @@ export async function load({ locals }) {
 export const actions = {
   adicionar: async ({ request, locals }) => {
     const form = await superValidate(request, criarPessoaSchema);
+    console.log(form)
+    return message(form, 'Deu ruim', { status: 400 })
     if (form.valid) {
       const criador_id = locals.sessao.uid
       const empresa_id = locals.sessao.empresa_id

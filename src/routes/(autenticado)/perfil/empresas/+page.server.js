@@ -44,6 +44,7 @@ export const actions = {
 
                 if (empresa) {
                     const formEditar = await superValidate(empresa, editarEmpresaSchema, { id: "editar", errors: false })
+                    resetarEmpresa(empresa.id)
                     return message(formEditar, "Empresa cadastrada com sucesso.")
                 }
                 return message(form, "Empresa cadastrada com sucesso.")

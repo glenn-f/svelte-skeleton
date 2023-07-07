@@ -18,9 +18,17 @@ export const deleteIdSchema = z.object({
   id: z.coerce.number().int()
 })
 
-export const zOptionalInput = z.literal('').nullish()
+export const zEnum = (list) => {
+  const literals = []
+  for (let i = 0; i < list.length; i++) {
+    literals.push(z.literal(list[i]))
+  }
+  return z.union(literals)
+}
+export const zEnum2 = (list, errorMsg) => z.custom((v) => list.includes(v), errorMsg)
+export const zOptionalInput = (zSchema) => z.literal('').nullish().transform(() => undefined).or(zSchema)
 export const zDate = z.union([z.number(), z.string().trim().min(1), z.date()]).pipe(z.coerce.date())
-export const zNumberEnum = (list) => z.coerce.number().pipe(z.enum(list))
+export const zNumberEnum = (list) => z.coerce.number().pipe(z.enum([1]))
 export const zCEP = z.string().trim().regex(/^\d{8}$/, "CEP Inválido")
 export const zCPF = z.string().trim().regex(/^\d{11}$/)
 export const zCNPJ = z.string().trim().regex(/^\d{14}$/)
@@ -28,23 +36,24 @@ export const zTelBR = z.string().trim().regex(/^\d{10,11}$/)
 export const zNumber = z.coerce.number()
 export const zCurrency = z.coerce.number().nonnegative()
 
+// console.log(z.coerce.number().pipe(z.enum([1, 2])).safeParse(PESSOA_FISICA).error)
 //* Esquemas de Pessoa
 export const pessoaSchema = z.object({
   id: z.coerce.number().int(),
   empresa_id: z.coerce.number().int(),
   criador_id: z.coerce.number().int(),
-  tipo_pessoa: zNumberEnum([PESSOA_FISICA, PESSOA_JURIDICA]),
-  tipo_relacionamento: zNumberEnum([RELACIONAMENTO_CLIENTE, RELACIONAMENTO_COLABORADOR, RELACIONAMENTO_FORNECEDOR]),
-  nome: z.string().trim().min(5),
-  email: z.string().trim().email().or(zOptionalInput),
-  cpf: zCPF.or(zOptionalInput),
-  cnpj: zCNPJ.or(zOptionalInput),
-  rg: z.string().trim().min(1).or(zOptionalInput),
-  apelido: z.string().trim().min(1).or(zOptionalInput),
-  endereco: z.string().trim().min(5).or(zOptionalInput),
-  cep: zCEP.or(zOptionalInput),
-  sexo: zNumberEnum([SEXO_MASCULINO, SEXO_FEMININO]).or(zOptionalInput),
-  dn: zDate.or(zOptionalInput),
+  tipo_pessoa: z.coerce.number().pipe(zEnum2([PESSOA_FISICA], "Escolha uma opção")),
+  tipo_relacionamento: z.any(),
+  // nome: z.string().trim().min(5),
+  // email: z.string().trim().email().or(zOptionalInput),
+  // cpf: zOptionalInput(zCPF),
+  // cnpj: zCNPJ.or(zOptionalInput),
+  // rg: z.string().trim().min(1).or(zOptionalInput),
+  // apelido: z.string().trim().min(1).or(zOptionalInput),
+  // endereco: z.string().trim().min(5).or(zOptionalInput),
+  // cep: zCEP.or(zOptionalInput),
+  // sexo: zNumberEnum([SEXO_MASCULINO, SEXO_FEMININO]).or(zOptionalInput),
+  // dn: zDate.or(zOptionalInput),
 })
 
 export const criarPessoaSchema = pessoaSchema.omit({ id: true, empresa_id: true, criador_id: true }).extend({
