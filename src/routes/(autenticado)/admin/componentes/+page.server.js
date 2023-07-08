@@ -1,5 +1,5 @@
 import { superValidate } from 'sveltekit-superforms/server';
-import { z } from '../../../../lib/zodBr';
+import { z } from '$lib/zod';
 
 const schema = z.object({
     perc: z.any(),

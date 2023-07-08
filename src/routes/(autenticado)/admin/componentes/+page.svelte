@@ -1,7 +1,7 @@
 <script>
   import InputNumber from '$lib/components/Forms/InputNumber.svelte'
   import InputPercent from '$lib/components/Forms/InputPercent.svelte'
-  import InputDate from '../../../../lib/components/Forms/InputDate.svelte'
+  import InputDate from '$lib/components/Forms/InputDate.svelte'
   import { superForm } from 'sveltekit-superforms/client'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   export let data

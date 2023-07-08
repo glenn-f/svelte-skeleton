@@ -1,15 +1,15 @@
 <script>
   import { Table } from '$lib/components/Table'
+  import { mapREP, mapTipoPessoa, PESSOA_JURIDICA } from '$lib/globals'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
   import { renderComponent } from '@tanstack/svelte-table'
   import CelulaAcoes from './CelulaAcoes.svelte'
-  import ModalFormPessoa from './ModalFormPessoa.svelte'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import CelulaStatus from './CelulaStatus.svelte'
-  import { mapRelacionamento, mapTipoPessoa, PESSOA_JURIDICA } from '$lib/globals'
+  import ModalFormPessoa from './ModalFormPessoa.svelte'
+
   export let data
-  const GPEs = new Map(data.permOptions.map((v, i) => [v.id, v]))
+  
   let columns = [
     { accessorKey: 'id', header: 'ID' },
     { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue())?.toLocaleString() },
@@ -24,7 +24,7 @@
       }
     },
     { accessorKey: 'tipo_pessoa', header: 'Tipo Pessoa', cell: (info) => mapTipoPessoa.get(info.getValue()) },
-    { accessorKey: 'tipo_relacionamento', header: 'Relação', cell: (info) => mapRelacionamento.get(info.getValue()) },
+    { accessorKey: 'tipo_relacionamento', header: 'Relação', cell: (info) => mapREP.get(info.getValue()) },
     { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false }
   ]

@@ -1,9 +1,9 @@
+import { REP_COLABORADOR } from '$lib/globals'
+import { resetarEmpresa } from '$lib/server/cache'
+import { criarGPEInicial, db, dbTransaction } from '$lib/server/db'
+import { resetarSessoesUsuario, sessionCookieSettings } from '$lib/server/session'
+import { criarEmpresaSchema, editarEmpresaSchema } from '$lib/zod/schemas/empresa'
 import { message, superValidate } from 'sveltekit-superforms/server'
-import { criarGPEInicial, db, dbTransaction } from '../../../../lib/server/db'
-import { resetarSessoesUsuario, sessionCookieSettings } from '../../../../lib/server/session'
-import { criarEmpresaSchema, editarEmpresaSchema } from '../../../../lib/zodSchemas'
-import { resetarEmpresa } from '../../../../lib/server/cache'
-import { RELACIONAMENTO_COLABORADOR } from '../../../../lib/globals'
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ locals }) {
@@ -127,7 +127,7 @@ function criarColaboradorViaUsuario(criador_id, empresa_id) {
     const { nome, email } = query.get({ id: criador_id })
     const mutate = db.prepare("INSERT INTO pessoa (empresa_id, criador_id, tipo_relacionamento, nome, email)\
 VALUES ($empresa_id, $criador_id, $tipo_relacionamento, $nome, $email)")
-    const res = mutate.run({ empresa_id, criador_id, tipo_relacionamento: RELACIONAMENTO_COLABORADOR, nome, email })
+    const res = mutate.run({ empresa_id, criador_id, tipo_relacionamento: REP_COLABORADOR, nome, email })
     if (res.changes > 0) {
         return res.lastInsertRowid
     }

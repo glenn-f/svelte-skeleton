@@ -1,4 +1,36 @@
-import { ZodIssueCode, ZodParsedType, z as zod } from 'zod';
+import { ZodIssueCode, ZodParsedType, z } from 'zod';
+
+//! Helpers
+export function deleteUndefined(obj) {
+  for (const key in obj)
+    if (obj[key] === undefined)
+      delete obj[key]
+  return obj;
+}
+
+export function stringUndefined(schema) {
+  return z.preprocess(text => text === '' ? undefined : text, schema)
+}
+
+//! Tipos Padronizados
+export const zNumericEnum = (list, errorMsg = "Escolha uma opção") => z.custom((v) => list.includes(Number(v)), errorMsg)
+export const zEnum = (list, errorMsg = "Escolha uma opção") => z.custom((v) => list.includes(v), errorMsg)
+export const zOptional = (zSchema) => z.literal('').nullish().transform(() => undefined).or(zSchema)
+export const zDate = z.union([z.number(), z.string().trim().min(1), z.date()], { invalid_type_error: 'Data inválida' }).pipe(z.coerce.date())
+export const zCEP = z.string().trim().regex(/^\d{8}$/, "CEP inválido")
+export const zCPF = z.string().trim().regex(/^\d{11}$/, "CPF inválido")
+export const zCNPJ = z.string().trim().regex(/^\d{14}$/, 'CNPJ inválido')
+export const zTelBR = z.string().trim().regex(/^\d{10,11}$/, 'Telefone inválido')
+export const zRG = z.string().trim().regex(/^\d+$/, 'RG inválido')
+export const zEmail = z.string().trim().email('E-mail inválido')
+export const zNumber = z.coerce.number().finite('Número inválido')
+export const zCurrency = z.coerce.number().nonnegative('Deve ser positivo ou zero')
+export const zID = z.coerce.number({ invalid_type_error: "ID inválido" }).int('ID deve ser inteiro')
+
+//! Esquemas Genéricos
+export const idSchema = z.object({ id: zID })
+
+//! Tradução pt-BR
 const mapTypes = {
   ['string']: 'texto',
   ['number']: 'número',
@@ -84,7 +116,7 @@ function ptBrErrorMap(issue, ctx) {
           util.assertNever(issue.validation);
         }
       } else if (issue.validation !== 'regex') {
-        message = `${issue.validation} inválido`;
+        message = `${issue.validation.at(0).toUpperCase() + issue.validation.substring(1)} inválido`;
       } else {
         message = 'Expressão Regular Inválida';
       }
@@ -169,5 +201,6 @@ function ptBrErrorMap(issue, ctx) {
   return { message };
 };
 
-zod.setErrorMap(ptBrErrorMap)
-export const z = zod
+z.setErrorMap(ptBrErrorMap)
+
+export { z }

@@ -2,14 +2,14 @@ import { buscarSessao } from '$lib/server/session'
 import { Logger } from '$lib/logger'
 import { dev } from '$app/environment'
 import { sequence } from '@sveltejs/kit/hooks'
-import { redirect } from '@sveltejs/kit'
+import { error, redirect } from '@sveltejs/kit'
 import { buscarEmpresa, buscarGPE } from './lib/server/cache'
 
 async function iniciarLog({ event, resolve }) {
   event.locals.log = new Logger(event, dev)
   if (event.route.id === null) {
     event.locals.log.end("Rota não encontrada", "red")
-    throw redirect(307, "/inicio")
+    throw error(404, "Página Não Encontrada")
   }
   return resolve(event)
 }
@@ -50,3 +50,11 @@ async function finalizarLog({ event, resolve }) {
 }
 
 export const handle = sequence(iniciarLog, lerCookies, verificarAutenticacao, finalizarLog)
+
+export function handleError({ error }) {
+  console.error(error)
+  return {
+    message: 'Oops! Ocorreu um erro inesperado. Tente refazer a ação e reporte para o administrador.',
+    code: error?.code ?? 'ERRO_DESCONHECIDO'
+  };
+}

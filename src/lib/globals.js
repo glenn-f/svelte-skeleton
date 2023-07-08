@@ -6,13 +6,13 @@ mapTipoUsuario.set(USUARIO_ADICIONAL, "Adicional")
 mapTipoUsuario.set(USUARIO_MEMBRO, "Membro")
 mapTipoUsuario.set(USUARIO_ADMINISTRADOR, "Administrador")
 
-export const RELACIONAMENTO_COLABORADOR = 1
-export const RELACIONAMENTO_CLIENTE = 2
-export const RELACIONAMENTO_FORNECEDOR = 3
-const mapRelacionamento = new Map()
-mapRelacionamento.set(RELACIONAMENTO_COLABORADOR, "Colaborador")
-mapRelacionamento.set(RELACIONAMENTO_CLIENTE, "Cliente")
-mapRelacionamento.set(RELACIONAMENTO_FORNECEDOR, "Fornecedor")
+export const REP_COLABORADOR = 1
+export const REP_CLIENTE = 2
+export const REP_FORNECEDOR = 3
+const mapREP = new Map()
+mapREP.set(REP_COLABORADOR, "Colaborador")
+mapREP.set(REP_CLIENTE, "Cliente")
+mapREP.set(REP_FORNECEDOR, "Fornecedor")
 
 export const PESSOA_FISICA = 1
 export const PESSOA_JURIDICA = 2
@@ -22,10 +22,10 @@ mapTipoPessoa.set(PESSOA_JURIDICA, "Jurídica")
 
 export const SEXO_MASCULINO = 1
 export const SEXO_FEMININO = 2
-const mapSexoBiologico = new Map()
-mapSexoBiologico.set(SEXO_MASCULINO, "Masculino")
-mapSexoBiologico.set(SEXO_FEMININO, "Feminino")
+const mapSexo = new Map()
+mapSexo.set(SEXO_MASCULINO, "Masculino")
+mapSexo.set(SEXO_FEMININO, "Feminino")
 
-export { mapTipoUsuario, mapRelacionamento, mapTipoPessoa, mapSexoBiologico }
+export { mapREP, mapSexo, mapTipoPessoa, mapTipoUsuario }
 
 export const fmtMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })

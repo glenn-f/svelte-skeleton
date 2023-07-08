@@ -1,9 +1,8 @@
-import { TIPO_USUARIO } from '$lib/globals';
-import { alterarStatusUsuarioDB, alterarUsuario, criarUsuario, listarUsuarios, db } from '$lib/server/db';
-import { addUsuarioEmpresaSchema, deleteIdSchema, editUsuarioSchema } from '$lib/zodSchemas';
+import { db } from '$lib/server/db';
+import { idSchema } from '$lib/zod';
+import { addUsuarioEmpresaSchema, editUsuarioEmpresaSchema } from '$lib/zod/schemas/usuario';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
-import { toggleStatusUsuarioEmpresa, alterarUsuarioEmpresa, criarUsuarioEmpresa, dbInsert, dbTransaction, encriptar } from '../../../../lib/server/db/index.js';
-import { editUsuarioEmpresaSchema } from '../../../../lib/zodSchemas.js';
+import { alterarUsuarioEmpresa, criarUsuarioEmpresa, toggleStatusUsuarioEmpresa } from '$lib/server/db';
 
 export async function load({ locals }) {
   const form = await superValidate(addUsuarioEmpresaSchema)
@@ -56,7 +55,7 @@ export const actions = {
   },
 
   alternarStatus: async ({ request, locals }) => {
-    const form = await superValidate(request, deleteIdSchema);
+    const form = await superValidate(request, idSchema);
     if (form.valid) {
       const uid = form.data.id
       const eid = locals.sessao.empresa_id

@@ -1,8 +1,8 @@
-import { message, superValidate } from 'sveltekit-superforms/server';
-import { db, encriptar } from '../../../lib/server/db';
-import { alterarSenhaPerfilUsuarioSchema, editPerfilUsuarioSchema } from '../../../lib/zodSchemas';
+import { db, encriptar } from '$lib/server/db';
+import { resetarSessoesUsuario, sessionCookieSettings } from '$lib/server/session';
+import { alterarSenhaPerfilUsuarioSchema, editPerfilUsuarioSchema } from '$lib/zod/schemas/usuario';
 import { error } from '@sveltejs/kit';
-import { resetarSessoesUsuario, sessionCookieSettings } from '../../../lib/server/session';
+import { message, superValidate } from 'sveltekit-superforms/server';
 
 export async function load({ locals }) {
     const id = locals.sessao.uid

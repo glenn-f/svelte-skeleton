@@ -1,5 +1,4 @@
-import { criarGPEInicial } from '.'
-
+import { criarGPEInicial } from '..'
 
 const res = criarGPEInicial(8)
 

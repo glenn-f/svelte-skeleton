@@ -1,15 +1,13 @@
-import { listarUsuarios } from '$lib/server/db';
-import { TIPO_USUARIO } from '$lib/globals';
-import { setError, superValidate, message } from 'sveltekit-superforms/server';
-import { criarUsuario } from '$lib/server/db/index.js';
-import { addUsuarioSchema } from '$lib/zodSchemas.js';
-import { deleteIdSchema, editUsuarioSchema } from '../../../../lib/zodSchemas.js';
-import { alterarUsuario, alterarStatusUsuarioDB } from '../../../../lib/server/db/index.js';
+import { mapTipoUsuario } from '$lib/globals';
+import { alterarStatusUsuarioDB, alterarUsuario, criarUsuario, listarUsuarios } from '$lib/server/db';
+import { addUsuarioSchema, editUsuarioSchema } from '$lib/zod/schemas/usuario';
+import { idSchema } from '$lib/zod';
+import { message, setError, superValidate } from 'sveltekit-superforms/server';
 
 export async function load() {
   const form = await superValidate(addUsuarioSchema)
   const usuarios = listarUsuarios();
-  return { usuarios, form, permOptions: TIPO_USUARIO };
+  return { usuarios, form, permOptions: mapTipoUsuario };
 };
 
 export const actions = {
@@ -47,7 +45,7 @@ export const actions = {
   },
 
   apagar: async ({ request, locals }) => {
-    const form = await superValidate(request, deleteIdSchema);
+    const form = await superValidate(request, idSchema);
     console.log(form)
     if (form.valid) {
       const res = alterarStatusUsuarioDB({ uid: locals.sessao.uid, id: form.data.id })
@@ -58,7 +56,7 @@ export const actions = {
     return message(form, 'Usuário inválido', { status: 400 })
   },
   alternarStatus: async ({ request, locals }) => {
-    const form = await superValidate(request, deleteIdSchema);
+    const form = await superValidate(request, idSchema);
     console.log(form)
     if (form.valid) {
       const res = alterarStatusUsuarioDB({ uid: locals.sessao.uid, id: form.data.id })
