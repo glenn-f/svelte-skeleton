@@ -18,7 +18,7 @@
    * @type {Map<number, {label: string}>} */
   export let permOptions
   /** Preenchimento inicial do formulário. Varia de acordo com o `modo` deste componente*/
-  export let initialData = { senha: '', senha_repetir: '', nome: '', email: '', perm_usuario: 0 }
+  export let initialData = { senha: '', senha_repetir: '', nome: '', email: '', tipo_usuario: 0 }
 
   formData.data = { ...initialData }
   formData.errors = {}
@@ -74,7 +74,7 @@
 
     {#if modo != 'apagar'}
       <section class="grid grid-cols-12 gap-1 px-3">
-        {#if initialData.perm_usuario == 0}
+        {#if initialData.tipo_usuario == 0}
           <div class="col-span-12">
             <InputText label="Nome Completo" placeholder="Ex: Enzo Gabriel" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
           </div>

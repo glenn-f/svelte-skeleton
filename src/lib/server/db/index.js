@@ -49,7 +49,7 @@ export function criarSessaoDB(id, expiracao, usuarioId) {
 export function buscarSessaoDB(id) {
   try {
     const query = db.prepare("\
-SELECT s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email, u.perm_usuario perm, ue.empresa_id, ue.pessoa_id, ue.gpe_id \
+SELECT s.id sid, s.expiracao expiracao, u.id uid, u.nome nome, u.email, u.tipo_usuario perm, ue.empresa_id, ue.pessoa_id, ue.gpe_id \
 FROM sessao s LEFT JOIN usuario u ON u.id = s.usuario_id LEFT JOIN usuario_empresa ue ON ue.usuario_id = s.usuario_id WHERE s.id = $id")
     const row = query.get({ id })
     return row ? row : undefined
@@ -141,8 +141,8 @@ export function criarUsuarioEmpresa({ nome, email, senha, criador_id, empresa_id
   begin.run();
   try {
     senha = encriptar(senha)
-    const perm_usuario = 0 // usuário criado para uma empresa tem nível de permissão 0
-    const resUsuario = dbInsert('usuario', { nome, email, senha, perm_usuario, criador_id })
+    const tipo_usuario = 0 // usuário criado para uma empresa tem nível de permissão 0
+    const resUsuario = dbInsert('usuario', { nome, email, senha, tipo_usuario, criador_id })
     if (resUsuario.changes === 0) throw new Error("Não foi possível criar o usuário")
 
     const eh_colaborador = 1 // criado como colaborador para aparecer na listagem de vendedor e outras

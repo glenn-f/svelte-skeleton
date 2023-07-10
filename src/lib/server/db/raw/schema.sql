@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS usuario (
     nome TEXT NOT NULL,
     email TEXT NOT NULL,
     senha TEXT NOT NULL,
-    perm_usuario INTEGER NOT NULL DEFAULT(0),
+    tipo_usuario INTEGER NOT NULL DEFAULT(0),
     criador_id INTEGER NULL,
     criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
     delecao INTEGER,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS sessao (
     FOREIGN KEY (usuario_id) REFERENCES usuario(id)
 ) STRICT;
 INSERT
-    OR REPLACE INTO usuario (id, nome, email, senha, perm_usuario)
+    OR REPLACE INTO usuario (id, nome, email, senha, tipo_usuario)
 VALUES
     (
         0,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS pessoa (
     empresa_id INTEGER NOT NULL,
     criador_id INTEGER NOT NULL,
     tipo_pessoa INTEGER NOT NULL DEFAULT(1),
-    tipo_relacionamento INTEGER NOT NULL DEFAULT(1),
+    rep INTEGER NOT NULL DEFAULT(1),
     nome TEXT NOT NULL,
     email TEXT,
     cpf TEXT,
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS usuario_empresa(
     usuario_id INTEGER NOT NULL,
     empresa_id INTEGER NOT NULL,
     pessoa_id INTEGER NOT NULL,
-    gpe_id INTEGER NOT NULL DEFAULT(0),
+    gpe_id INTEGER,
     criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
     delecao INTEGER,
     PRIMARY KEY (usuario_id, empresa_id),
@@ -109,3 +109,33 @@ CREATE TABLE IF NOT EXISTS usuario_empresa(
     FOREIGN KEY (gpe_id) REFERENCES grupo_permissao_empresa(id),
     UNIQUE (pessoa_id)
 ) STRICT;
+CREATE TABLE IF NOT EXISTS produto_categoria(
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    empresa_id INTEGER NOT NULL,
+    nome TEXT NOT NULL,
+    criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+    delecao INTEGER,
+    FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    UNIQUE (nome)
+);
+CREATE TABLE IF NOT EXISTS produto (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    empresa_id INTEGER NOT NULL,
+    produto_categoria_id INTEGER,
+    nome TEXT NOT NULL,
+    criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+    delecao INTEGER,
+    FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    FOREIGN KEY (produto_categoria_id) REFERENCES produto_categoria(id),
+    UNIQUE (nome)
+);
+CREATE TABLE IF NOT EXISTS conta (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    empresa_id INTEGER NOT NULL,
+    nome TEXT NOT NULL,
+    criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+    delecao INTEGER,
+    FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    FOREIGN KEY (produto_categoria_id) REFERENCES produto_categoria(id),
+    UNIQUE (nome)
+);

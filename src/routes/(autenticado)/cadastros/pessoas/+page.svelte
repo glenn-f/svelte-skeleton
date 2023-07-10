@@ -24,7 +24,7 @@
       }
     },
     { accessorKey: 'tipo_pessoa', header: 'Tipo Pessoa', cell: (info) => mapTipoPessoa.get(info.getValue()) },
-    { accessorKey: 'tipo_relacionamento', header: 'Relação', cell: (info) => mapREP.get(info.getValue()) },
+    { accessorKey: 'rep', header: 'Relação', cell: (info) => mapREP.get(info.getValue()) },
     { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false }
   ]

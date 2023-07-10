@@ -125,9 +125,9 @@ VALUES ($usuario_id, $empresa_id, $gpe_id, $pessoa_id)")
 function criarColaboradorViaUsuario(criador_id, empresa_id) {
     const query = db.prepare("SELECT nome, email FROM usuario WHERE id = $id")
     const { nome, email } = query.get({ id: criador_id })
-    const mutate = db.prepare("INSERT INTO pessoa (empresa_id, criador_id, tipo_relacionamento, nome, email)\
-VALUES ($empresa_id, $criador_id, $tipo_relacionamento, $nome, $email)")
-    const res = mutate.run({ empresa_id, criador_id, tipo_relacionamento: REP_COLABORADOR, nome, email })
+    const mutate = db.prepare("INSERT INTO pessoa (empresa_id, criador_id, rep, nome, email)\
+VALUES ($empresa_id, $criador_id, $rep, $nome, $email)")
+    const res = mutate.run({ empresa_id, criador_id, rep: REP_COLABORADOR, nome, email })
     if (res.changes > 0) {
         return res.lastInsertRowid
     }

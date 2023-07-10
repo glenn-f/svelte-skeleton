@@ -15,7 +15,7 @@
     { accessorKey: 'delecao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
     { accessorKey: 'nome', header: 'Nome', cell: (info) => info.getValue() },
     { accessorKey: 'email', header: 'E-mail', cell: (info) => info.getValue() },
-    { accessorKey: 'perm_usuario', header: 'Permissão', cell: (info) => data.permOptions.get(info.getValue())?.label },
+    { accessorKey: 'tipo_usuario', header: 'Permissão', cell: (info) => data.permOptions.get(info.getValue())?.label },
     { accessorKey: 'criador', header: 'Criador', cell: (info) => info.getValue() },
     { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false }

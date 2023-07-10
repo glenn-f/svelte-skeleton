@@ -10,7 +10,7 @@
     senha_repetir: undefined,
     nome: initialData.nome,
     email: initialData.email,
-    perm_usuario: initialData.perm_usuario
+    tipo_usuario: initialData.tipo_usuario
   }
 
   function handleEditar() {

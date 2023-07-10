@@ -84,11 +84,41 @@ model est_entrada {
   pagamentos     lanc_pagamento[]
 }
 
+model est_saida {
+  id             BigInt              @id @default(autoincrement())
+  data_saida     DateTime            @default(now()) @db.Timestamptz(6)
+  observacoes    String?
+  responsavel_id Int?
+  responsavel    pessoa?             @relation("saida_responsavel", fields: [responsavel_id], references: [id])
+  buybacks       est_buyback?
+  perda          est_perda?
+  venda          est_venda?
+  itens_saida    est_item[]
+  recebimentos   lanc_recebimento[]
+  estornos       est_estorno_saida[]
+}
 model est_item_estorno {
   id             BigInt   @id
   est_item_id    BigInt
   item_estornado est_item @relation(fields: [est_item_id], references: [id])
   estoque_criado estoque  @relation(fields: [id], references: [id])
+}
+
+
+model est_perda {
+  id         BigInt    @id
+  tipo_perda Int
+  saida      est_saida @relation(fields: [id], references: [id])
+}
+
+
+model est_venda {
+  id         BigInt    @id
+  cliente_id Int?
+  troco      Decimal   @default(0) @db.Decimal(14, 4)
+  diferenca  Decimal   @default(0) @db.Decimal(14, 4)
+  cliente    pessoa?   @relation("saida_cliente", fields: [cliente_id], references: [id])
+  saida      est_saida @relation(fields: [id], references: [id])
 }
 
 model est_item {
@@ -103,36 +133,6 @@ model est_item {
   comissoes      comissao[]
   devolucoes     est_item_estorno[]
 }
-
-model est_perda {
-  id         BigInt    @id
-  tipo_perda Int
-  saida      est_saida @relation(fields: [id], references: [id])
-}
-
-model est_saida {
-  id             BigInt              @id @default(autoincrement())
-  data_saida     DateTime            @default(now()) @db.Timestamptz(6)
-  observacoes    String?
-  responsavel_id Int?
-  responsavel    pessoa?             @relation("saida_responsavel", fields: [responsavel_id], references: [id])
-  buybacks       est_buyback?
-  perda          est_perda?
-  venda          est_venda?
-  itens_saida    est_item[]
-  recebimentos   lanc_recebimento[]
-  estornos       est_estorno_saida[]
-}
-
-model est_venda {
-  id         BigInt    @id
-  cliente_id Int?
-  troco      Decimal   @default(0) @db.Decimal(14, 4)
-  diferenca  Decimal   @default(0) @db.Decimal(14, 4)
-  cliente    pessoa?   @relation("saida_cliente", fields: [cliente_id], references: [id])
-  saida      est_saida @relation(fields: [id], references: [id])
-}
-
 model estoque {
   id             BigInt            @id @default(autoincrement())
   primario_id    BigInt?

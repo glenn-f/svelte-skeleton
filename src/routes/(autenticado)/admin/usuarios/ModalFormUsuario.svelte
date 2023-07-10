@@ -18,7 +18,7 @@
    * @type {Map<number, {label: string}>} */
   export let permOptions
   /** Preenchimento inicial do formulário. Varia de acordo com o `modo` deste componente*/
-  export let initialData = { senha: '', senha_repetir: '', nome: '', email: '', perm_usuario: 0 }
+  export let initialData = { senha: '', senha_repetir: '', nome: '', email: '', tipo_usuario: 0 }
 
   formData.data = { ...initialData }
   formData.errors = {}
@@ -94,7 +94,7 @@
           />
         </div>
         <div class="col-span-12">
-          <InputSelect label="Permissão na Aplicação" name="perm_usuario" bind:value={$form.perm_usuario} options={permOptions} error={$errors.perm_usuario} errorSpacing required />
+          <InputSelect label="Permissão na Aplicação" name="tipo_usuario" bind:value={$form.tipo_usuario} options={permOptions} error={$errors.tipo_usuario} errorSpacing required />
         </div>
       </section>
     {:else}

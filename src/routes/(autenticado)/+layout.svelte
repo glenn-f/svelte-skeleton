@@ -50,9 +50,9 @@
             </Menu>
           {/if}
           {#if data.sessao.gpe.pode_ver_estoque || data.sessao.gpe.pode_entrada_estoque || data.sessao.gpe.pode_saida_estoque}
-            <Menu titulo="Inventário" icon="mdi:warehouse">
+            <Menu titulo="Estoque" icon="mdi:warehouse">
               {#if data.sessao.gpe.pode_ver_estoque}
-                <MenuItem href="/estoque" titulo="Estoque" icon="fluent-mdl2:product-list" />
+                <MenuItem href="/estoque" titulo="Inventário" icon="fluent-mdl2:product-list" />
               {/if}
               {#if data.sessao.gpe.pode_entrada_estoque}
                 <MenuItem href="/estoque/entradas" titulo="Entradas" icon="ri:inbox-archive-fill" />

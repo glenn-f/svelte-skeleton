@@ -72,9 +72,9 @@
     <section class="grid grid-cols-12 gap-1 px-3">
       <Label label="Associação com a Empresa" labelClass="col-span-7 flex flex-col items-center" error={$errors.tipo_associacao} required>
         <RadioGroup active="bg-primary-500" background="variant-glass" hover="variant-soft hover:variant-soft-primary">
-          <RadioItem bind:group={$form.tipo_relacionamento} name="tipo_relacionamento" value={1}>Colaborador</RadioItem>
-          <RadioItem bind:group={$form.tipo_relacionamento} name="tipo_relacionamento" value={2}>Cliente</RadioItem>
-          <RadioItem bind:group={$form.tipo_relacionamento} name="tipo_relacionamento" value={3}>Fornecedor</RadioItem>
+          <RadioItem bind:group={$form.rep} name="rep" value={1}>Colaborador</RadioItem>
+          <RadioItem bind:group={$form.rep} name="rep" value={2}>Cliente</RadioItem>
+          <RadioItem bind:group={$form.rep} name="rep" value={3}>Fornecedor</RadioItem>
         </RadioGroup>
       </Label>
       <Label label="Tipo de Pessoa" labelClass="col-span-5 flex flex-col items-center" error={$errors.tipo_pessoa} required>

@@ -1,66 +1,90 @@
-import { deleteUndefined, stringUndefined } from "$lib/zod"
-import { zEmail, zID, z } from ".."
+import { z, zEmail, zID, zOptional } from ".."
 
 export const usuarioSchema = z.object({
   id: zID,
+  criador_id: zOptional(zID),
   nome: z.string().trim().min(5),
   email: zEmail,
   senha: z.string().min(4),
-  perm_usuario: zID.default(0),
+  tipo_usuario: zID.default(0),
 })
 
-export const loginSchema = usuarioSchema.pick({ email: true, senha: true })
-
-export const addUsuarioSchema = usuarioSchema.omit({ id: true }).extend({
-  senha_repetir: usuarioSchema.shape.senha,
-}).refine((obj) => obj.senha === obj.senha_repetir, {
-  message: "As senhas não correspondem",
-  path: ["senha_repetir"],
+export const usuarioEmpresaSchema = z.object({
+  usuario_id: zID,
+  empresa_id: zID,
+  pessoa_id: zID,
+  gpe_id: zOptional(zID),
 })
 
-export const addUsuarioEmpresaSchema = usuarioSchema.omit({
-  id: true, perm_usuario: true
+//! Esquemas e Validadores comuns
+const alterarSenha = usuarioSchema.pick({
+  id: true,
+  senha: true
 }).extend({
-  gpe_id: z.coerce.number().int(),
   senha_repetir: usuarioSchema.shape.senha,
-}).refine((obj) => obj.senha === obj.senha_repetir, {
-  message: "As senhas não correspondem",
-  path: ["senha_repetir"],
 })
 
-export const editUsuarioEmpresaSchema = usuarioSchema.omit({
-  perm_usuario: true
+function validarSenha(v) {
+  return v.senha === v.senha_repetir
+}
+
+const erroValidarSenha = {
+  message: "As senhas não correspondem",
+  path: ["senha_repetir"],
+}
+
+//* Login
+export const loginSchema = usuarioSchema.pick({
+  email: true,
+  senha: true
+})
+
+//* Administração.Usuários
+export const addUsuarioSchema = usuarioSchema.pick({
+  nome: true,
+  email: true,
+  senha: true,
+  tipo_usuario: true
 }).extend({
-  nome: usuarioSchema.shape.nome.optional(),
-  email: usuarioSchema.shape.email.optional(),
-  senha: stringUndefined(usuarioSchema.shape.senha.optional()),
-  senha_repetir: stringUndefined(usuarioSchema.shape.senha.optional()),
-  gpe_id: z.coerce.number().int(),
-}).refine((obj) => obj.senha === obj.senha_repetir, {
-  message: "As senhas não correspondem",
-  path: ["senha_repetir"],
-}).transform(deleteUndefined)
+  senha_repetir: usuarioSchema.shape.senha
+}).refine(validarSenha, erroValidarSenha)
 
-export const editUsuarioSchema = usuarioSchema.extend({
-  senha: stringUndefined(usuarioSchema.shape.senha.optional()),
-  senha_repetir: stringUndefined(usuarioSchema.shape.senha.optional()),
-}).refine((obj) => obj.senha === obj.senha_repetir, {
-  message: "As senhas não correspondem",
-  path: ["senha_repetir"],
-}).transform((obj) => {
-  delete obj.senha_repetir
-  return obj
-}).transform(deleteUndefined)
+export const editUsuarioSchema = usuarioSchema.pick({
+  id: true,
+  nome: true,
+  email: true,
+  tipo_usuario: true
+})
 
+export const alterarSenhaUsuarioSchema = alterarSenha.refine(validarSenha, erroValidarSenha)
+
+//* Cadastros.Usuários (Empresa)
+export const addUsuarioEmpresaSchema = usuarioSchema.pick({
+  nome: true,
+  email: true,
+  senha: true,
+}).extend({
+  senha_repetir: usuarioSchema.shape.senha,
+  gpe_id: usuarioEmpresaSchema.shape.gpe_id,
+}).refine(validarSenha, erroValidarSenha)
+
+export const editUsuarioEmpresaSchema = usuarioSchema.pick({
+  id: true,
+  nome: true,
+  email: true,
+}).extend({
+  gpe_id: usuarioEmpresaSchema.shape.gpe_id,
+})
+
+export const alterarSenhaUsuarioEmpresaSchema = alterarSenha.refine(validarSenha, erroValidarSenha)
+
+//* Perfil.Usuario (Meus Dados)
 export const editPerfilUsuarioSchema = z.object({
   nome: usuarioSchema.shape.nome,
   email: usuarioSchema.shape.email,
 })
 
-export const alterarSenhaPerfilUsuarioSchema = z.object({
-  senha: usuarioSchema.shape.senha,
-  senha_repetir: usuarioSchema.shape.senha,
-}).refine((obj) => obj.senha === obj.senha_repetir, {
-  message: "As senhas não correspondem",
-  path: ["senha_repetir"],
-}).transform((obj) => ({ senha: obj.senha }))
+export const alterarSenhaPerfilUsuarioSchema = alterarSenha.pick({
+  senha: true,
+  senha_repetir: true
+}).refine(validarSenha, erroValidarSenha)

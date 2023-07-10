@@ -9,7 +9,7 @@ export async function load({ locals }) {
   const empresa_id = locals.sessao.empresa_id
 
   //* Consultar pessoas relacionadas com esta empresa
-  const query = db.prepare('SELECT id, criacao, nome, cpf, cnpj, tipo_relacionamento, tipo_pessoa FROM pessoa WHERE empresa_id = $empresa_id')
+  const query = db.prepare('SELECT id, criacao, nome, cpf, cnpj, rep, tipo_pessoa FROM pessoa WHERE empresa_id = $empresa_id')
   const pessoas = query.all({ empresa_id })
 
   return { pessoas, formAdicionar, formEditar };
