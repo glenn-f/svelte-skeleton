@@ -25,24 +25,6 @@ CREATE TABLE
         FOREIGN KEY (usuario_id) REFERENCES usuario(id)
     ) STRICT;
 
-INSERT OR
-REPLACE
-    INTO usuario (
-        id,
-        nome,
-        email,
-        senha,
-        tipo_usuario
-    )
-VALUES (
-        0,
-        'Administrador',
-        'a@d.min',
-        '$2b$10$kgAkctImz3V8beH8rUcp5eUxa8N4FUWrI4DQ2J30sePHSVmzNqj9C',
-        99
-    );
-
---senha123
 
 CREATE TABLE
     IF NOT EXISTS empresa (
@@ -148,6 +130,7 @@ CREATE TABLE
         empresa_id INTEGER NOT NULL,
         produto_categoria_id INTEGER,
         nome TEXT NOT NULL,
+        titulo_codigo TEXT,
         criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
         delecao INTEGER,
         FOREIGN KEY (empresa_id) REFERENCES empresa(id),
