@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS usuario (
 ) STRICT;
 -- Tabela "sessao"
 CREATE TABLE IF NOT EXISTS sessao (
-  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  id TEXT NOT NULL PRIMARY KEY,
   usuario_id INTEGER,
   expiracao INTEGER NOT NULL,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
@@ -131,11 +131,11 @@ CREATE TABLE IF NOT EXISTS produto (
 CREATE TABLE IF NOT EXISTS regra_comissao (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   empresa_id INTEGER NOT NULL,
-  bonus_fixo DECIMAL(14,4) NOT NULL,
-  taxa_fixa DECIMAL(9,6) NOT NULL,
+  bonus_fixo INTEGER NOT NULL,
+  taxa_fixa INTEGER NOT NULL,
   nome TEXT NOT NULL,
   descricao TEXT,
-  data_inicial INTEGER NOT NULL DEFAULT,
+  data_inicial INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
   data_final INTEGER NOT NULL,
   FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 ) STRICT;
@@ -147,18 +147,18 @@ CREATE TABLE IF NOT EXISTS produto_regra_comissao (
   condicao TEXT NOT NULL,
   origem TEXT NOT NULL,
   FOREIGN KEY (produto_id) REFERENCES produto(id),
-  FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id),
+  FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id)
 ) STRICT;
 --! Tabela "fechamento_comissao"
 CREATE TABLE IF NOT EXISTS fechamento_comissao (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   pessoa_id INTEGER NOT NULL,
   regra_comissao_id INTEGER NOT NULL,
-  bonus_fixo DECIMAL(14,4) NOT NULL,
-  taxa_fixa DECIMAL(9,6) NOT NULL,
+  bonus_fixo INTEGER NOT NULL,
+  taxa_fixa INTEGER NOT NULL,
   efetivacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
   FOREIGN KEY (pessoa_id) REFERENCES pessoa(id),
-  FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id),
+  FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id)
 ) STRICT;
 --! Tabela "comissao"
 CREATE TABLE IF NOT EXISTS comissao (
@@ -167,8 +167,8 @@ CREATE TABLE IF NOT EXISTS comissao (
   pessoa_id INTEGER NOT NULL,
   fechamento_comissao_id INTEGER,
   tipo_comissao INTEGER NOT NULL,
-  valor_fixo DECIMAL(14,4) NOT NULL,
-  valor_taxa DECIMAL(14,4) NOT NULL,
+  valor_fixo INTEGER NOT NULL,
+  valor_taxa INTEGER NOT NULL,
   efetivacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
   FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id),
   FOREIGN KEY (fechamento_comissao_id) REFERENCES fechamento_comissao(id),
@@ -183,7 +183,7 @@ CREATE TABLE IF NOT EXISTS fc (
   fcg_id INTEGER,
   classe_fc INTEGER NOT NULL,
   tipo_fc INTEGER NOT NULL,
-  valor DECIMAL(14,4) NOT NULL,
+  valor INTEGER NOT NULL,
   observacoes TEXT,
   efetivacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
@@ -193,8 +193,7 @@ CREATE TABLE IF NOT EXISTS fc (
 CREATE TABLE IF NOT EXISTS comissao_contabil (
   comissao_id INTEGER NOT NULL,
   fc_id INTEGER NOT NULL,
-  PRIMARY KEY (comissao_id, fc_id)
-  FOREIGN KEY (comissao_id) REFERENCES comissao(id),
+  PRIMARY KEY (comissao_id, fc_id) FOREIGN KEY (comissao_id) REFERENCES comissao(id),
   FOREIGN KEY (fc_id) REFERENCES fc(id),
   UNIQUE (comissao_id),
   UNIQUE (fc_id)
@@ -203,12 +202,16 @@ CREATE TABLE IF NOT EXISTS comissao_contabil (
 CREATE TABLE IF NOT EXISTS estoque (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   produto_id INTEGER NOT NULL,
-  qntd INTEGER NOT NULL, -- transferivel, quantidade deste estoque (no estado atual: em avaliacao, disponivel)
-  custo DECIMAL(14, 4) NOT NULL, -- transferivel,  custo bruto Acumulado do estoque (total custo_manutencao + total custo_entrada) 
-  preco_unitario DECIMAL(14, 4), --atualizavel
-  estado INTEGER NOT NULL DEFAULT 1, --atualizavel (disponivel para em avaliacao)
-  condicao INTEGER NOT NULL DEFAULT 1, 
-  origem INTEGER NOT NULL DEFAULT 1, 
+  qntd INTEGER NOT NULL,
+  -- transferivel, quantidade deste estoque (no estado atual: em avaliacao, disponivel)
+  custo INTEGER NOT NULL,
+  -- transferivel,  custo bruto Acumulado do estoque (total custo_manutencao + total custo_entrada) 
+  preco_unitario INTEGER,
+  --atualizavel
+  estado INTEGER NOT NULL DEFAULT 1,
+  --atualizavel (disponivel para em avaliacao)
+  condicao INTEGER NOT NULL DEFAULT 1,
+  origem INTEGER NOT NULL DEFAULT 1,
   codigo TEXT,
   dados_json TEXT,
   observacoes TEXT,
@@ -231,8 +234,7 @@ CREATE TABLE IF NOT EXISTS pe (
 CREATE TABLE IF NOT EXISTS pe_fcg (
   pe_id INTEGER NOT NULL,
   fcg_id INTEGER NOT NULL,
-  PRIMARY KEY (pe_id, fcg_id)
-  FOREIGN KEY (pe_id) REFERENCES pe(id),
+  PRIMARY KEY (pe_id, fcg_id) FOREIGN KEY (pe_id) REFERENCES pe(id),
   FOREIGN KEY (fcg_id) REFERENCES fcg(id),
   UNIQUE (fcg_id)
 ) STRICT;
@@ -243,7 +245,7 @@ CREATE TABLE IF NOT EXISTS fe (
   pe_id INTEGER NOT NULL,
   responsavel_id INTEGER,
   qntd INTEGER NOT NULL,
-  diferenca_preco DECIMAL(14, 4) NOT NULL,
+  diferenca_preco INTEGER NOT NULL,
   observacoes TEXT,
   FOREIGN KEY (estoque_id) REFERENCES estoque(id),
   FOREIGN KEY (pe_id) REFERENCES pe(id),
@@ -253,7 +255,7 @@ CREATE TABLE IF NOT EXISTS fe (
 CREATE TABLE IF NOT EXISTS fc_fe (
   fc_id INTEGER NOT NULL,
   fe_id INTEGER NOT NULL,
-  valor_inicial DECIMAL(14, 4) NOT NULL,
+  valor_inicial INTEGER NOT NULL,
   FOREIGN KEY (fc_id) REFERENCES fc(id),
   FOREIGN KEY (fe_id) REFERENCES fe(id),
   PRIMARY KEY (fc_id, fe_id),
@@ -264,7 +266,7 @@ CREATE TABLE IF NOT EXISTS conta (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   empresa_id INTEGER NOT NULL,
   nome TEXT NOT NULL,
-  saldo DECIMAL(14,4) NOT NULL,
+  saldo INTEGER NOT NULL,
   FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 ) STRICT;
 --! Tabela "conta_forma"
@@ -281,7 +283,7 @@ CREATE TABLE IF NOT EXISTS forma_transacao (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   conta_forma_id INTEGER NOT NULL,
   nome TEXT,
-  taxa_encargo DECIMAL(9,6) NOT NULL DEFAULT(0),
+  taxa_encargo INTEGER NOT NULL DEFAULT(0),
   FOREIGN KEY (conta_forma_id) REFERENCES conta_forma(id)
 ) STRICT;
 --! Tabela "ff" Fluxo Financeiro
@@ -289,7 +291,7 @@ CREATE TABLE IF NOT EXISTS ff (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   conta_id INTEGER NOT NULL,
   tipo_ff INTEGER NOT NULL,
-  valor DECIMAL(14,4) NOT NULL,
+  valor INTEGER NOT NULL,
   observacoes TEXT,
   efetivacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
   FOREIGN KEY (conta_id) REFERENCES conta(id)
@@ -298,8 +300,7 @@ CREATE TABLE IF NOT EXISTS ff (
 CREATE TABLE IF NOT EXISTS fc_ff (
   fc_id INTEGER NOT NULL,
   ff_id INTEGER NOT NULL,
-  PRIMARY KEY (fc_id, ff_id)
-  FOREIGN KEY (fc_id) REFERENCES fc(id),
+  PRIMARY KEY (fc_id, ff_id) FOREIGN KEY (fc_id) REFERENCES fc(id),
   FOREIGN KEY (ff_id) REFERENCES ff(id),
   UNIQUE (fc_id)
 ) STRICT;
