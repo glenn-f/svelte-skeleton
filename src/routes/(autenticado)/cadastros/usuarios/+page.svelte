@@ -7,19 +7,8 @@
   import ModalFormUsuario from './ModalFormUsuario.svelte'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import CelulaStatus from './CelulaStatus.svelte'
-
-
-
-
   export let data
-
-  console.log(data)
-
-
-
-
-
-
+  
   const GPEs = new Map(data.permOptions.map((v, i) => [v.id, v]))
   let columns = [
     { accessorKey: 'id', header: 'ID' },

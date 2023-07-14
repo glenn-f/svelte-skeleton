@@ -351,3 +351,33 @@ export function toggleStatusUsuarioEmpresa({ eid, uid }) {
     return { ok: false, message: 'Erro no servidor. Tente mais tarde.' }
   }
 }
+
+
+/**
+ * @template T - Tipo dos dados do resultado.
+ * @typedef {Object.<keyof T, string[] | undefined>} FieldErrors<T>
+ */
+/**
+ * @template T - Tipo dos dados do resultado.
+ * @typedef {Object} ResultSetInvalid<T>
+ * @property {false} valid - Validade do resultado da execução SQL
+ * @property {FieldErrors<T>} [fieldErrors] - Listagem de erros por campo da tabela
+ * @property {string} message - Descrição geral do erro ocorrido
+ * @property {string} code - Código do erro ocorrido
+ */
+/**
+ * @template T - Tipo dos dados do resultado.
+ * @typedef {Object} ResultSetValid<T>
+ * @property {true} valid - Validade do resultado da execução SQL
+ * @property {T[]} data - Dados válidos do resultado da execução SQL
+ */
+/**
+ * @template T - Tipo dos dados do resultado.
+ * @typedef {Object} ResultValid<T>
+ * @property {true} valid - Validade do resultado da execução SQL
+ * @property {T} data - Dados válidos do resultado da execução SQL
+ */
+/**
+ * @template T - Tipo dos dados do resultado.
+ * @typedef {ResultSetValid<T> | ResultSetInvalid<T>} DBAll<T>
+ */

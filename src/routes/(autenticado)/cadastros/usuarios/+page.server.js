@@ -1,5 +1,6 @@
 import { alterarUsuarioEmpresa, criarUsuarioEmpresa, db, toggleStatusUsuarioEmpresa } from '$lib/server/db';
 import { consultarUsuarios } from '$lib/server/db/models/usuario.js';
+import { consultarGPEs } from '$lib/server/db/models/usuario_gpe.js';
 import { idSchema } from '$lib/zod';
 import { addUsuarioEmpresaSchema, editUsuarioEmpresaSchema } from '$lib/zod/schemas/usuario';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
@@ -7,21 +8,17 @@ import { message, setError, superValidate } from 'sveltekit-superforms/server';
 export async function load({ locals }) {
   const form = await superValidate(addUsuarioEmpresaSchema)
   const { empresa_id: eid } = locals.sessao
-  let usuarios
+  let usuarios, gpes, result
 
-  //* Pegar usuários desta empresa
-  const rs = consultarUsuarios({ eid })
-  if (rs.valid) {
-    usuarios = rs.data
-  }
+  //* Consultar Usuários da Empresa
+  result = consultarUsuarios({ eid })
+  if (result.valid) { usuarios = result.data }
+  //* Consultar Grupos de Permissão da Empresa
+  result = consultarGPEs({ eid })
+  if (result.valid) { gpes = result.data }
 
-  const queryGPE = db.prepare('SELECT * FROM grupo_permissao_empresa WHERE empresa_id = $eid AND delecao IS NULL')
-  const gpes = queryGPE.all({ eid })
-  
   return { usuarios, form, permOptions: gpes };
 };
-
-
 
 export const actions = {
   adicionar: async ({ request, locals }) => {

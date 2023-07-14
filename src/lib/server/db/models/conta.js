@@ -1,9 +1,30 @@
-import { db } from ".."
+import { db, dbInsert, dbTransaction } from ".."
 
-export function consultarUsuarios(dados) {
-  //TODO consulta de contas no banco de dados
-  const query = db.prepare("")
-  const contas = query.all(dados)
+export function consultarContas(dados) {
 
-  return contas
 }
+
+export function detalharConta(dados) {
+
+}
+
+export function editarConta(dados) {
+
+}
+
+export function alternarStatusConta(dados) {
+
+}
+
+/**
+ * @typedef {Object} Conta
+ * @property {number} id - O ID da pessoa
+ * @property {number} empresa_id - O ID da empresa
+ * @property {string} nome - O nome da conta
+ * @property {number} saldo - O saldo da conta 
+ */
+
+/**
+  * @template T
+  * @typedef {import('..').DBAll<T>} DBAll<T>
+*/

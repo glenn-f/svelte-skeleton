@@ -1,17 +1,55 @@
-import { db } from "..";
+import { db, dbInsert, dbTransaction } from ".."
 
-export function criarPessoa() {
+/**
+ * Consulta todos os usuários associados à uma empresa da aplicação
+ * @param {{eid: number}} dados Dados da consulta sobre os usuários
+ * @returns {DBAll<Pessoa>} Lista de usuários pertencentes à empresa 
+ */
+export function consultarPessoas(dados) {
+  const { eid } = dados
+  try {
+    const query = db.prepare("SELECT * FROM pessoa WHERE empresa_id = $eid")
+    const data = query.all({ eid })
+    return { valid: true, data }
+  } catch (e) {
+    return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+  }
+}
+
+export function detalharPessoa(dados) {
 
 }
 
-export function listarPessoas() {
+export function editarPessoa(dados) {
 
 }
 
-export function editarPessoa() {
+export function alternarStatusPessoa(dados) {
 
 }
 
-export function statusPessoa() {
+/**
+ * @typedef {Object} Pessoa
+ * @property {number} id - O ID da pessoa
+ * @property {number} empresa_id - O ID da empresa
+ * @property {number} criador_id - O ID do usuário que criou esta pessoa
+ * @property {number} tipo_pessoa - O Tipo de Pessoa
+ * @property {number} rep - O Tipo de Relacionamento Empresa-Pessoa
+ * @property {string} nome - O nome da pessoa
+ * @property {string} [email] - 
+ * @property {string} [cpf] - 
+ * @property {string} [cnpj] - 
+ * @property {string} [rg] - 
+ * @property {string} [apelido] - 
+ * @property {string} [endereco] - 
+ * @property {string} [cep] - 
+ * @property {string} [sexo] - 
+ * @property {Date} [dn] - 
+ * @property {Date} criacao - Data de inserção deste registro no banco de dados
+ * @property {Date} [delecao] - Data de desativação deste registro no banco de dados
+ */
 
-}
+/**
+  * @template T
+  * @typedef {import('..').DBAll<T>} DBAll<T>
+*/
