@@ -45,14 +45,14 @@
                 <MenuItem href="/loja/disponivel" titulo="Estoque Disponível" icon="mdi:cart-check" />
               {/if}
               {#if data.sessao.gpe.pode_ver_historico_vendas}
-                <MenuItem href="/loja/histórico" titulo="Histórico de Vendas" icon="mdi:receipt-text-clock" />
+                <MenuItem href="/loja/historico" titulo="Histórico de Vendas" icon="mdi:receipt-text-clock" />
               {/if}
             </Menu>
           {/if}
           {#if data.sessao.gpe.pode_ver_estoque || data.sessao.gpe.pode_entrada_estoque || data.sessao.gpe.pode_saida_estoque}
             <Menu titulo="Estoque" icon="mdi:warehouse">
               {#if data.sessao.gpe.pode_ver_estoque}
-                <MenuItem href="/estoque" titulo="Inventário" icon="fluent-mdl2:product-list" />
+                <MenuItem href="/estoque/inventario" titulo="Inventário" icon="fluent-mdl2:product-list" />
               {/if}
               {#if data.sessao.gpe.pode_entrada_estoque}
                 <MenuItem href="/estoque/entradas" titulo="Entradas" icon="ri:inbox-archive-fill" />
@@ -65,13 +65,10 @@
           {#if data.sessao.gpe.pode_ver_saldo || data.sessao.gpe.pode_transacao_receita || data.sessao.gpe.pode_transacao_despesa}
             <Menu titulo="Transações" icon="ic:round-currency-exchange">
               {#if data.sessao.gpe.pode_ver_saldo}
-                <MenuItem href="/transacoes/saldo" titulo="Saldo" icon="fa6-solid:coins" />
+                <MenuItem href="/transacoes/saldo" titulo="Saldo de Contas" icon="fa6-solid:coins" />
               {/if}
               {#if data.sessao.gpe.pode_transacao_receita}
-                <MenuItem href="/transacoes/entrada" titulo="Receitas" icon="iconoir:receive-dollars" />
-              {/if}
-              {#if data.sessao.gpe.pode_transacao_despesa}
-                <MenuItem href="/transacoes/saida" titulo="Despesas" icon="iconoir:send-dollars" />
+                <MenuItem href="/transacoes/historico" titulo="Histórico" icon="mdi:cash-sync" />
               {/if}
             </Menu>
           {/if}
