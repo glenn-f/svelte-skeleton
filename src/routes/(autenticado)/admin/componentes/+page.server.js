@@ -1,15 +1,16 @@
 import { superValidate } from 'sveltekit-superforms/server';
-import { z } from '$lib/zod';
+import { z, zDate } from '$lib/zod';
 
 const schema = z.object({
     perc: z.any(),
     moeda: z.any(),
-    dn: z.coerce.date()
+    dn: z.any()
 })
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load() {
-    const form = superValidate(schema)
+    let dn = new Date().getTime()
+    const form = superValidate({ dn }, schema, { errors: false })
     return { form };
 };
 

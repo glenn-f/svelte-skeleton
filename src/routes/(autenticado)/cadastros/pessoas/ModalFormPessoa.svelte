@@ -11,7 +11,7 @@
   import InputText from '$lib/components/Forms/InputText.svelte'
   import CardModal from '$lib/components/CardModal.svelte'
   import Label from '../../../../lib/components/Forms/Label.svelte'
-  import InputDate from '../../../../lib/components/Forms/InputDate.svelte'
+  import InputDate from '../../../../lib/components/Forms/InputDateTime.svelte'
   /** Modo em que o modal será aberto
    * @type {'adicionar' | 'editar' | 'apagar'} */
   export let modo = 'adicionar'

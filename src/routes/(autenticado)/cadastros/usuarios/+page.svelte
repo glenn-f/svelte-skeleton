@@ -12,7 +12,7 @@
   const GPEs = new Map(data.permOptions.map((v, i) => [v.id, v]))
   let columns = [
     { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'associacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
+    { accessorKey: 'associacao', header: 'Associação', cell: (info) => new Date(info.getValue()).toLocaleString() },
     { accessorKey: 'desativacao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
     { accessorKey: 'nome', header: 'Nome' },
     { accessorKey: 'email', header: 'E-mail' },

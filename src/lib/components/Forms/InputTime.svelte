@@ -1,5 +1,5 @@
 <script>
-  import { HTMLdateToMillis, millisToHTMLdate } from '$lib/types'
+  import { HTMLtimeToMillis, millisToHTMLtime } from '$lib/types'
   import Label from './Label.svelte'
   /** @type {?string} */
   export let label = undefined
@@ -25,33 +25,21 @@
   export let labelClass = ''
   /** @type {?string} */
   export let autocomplete = 'off'
-  export let max = '9999-12-31'
+  export let max = undefined
   export let min = undefined
   export let readonly = undefined
   export let input = undefined
   let valueMask = undefined
 
-  if (max instanceof Date) {
-    max = max.toISOString().substring(0, 10)
-  } else if (typeof max == 'string') {
-    max = max.substring(0, 10)
-  }
-
-  if (min instanceof Date) {
-    min = min.toISOString().substring(0, 10)
-  } else if (typeof min == 'string') {
-    min = min.substring(0, 10)
-  }
-
   function updateValue(mask) {
-    const tmpVal = HTMLdateToMillis(mask)
+    const tmpVal = HTMLtimeToMillis(mask)
     if (tmpVal !== value) {
       value = tmpVal
     }
   }
 
   function updateMask(val) {
-    const tmpMask = millisToHTMLdate(val)
+    const tmpMask = millisToHTMLtime(val)
     if (tmpMask !== valueMask) {
       valueMask = tmpMask
     }
@@ -69,9 +57,9 @@
     class:input-success={success && !warning && !error}
     class:input-warning={warning && !error}
     class:input-error={error}
-    type="date"
+    type="time"
     class={'input read-only:variant-filled-surface' + inputClass}
-    name={'_InputDate-' + name}
+    name={'_InputTime-' + name}
     {max}
     {min}
     {readonly}

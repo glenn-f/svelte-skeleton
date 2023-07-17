@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS usuario (
   senha TEXT NOT NULL,
   tipo_usuario INTEGER NOT NULL DEFAULT(0),
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
   delecao INTEGER,
   FOREIGN KEY (criador_id) REFERENCES usuario(id),
   UNIQUE (email)
@@ -18,6 +19,7 @@ CREATE TABLE IF NOT EXISTS sessao (
   usuario_id INTEGER,
   expiracao INTEGER NOT NULL,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
   FOREIGN KEY (usuario_id) REFERENCES usuario(id)
 ) STRICT;
 -- Tabela "empresa"
@@ -37,6 +39,7 @@ CREATE TABLE IF NOT EXISTS empresa (
   endereco TEXT,
   telefone TEXT,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
   delecao INTEGER,
   FOREIGN KEY (dono_id) REFERENCES usuario(id),
   UNIQUE (dono_id)
@@ -60,7 +63,10 @@ CREATE TABLE IF NOT EXISTS grupo_permissao_empresa (
   pode_cadastrar_conta INTEGER NOT NULL DEFAULT(0),
   pode_cadastrar_usuario INTEGER NOT NULL DEFAULT(0),
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
   delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
   UNIQUE (empresa_id, nome)
 ) STRICT;
@@ -68,7 +74,6 @@ CREATE TABLE IF NOT EXISTS grupo_permissao_empresa (
 CREATE TABLE IF NOT EXISTS pessoa (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   empresa_id INTEGER NOT NULL,
-  criador_id INTEGER NOT NULL,
   tipo_pessoa INTEGER NOT NULL DEFAULT(1),
   rep INTEGER NOT NULL DEFAULT(1),
   nome TEXT NOT NULL,
@@ -82,7 +87,10 @@ CREATE TABLE IF NOT EXISTS pessoa (
   sexo TEXT,
   dn INTEGER,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
   delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
   FOREIGN KEY (criador_id) REFERENCES usuario(id),
   UNIQUE (cpf, empresa_id),
@@ -95,8 +103,11 @@ CREATE TABLE IF NOT EXISTS usuario_empresa (
   pessoa_id INTEGER NOT NULL,
   gpe_id INTEGER,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
   delecao INTEGER,
+  criador_id INTEGER,
   PRIMARY KEY (usuario_id, empresa_id),
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (usuario_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
   FOREIGN KEY (pessoa_id) REFERENCES pessoa(id),
@@ -109,7 +120,10 @@ CREATE TABLE IF NOT EXISTS produto_categoria(
   empresa_id INTEGER NOT NULL,
   nome TEXT NOT NULL,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
   delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
   UNIQUE (nome)
 ) STRICT;
@@ -122,7 +136,10 @@ CREATE TABLE IF NOT EXISTS produto (
   titulo_codigo TEXT,
   config_json TEXT,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
   delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
   FOREIGN KEY (produto_categoria_id) REFERENCES produto_categoria(id),
   UNIQUE (nome)
@@ -135,8 +152,13 @@ CREATE TABLE IF NOT EXISTS regra_comissao (
   taxa_fixa INTEGER NOT NULL,
   nome TEXT NOT NULL,
   descricao TEXT,
-  data_inicial INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  data_inicial INTEGER NOT NULL,
   data_final INTEGER NOT NULL,
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 ) STRICT;
 --! Tabela "produto_regra_comissao"
@@ -156,7 +178,11 @@ CREATE TABLE IF NOT EXISTS fechamento_comissao (
   regra_comissao_id INTEGER NOT NULL,
   bonus_fixo INTEGER NOT NULL,
   taxa_fixa INTEGER NOT NULL,
-  efetivacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (pessoa_id) REFERENCES pessoa(id),
   FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id)
 ) STRICT;
@@ -169,7 +195,11 @@ CREATE TABLE IF NOT EXISTS comissao (
   tipo_comissao INTEGER NOT NULL,
   valor_fixo INTEGER NOT NULL,
   valor_taxa INTEGER NOT NULL,
-  efetivacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id),
   FOREIGN KEY (fechamento_comissao_id) REFERENCES fechamento_comissao(id),
   FOREIGN KEY (pessoa_id) REFERENCES pessoa(id)
@@ -185,7 +215,11 @@ CREATE TABLE IF NOT EXISTS fc (
   tipo_fc INTEGER NOT NULL,
   valor INTEGER NOT NULL,
   observacoes TEXT,
-  efetivacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
   FOREIGN KEY (fcg_id) REFERENCES fcg(id)
 ) STRICT;
@@ -215,18 +249,25 @@ CREATE TABLE IF NOT EXISTS estoque (
   codigo TEXT,
   dados_json TEXT,
   observacoes TEXT,
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (produto_id) REFERENCES produto(id)
 ) STRICT;
 --! Tabela "pe" Processo Estoque
 CREATE TABLE IF NOT EXISTS pe (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  usuario_id INTEGER NOT NULL,
   empresa_id INTEGER NOT NULL,
   responsavel_id INTEGER,
   tipo_pe INTEGER NOT NULL,
   observacoes TEXT,
-  efetivacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
-  FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
   FOREIGN KEY (responsavel_id) REFERENCES pessoa(id)
 ) STRICT;
@@ -267,6 +308,11 @@ CREATE TABLE IF NOT EXISTS conta (
   empresa_id INTEGER NOT NULL,
   nome TEXT NOT NULL,
   saldo INTEGER NOT NULL,
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 ) STRICT;
 --! Tabela "conta_forma"
@@ -276,6 +322,11 @@ CREATE TABLE IF NOT EXISTS conta_forma (
   nome TEXT NOT NULL,
   pode_receber INTEGER NOT NULL DEFAULT 1,
   pode_pagar INTEGER NOT NULL DEFAULT 1,
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (conta_id) REFERENCES conta(id)
 ) STRICT;
 --! Tabela "forma_transacao"
@@ -284,6 +335,11 @@ CREATE TABLE IF NOT EXISTS forma_transacao (
   conta_forma_id INTEGER NOT NULL,
   nome TEXT,
   taxa_encargo INTEGER NOT NULL DEFAULT(0),
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (conta_forma_id) REFERENCES conta_forma(id)
 ) STRICT;
 --! Tabela "ff" Fluxo Financeiro
@@ -292,8 +348,12 @@ CREATE TABLE IF NOT EXISTS ff (
   conta_id INTEGER NOT NULL,
   tipo_ff INTEGER NOT NULL,
   valor INTEGER NOT NULL,
-  observacoes TEXT,
-  efetivacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  observacoes TEXT,  
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (conta_id) REFERENCES conta(id)
 ) STRICT;
 --! Tabela "fc_ff" Fluxo Contabil-Financeiro

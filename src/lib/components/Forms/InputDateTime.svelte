@@ -1,5 +1,6 @@
 <script>
-  import { HTMLdateToMillis, millisToHTMLdate } from '$lib/types'
+  import { browser } from '$app/environment'
+  import { HTMLdatetimeToMillis, millisToHTMLdatetime } from '$lib/types'
   import Label from './Label.svelte'
   /** @type {?string} */
   export let label = undefined
@@ -44,14 +45,16 @@
   }
 
   function updateValue(mask) {
-    const tmpVal = HTMLdateToMillis(mask)
+    if (!browser) return
+    const tmpVal = HTMLdatetimeToMillis(mask)
     if (tmpVal !== value) {
       value = tmpVal
     }
   }
 
   function updateMask(val) {
-    const tmpMask = millisToHTMLdate(val)
+    if (!browser) return
+    const tmpMask = millisToHTMLdatetime(val)
     if (tmpMask !== valueMask) {
       valueMask = tmpMask
     }
@@ -69,9 +72,9 @@
     class:input-success={success && !warning && !error}
     class:input-warning={warning && !error}
     class:input-error={error}
-    type="date"
+    type="datetime-local"
     class={'input read-only:variant-filled-surface' + inputClass}
-    name={'_InputDate-' + name}
+    name={'_InputDateTime-' + name}
     {max}
     {min}
     {readonly}
