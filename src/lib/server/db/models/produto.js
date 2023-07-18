@@ -9,6 +9,7 @@ export function consultarProdutos(dados) {
   const { eid } = dados
   try {
     const query = db.prepare("SELECT * FROM produto WHERE empresa_id = $eid")
+    /** @type {Produto[]} Listagem de produtos */
     const data = query.all({ eid })
     return { valid: true, data }
   } catch (e) {

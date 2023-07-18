@@ -2,6 +2,7 @@
   import { formatMoeda } from '$lib/helpers'
   import { onMount } from 'svelte'
   import Label from './Label.svelte'
+  import Icon from '@iconify/svelte'
   /** @type {?(string | string[])} */
   export let error = undefined
   /** @type {?string} */
@@ -80,21 +81,15 @@
     inputEl.setSelectionRange(pos, pos)
     e.preventDefault()
   }
-  /** Formata o texto ao sair do inpur
-   * @param {InputEvent} e
-   */
-  function onBlur(e) {
-    let mask = (e.target.value ?? '0').replaceAll('.', '').replace(',', '.')
-    value = parseFloat(mask)
-    maskInput.value = formatMoeda(mask, 2)
-  }
   /** Seleciona todo o texto ao entrar no input
    * @param {InputEvent} e
    */
   function onFocus(e) {
     /** @type {HTMLInputElement} */
     const input = e.target
-    input.setSelectionRange(0, 100)
+    let posSel = input.value.indexOf(',')
+    posSel = posSel === -1 ? input.selectionEnd : posSel
+    input.setSelectionRange(0, posSel)
   }
   /** @type {HTMLInputElement} */
   let maskInput
@@ -116,20 +111,24 @@
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
-  <input
-    bind:this={maskInput}
-    class:input-success={success && !warning && !error}
-    class:input-warning={warning && !error}
-    class:input-error={error}
-    type="text"
-    class={'input read-only:variant-filled-surface ' + inputClass}
-    {readonly}
-    id={'InputMoeda' + name}
-    style={`text-align: ${align};`}
-    {required}
-    {autocomplete}
-    on:blur={onBlur}
-    on:focus={onFocus}
-  />
+  <div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
+    <div class="input-group-shim !px-2">
+      <Icon icon="mdi:currency-brl" width="28px" height="28px" />
+    </div>
+    <input
+      bind:this={maskInput}
+      class:input-success={success && !warning && !error}
+      class:input-warning={warning && !error}
+      class:input-error={error}
+      type="text"
+      class={'input rounded-tl-none rounded-bl-none read-only:variant-filled-surface ' + inputClass}
+      id={'InputMoeda' + name}
+      style={`text-align: ${align};`}
+      {readonly}
+      {required}
+      {autocomplete}
+      on:focus={onFocus}
+    />
+  </div>
 </Label>
 <input type="hidden" {name} bind:value />

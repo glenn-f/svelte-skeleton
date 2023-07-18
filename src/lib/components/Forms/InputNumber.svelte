@@ -2,174 +2,6 @@
   import { formatMoeda } from '$lib/helpers'
   import { onMount } from 'svelte'
   import Label from './Label.svelte'
-
-  const verificarZerosEsquerda = (val) => {
-    const match = /^([0\.]+)(?=\d)/g.exec(val)
-    return match ? (match[1] || '').length : 0
-  }
-  function maskLoop(cPos, text, limiteInferior, virgula, milhar) {
-    let mask = ''
-    for (let c = text.charAt(cPos); cPos >= limiteInferior; c = text.charAt(--cPos)) {
-      if (c === ',') {
-        if (!virgula) {
-          milhar = 0
-          virgula = 1
-          mask = ',' + mask
-        }
-        continue
-      } else if (c === '.') continue
-      if (milhar > 0 && milhar % 3 === 0) mask = '.' + mask
-      if (milhar > -1) milhar += 1
-      mask = c + mask
-    }
-    return [mask, virgula, milhar]
-  }
-  /** Recebe uma string numérica com ou sem máscara e retorna a nova máscara de texto e a posição do cursor de seleção textual.
-   * Só pode receber textos no formato pt-BR. Se a string `initialValue` for no formato en-US o resultado será incorreto.
-   * @param {string} initialValue
-   * @param {number} selPos
-   * @param {number | null} digAposVirgula
-   */
-  function maskMoeda(initialValue, selPos, digAposVirgula = undefined) {
-    digAposVirgula = parseInt(digAposVirgula) >= 0 ? parseInt(digAposVirgula) : -1
-    const lastCharPos = initialValue.length - 1
-    const selCharPos = selPos - 1
-    const cursorChar = selPos ? initialValue.charAt(selCharPos) : null
-    /** Texto antes da posição do cursor do texto*/
-    let as = ''
-    /** Texto depois a posição do cursor do texto*/
-    let ds = ''
-    /** Em qual parte do texto a vírgula é encontrada (-1: Antes, 1: depois, 0: não encontrada) */
-    let virgula = 0
-    /** Contador de milhar no texto da máscara (-1: indefinido) */
-    let milhar = initialValue.indexOf(',') === -1 ? 0 : -1
-    let maskInfo
-
-    //* Depois do cursor
-    maskInfo = maskLoop(lastCharPos, initialValue, selPos, virgula, milhar)
-    ds = maskInfo[0]
-    virgula = maskInfo[1]
-    milhar = maskInfo[2]
-
-    //* Antes do cursor
-    maskInfo = maskLoop(selCharPos, initialValue, 0, virgula, milhar)
-    as = maskInfo[0]
-    virgula = maskInfo[1]
-    milhar = maskInfo[2]
-
-    // não pode iniciar com vírgula, deve haver um dígito à esquerda
-    if (as.charAt(0) === ',') as = '0' + as
-    if (!as && ds.charAt(0) === ',') ds = '0' + ds
-
-    // apagar zeros a esquerda, se houver
-    const corteAS = verificarZerosEsquerda(as + ds)
-    const corteDS = verificarZerosEsquerda(ds)
-    if (corteAS) {
-      as = as.slice(corteAS)
-    }
-    if (as.length === 0 && corteDS) {
-      ds = ds.slice(corteDS)
-    }
-
-    //* Resultado da máscara
-    let finalValue = as + ds
-    let finalCursor = as.length
-
-    //* Ajuste da posição do cursor
-    const newCursorChar = finalValue.charAt(finalCursor)
-    if (cursorChar === newCursorChar && ['.', ','].includes(cursorChar)) {
-      finalCursor++
-    }
-
-    //* Ajuste de dígitos após virgula
-    let posVirgula = finalValue.indexOf(',')
-    if (digAposVirgula > 0) {
-      // inserir ou verificar se qntd apos a virgula está correta
-      if (posVirgula !== -1) {
-        // tem virgula
-        let tam = posVirgula + 1 + digAposVirgula
-        finalValue = finalValue.slice(0, tam).padEnd(tam, '0')
-      } else {
-        // não tem virgula
-        finalValue = finalValue + ',' + '0'.repeat(digAposVirgula)
-      }
-    } else if (digAposVirgula === 0 && posVirgula >= 0) {
-      // existe virgula e deve ser removida junto com decimais
-      finalValue = finalValue.slice(0, posVirgula)
-    }
-    // apagar virgula orfã se o último valor digitado não é uma vírgula
-    if (finalValue.at(-1) === ',' && finalValue.charAt(finalCursor - 1) !== ',') {
-      finalValue = finalValue.slice(0, finalValue.length - 1)
-    }
-
-    return [finalValue, finalCursor]
-  }
-
-  /** Trata as entradas de caracteres feitas pelo usuário após terem sido inseridas no input.value (apenas /[0-9,.]/)
-   *  @param {InputEvent} e
-   */
-  function onInput(e) {
-    /** @type {HTMLInputElement} */
-    const input = e.target
-    const initialValue = input.value
-    const initialCursorPos = Math.max(input.selectionStart, input.selectionEnd)
-    let finalValue, finalCursorPos
-    // inputType: "insertFromPaste" | "insertText" | "insertFromDrop"
-    if (e.inputType !== 'deleteByDrag') {
-      const mask = maskMoeda(initialValue, initialCursorPos, qntdAposVirgula)
-      finalValue = mask[0]
-      finalCursorPos = mask[1]
-      if (['deleteByCut', 'deleteContentBackward'].includes(e.inputType)) {
-        if (['.'].includes(finalValue.charAt(finalCursorPos - 1))) {
-          finalCursorPos--
-        }
-      } else if (e.inputType == 'deleteContentForward') {
-        if (['.'].includes(finalValue.charAt(finalCursorPos)) || finalValue.slice(0, finalCursorPos + 2) == '0,') {
-          finalCursorPos++
-        }
-      }
-    } else {
-      return
-    }
-
-    value = parseFloat(finalValue.replaceAll('.', '').replace(',', '.')) || 0
-    input.value = finalValue
-    input.setSelectionRange(finalCursorPos, finalCursorPos)
-  }
-  /** Impede a entrada de caracteres diferentes de [0123456789.,]
-   *  @param {InputEvent} e
-   */
-  function onBeforeInput(e) {
-    if (typeof e.data == 'string') {
-      for (const char of e.data) {
-        const code = char.charCodeAt(0)
-        if (!((code >= 48 && code <= 57) || code === 44 || code === 46)) {
-          e.preventDefault()
-          return
-        }
-      }
-    }
-  }
-
-  /**
-   *
-   * @param {InputEvent} e
-   */
-  function onBlur(e) {
-    let mask = (e.target.value ?? '0').replaceAll('.', '').replace(',', '.')
-    value = parseFloat(mask)
-    maskInput.value = formatMoeda(mask, qntdAposVirgula)
-  }
-  /**
-   *
-   * @param {InputEvent} e
-   */
-   function onFocus(e) {
-    /** @type {HTMLInputElement} */
-    const input = e.target
-    console.log(input)
-    input.setSelectionRange(0,100)
-  }
   /** @type {?(string | string[])} */
   export let error = undefined
   /** @type {?string} */
@@ -185,22 +17,97 @@
   /** O padrão de alinhamento interno é 'right' @type {'right' | 'center' | 'left'} */
   export let align = 'right'
   /** @type {?string} */
+  export let casasDecimais = 0
   export let readonly = undefined
   export let autocomplete = 'off'
   export let label = undefined
   export let required = undefined
   export let name
-  export let qntdAposVirgula = undefined
   export let value = undefined
-  if (typeof value == 'string') value = value ? parseFloat(value) : undefined
 
+  if (typeof value == 'string') {
+    let v = parseFloat(value)
+    value = Number.isFinite(v) ? v : undefined
+  }
+
+  function handleMask(text, selEnd) {
+    if (!text) return { numJs: undefined, numBr: '', pos: 0 }
+    let posFromEnd = text.length - selEnd
+    text = '0' + text.replace(/[.,]/g, '')
+    const numJs = casasDecimais > 0 ? parseFloat(text.slice(0, -casasDecimais) + '.' + text.slice(-casasDecimais)) : parseFloat(text)
+    const numBr = formatMoeda(numJs, casasDecimais)
+    const pos = numBr.length - posFromEnd
+    return { numJs, numBr, pos }
+  }
+
+  /** Impede a entrada de caracteres diferentes de [0123456789.,]
+   *  @param {InputEvent} e */
+  function onBeforeInput(e) {
+    /** @type {HTMLInputElement} */
+    const inputEl = e.target
+    let selSize = inputEl.selectionEnd - inputEl.selectionStart
+    let selStart = Math.max(inputEl.selectionStart + (selSize === 0 && e.inputType === 'deleteContentBackward' ? -1 : 0), 0)
+    let selEnd = Math.min(inputEl.selectionEnd + (selSize === 0 && e.inputType === 'deleteContentForward' ? 1 : 0), inputEl.value.length)
+    let textoDelecao = inputEl.value.substring(selStart, selEnd)
+    let textoInsercao = e.data || ''
+    let textoAntes = inputEl.value.substring(0, selStart)
+    let textoDepois = inputEl.value.substring(selEnd)
+    let textoFinal = textoAntes + textoInsercao + textoDepois
+    let charSelStart = inputEl.value.charAt(selStart)
+
+    //* Tratamento de Exceções
+    if (textoInsercao) {
+      for (const char of textoInsercao) {
+        const code = char.charCodeAt(0)
+        if (!((code >= 48 && code <= 57) || code === 44 || code === 46)) return e.preventDefault()
+      }
+      if (!textoDelecao && textoInsercao.length == 1) {
+        if (textoInsercao === charSelStart && [',', '.'].includes(charSelStart)) {
+          inputEl.setSelectionRange(selStart + 1, selStart + 1)
+          return e.preventDefault()
+        }
+      }
+    } else if (textoDelecao.length == 1) {
+      if ([',', '.'].includes(textoDelecao)) {
+        if (e.inputType == 'deleteContentBackward') inputEl.setSelectionRange(selStart, selStart)
+        else inputEl.setSelectionRange(selEnd, selEnd)
+        return e.preventDefault()
+      }
+    }
+    //* Tratamento do valor final
+    let { numJs, numBr, pos } = handleMask(textoFinal, textoAntes.length + textoInsercao.length)
+    value = numJs
+    inputEl.value = numBr
+    inputEl.setSelectionRange(pos, pos)
+    e.preventDefault()
+  }
+  /** Seleciona todo o texto ao entrar no input
+   * @param {InputEvent} e
+   */
+  function onFocus(e) {
+    /** @type {HTMLInputElement} */
+    const input = e.target
+    let posSel = input.value.indexOf(',')
+    posSel = posSel === -1? input.selectionEnd : posSel
+    input.setSelectionRange(0, posSel)
+  }
   /** @type {HTMLInputElement} */
   let maskInput
 
   onMount(() => {
     maskInput.onbeforeinput = onBeforeInput
-    maskInput.value = value === undefined ? formatMoeda(0, qntdAposVirgula) : formatMoeda(value, qntdAposVirgula)
   })
+
+  function onChangeValue(v) {
+    if (!maskInput) return
+    v = parseFloat(v)
+    let mask = Number.isFinite(v) ? formatMoeda(v, casasDecimais) : ''
+    if (mask !== maskInput.value) {
+      maskInput.value = mask
+    }
+  }
+
+  $: onChangeValue(value)
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
@@ -211,13 +118,11 @@
     class:input-error={error}
     type="text"
     class={'input read-only:variant-filled-surface ' + inputClass}
-    {readonly}
     id={'InputMoeda' + name}
     style={`text-align: ${align};`}
+    {readonly}
     {required}
     {autocomplete}
-    on:input={onInput}
-    on:blur={onBlur}
     on:focus={onFocus}
   />
 </Label>
