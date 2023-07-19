@@ -43,7 +43,7 @@
 
 <div class="grid gap-3">
   <div class="flex items-center">
-    <h1 class="h1 text-center mr-3">Pessoas</h1>
+    <h1 class="h1 text-center mr-3">Todas Pessoas</h1>
     <!-- <button class="btn variant-filled-primary h-min" on:click={handleAdicionar}>
       <Icon icon="fa6-solid:plus" />
       <span>Adicionar</span>

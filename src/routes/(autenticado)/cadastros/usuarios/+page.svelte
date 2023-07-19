@@ -4,9 +4,8 @@
   import { modalStore } from '@skeletonlabs/skeleton'
   import { renderComponent } from '@tanstack/svelte-table'
   import CelulaAcoes from './CelulaAcoes.svelte'
-  import ModalFormUsuario from './ModalFormUsuario.svelte'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import CelulaStatus from './CelulaStatus.svelte'
+  import ModalFormUsuario from './ModalFormUsuario.svelte'
   export let data
   
   const GPEs = new Map(data.permOptions.map((v, i) => [v.id, v]))
@@ -16,7 +15,7 @@
     { accessorKey: 'desativacao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
     { accessorKey: 'nome', header: 'Nome' },
     { accessorKey: 'email', header: 'E-mail' },
-    { accessorKey: 'gpe_id', header: 'Permissão', cell: (info) => GPEs.get(info.getValue()).nome },
+    { accessorKey: 'gpe_id', header: 'Grupo', cell: (info) => GPEs.get(info.getValue()).nome },
     { accessorKey: 'criador_nome', header: 'Criador' },
     { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original, permOptions: GPEs }), enableSorting: false },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original, permOptions: GPEs }), enableSorting: false }

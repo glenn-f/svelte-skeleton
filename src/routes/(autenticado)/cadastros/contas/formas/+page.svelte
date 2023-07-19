@@ -25,7 +25,7 @@
   
   <div class="grid gap-3">
     <div class="flex items-center">
-      <h1 class="h1 text-center mr-3">Contas Transacionais</h1>
+      <h1 class="h1 text-center mr-3">Formas de Transação</h1>
       <!-- <button class="btn variant-filled-primary h-min" on:click={handleAdicionar}>
         <Icon icon="fa6-solid:plus" />
         <span>Adicionar</span>
@@ -33,7 +33,7 @@
     </div>
     <div class="grid gap-2">
       {#key data}
-        <Table rows={data.produtos} {columns} {pageSizes} />
+        <Table rows={data.formas} {columns} {pageSizes} />
       {/key}
     </div>
   </div>

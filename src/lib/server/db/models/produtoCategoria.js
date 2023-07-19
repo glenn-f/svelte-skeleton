@@ -28,6 +28,29 @@ export function alternarStatusProdutoCategoria(dados) {
 
 }
 
+export function criarProdutoCategoria(dados) {
+  const { empresa_id, nome } = dados
+  try {
+    const rs = dbInsert('produto_categoria', { empresa_id, nome })
+    if (rs.changes > 0) {
+      return { ok: true, id: rs.lastInsertRowid }
+    }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
+        return { ok: false, errors: { nome: "Este nome já está em uso" } }
+      } else {
+        console.log({ ErroSqlite: { code: e.code, message: e.message } })
+      }
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+  }
+
+
+}
+
 /**
  * @typedef {Object} ProdutoCategoria
  * @property {number} id - O ID da categoria de produto

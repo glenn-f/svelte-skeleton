@@ -10,6 +10,7 @@
   let columns = [
     { accessorKey: 'id', header: 'ID' },
     { accessorKey: 'nome', header: 'Nome' },
+    { accessorKey: 'produto_categoria_id', header: 'Categoria', cell: (info) => data.categorias.find(c=>c.id == info.getValue())?.nome },
     { header: 'Status', cell: (info) => "TODO", enableSorting: false },
     { header: 'Ações', cell: (info) => "TODO", enableSorting: false }
   ]

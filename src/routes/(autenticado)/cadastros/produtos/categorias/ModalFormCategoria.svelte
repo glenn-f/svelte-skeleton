@@ -1,22 +1,19 @@
 <script>
-  import { invalidateAll } from '$app/navigation'
-  import CardModal from '$lib/components/CardModal.svelte'
-  import InputSelect from '$lib/components/Forms/InputSelect.svelte'
-  import InputText from '$lib/components/Forms/InputText.svelte'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
-  import { superForm } from 'sveltekit-superforms/client'
-  import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
+	import { invalidateAll } from '$app/navigation'
+	import CardModal from '$lib/components/CardModal.svelte'
+	import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
+	import InputText from '$lib/components/Forms/InputText.svelte'
+	import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+	import { superForm } from 'sveltekit-superforms/client'
   /** Modo em que o modal será aberto
    * @type {'adicionar' | 'editar' | 'apagar'} */
   export let modo = 'adicionar'
-  export let categorias
   /** Dados do formulário recebidos do superValidate pelo lado do servidor */
   export let formData
   /** Preenchimento inicial do formulário. Varia de acordo com o `modo` deste componente*/
   export let initialData = { nome: '' }
   formData.data = { ...initialData }
   formData.errors = {}
-
   const { form, errors, enhance, reset, message } = superForm(formData, {
     resetForm: true,
     taintedMessage: false,
@@ -62,26 +59,12 @@
 <form {action} method="POST" use:enhance>
   <CardModal>
     <svelte:fragment slot="header">
-      <h2 class="h2">{titulo} Produto</h2>
+      <h2 class="h2">{titulo} Categoria</h2>
     </svelte:fragment>
     <!-- <SuperDebug data={$form} /> -->
     <section class="grid grid-cols-12 gap-1 px-3">
-      <div class="class col-span-12">
-        <InputSelect name="produto_categoria_id" label="Categoria" options={categorias} getOptionLabel={(v) => v.nome} getOptionValue={(v) => v.id} bind:value={$form.produto_categoria_id} />
-      </div>
       <div class="col-span-12">
-        <InputText label="Nome" placeholder="Ex: Iphone 20 Ultra Pro 1TB" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
-      </div>
-      <div class="col-span-12">
-        <InputText
-          label="Tipo de Identificação Única"
-          placeholder="Ex: IMEI, Serial Number"
-          name="titulo_codigo"
-          bind:value={$form.titulo_codigo}
-          error={$errors.titulo_codigo}
-          errorSpacing
-          required
-        />
+        <InputText label="Nome" placeholder="Ex: Telefonia, Informática, Escritório etc" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
       </div>
     </section>
 

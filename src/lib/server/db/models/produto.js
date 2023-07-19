@@ -17,6 +17,31 @@ export function consultarProdutos(dados) {
   }
 }
 
+
+//
+
+
+export function criarProduto(dados) {
+  const { empresa_id, produto_categoria_id, nome, titulo_codigo } = dados
+  try {
+    const rs = dbInsert('produto', { empresa_id, produto_categoria_id, nome, titulo_codigo })
+    if (rs.changes > 0) {
+      return { ok: true, id: rs.lastInsertRowid }
+    }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
+        return { ok: false, errors: { nome: "Este nome já está em uso" } }
+      } else {
+        console.log({ ErroSqlite: { code: e.code, message: e.message } })
+      }
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+  }
+}
+
 export function detalharProduto(dados) {
 
 }

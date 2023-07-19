@@ -22,7 +22,6 @@
 
   formData.data = { ...initialData }
   formData.errors = {}
-  console.log(initialData)
 
   const { form, errors, enhance, reset, message } = superForm(formData, {
     resetForm: true,
@@ -63,7 +62,6 @@
   function onClose() {
     modalStore.close()
   }
-  console.log(initialData)
 </script>
 
 <form {action} method="POST" use:enhance>
