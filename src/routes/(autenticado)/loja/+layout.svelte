@@ -15,21 +15,29 @@
       rounded="rounded-t-md"
       class="!-0 bg-surface-200-700-token w-full rounded-container-token shadow-md"
     >
-      <TabAnchor href="/cadastros/usuarios" selected={$page.url.pathname === '/cadastros/usuarios'}>
+      <TabAnchor href="/loja/vender" selected={$page.url.pathname === '/loja/vender'}>
         <svelte:fragment slot="lead">
           <div class="grid place-items-center">
-            <Icon icon="carbon:credentials" width="32px" height="32px" />
+            <Icon icon="mdi:point-of-sale" width="32px" height="32px" />
           </div>
         </svelte:fragment>
-        <span>Usuários da Empresa</span>
+        <span>Efetuar Venda</span>
       </TabAnchor>
-      <TabAnchor href="/cadastros/usuarios/grupos" selected={$page.url.pathname === '/cadastros/usuarios/grupos'}>
+      <TabAnchor href="/loja/disponivel" selected={$page.url.pathname === '/loja/disponivel'}>
         <svelte:fragment slot="lead">
           <div class="grid place-items-center">
-            <Icon icon="carbon:group-access" width="32px" height="32px" />
+            <Icon icon="mdi:cart-check" width="32px" height="32px" />
           </div>
         </svelte:fragment>
-        <span>Grupos de Usuários</span>
+        <span>Estoque Disponível</span>
+      </TabAnchor>
+      <TabAnchor href="/loja/historico" selected={$page.url.pathname === '/loja/historico'}>
+        <svelte:fragment slot="lead">
+          <div class="grid place-items-center">
+            <Icon icon="mdi:receipt-text-clock" width="32px" height="32px" />
+          </div>
+        </svelte:fragment>
+        <span>Histórico de Vendas</span>
       </TabAnchor>
       <div class="bg-surface-100-800-token p-2 rounded-b-md" slot="panel">
         <slot />

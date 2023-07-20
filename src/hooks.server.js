@@ -7,8 +7,6 @@ import { buscarEmpresa, buscarGPE } from './lib/server/cache'
 
 async function iniciarLog({ event, resolve }) {
   const headers = event.request.headers
-  const c = event.getClientAddress()
-  console.log(c)
   event.locals.log = new Logger(event, dev)
   if (event.route.id === null) {
     event.locals.log.end("Rota não encontrada", "red")
