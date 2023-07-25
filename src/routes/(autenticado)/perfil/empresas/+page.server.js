@@ -1,7 +1,8 @@
 import { REP_COLABORADOR } from '$lib/globals'
 import { resetarEmpresa } from '$lib/server/cache'
-import { criarGPEInicial, db, dbTransaction } from '$lib/server/db'
-import { resetarSessoesUsuario, sessionCookieSettings } from '$lib/server/session'
+import { db, dbTransaction } from '$lib/server/db'
+import { criarGPEInicial } from '$lib/server/db/models/grupoPermissao'
+import { resetarSessoesUsuario, sessionCookieSettings } from '$lib/server/loginSessao'
 import { criarEmpresaSchema, editarEmpresaSchema } from '$lib/zod/schemas/empresa'
 import { message, superValidate } from 'sveltekit-superforms/server'
 
@@ -36,7 +37,9 @@ export const actions = {
             if (result.ok) {
                 //* Atualizar sessão
                 const sessao = resetarSessoesUsuario(dono_id)
-                cookies.set('sid', sessao.sid, { ...sessionCookieSettings, maxAge: sessao.expiracao / 1000 })
+                if (sessao.valid) {
+                    cookies.set('sid', sessao.data.sid, { ...sessionCookieSettings, maxAge: sessao.data.expiracao / 1000 })
+                }
 
                 //* Atualizar formulário
                 const query = db.prepare('SELECT id, nome_fantasia, razao_social, cnpj, inscricao_estadual, codigo_regime_tributario, pais, uf, municipio, bairro, cep, endereco, telefone FROM empresa WHERE dono_id = $id')
@@ -75,7 +78,9 @@ pais = $pais, uf = $uf, municipio = $municipio, bairro = $bairro, cep = $cep, en
                 //* Atualizar sessão
                 const empresa = resetarEmpresa(form.data.id)
                 const sessao = resetarSessoesUsuario(dono_id)
-                cookies.set('sid', sessao.sid, { ...sessionCookieSettings, maxAge: sessao.expiracao / 1000 })
+                if (sessao.valid) {
+                    cookies.set('sid', sessao.data.sid, { ...sessionCookieSettings, maxAge: sessao.data.expiracao / 1000 })
+                }
 
                 //* OK
                 return message(form, "Empresa atualizada com sucesso.")

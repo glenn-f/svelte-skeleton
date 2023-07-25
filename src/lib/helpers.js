@@ -13,6 +13,9 @@ export function objectToArray(obj) {
   return obj
 }
 
+export function isSvelteStore(obj) {
+  return (typeof obj == 'object' && obj !== null && typeof obj.subscribe === 'function')
+}
 export function formatCNPJ(value) {
   const cnpj = toNumericText(value, 14)
   const regex = /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/

@@ -1,23 +1,23 @@
 <script>
   import { enhance } from '$app/forms'
-  import { USUARIO_ADMINISTRADOR } from '$lib/globals'
   import { SlideToggle, toastStore } from '@skeletonlabs/skeleton'
-  export let initialData
+  export let checked, id
+  export let action = '?/alternarStatus',
+    method = 'POST',
+    name = 'status'
   /** @type {HTMLFormElement}*/
   let form
   async function handleAlternar(e) {
     e.preventDefault()
     form.requestSubmit()
   }
-  $: checked = !initialData.delecao
-  $: disabled = initialData.tipo_usuario === USUARIO_ADMINISTRADOR
 </script>
 
 <div class="flex flex-nowrap gap-3">
   <form
     bind:this={form}
-    action="?/alternarStatus"
-    method="POST"
+    {action}
+    {method}
     use:enhance={(_) => {
       return ({ result, update }) => {
         if (result.data.form.valid) {
@@ -29,7 +29,7 @@
       }
     }}
   >
-    <input type="hidden" name="id" value={initialData.id} />
-    <SlideToggle {disabled} on:click={handleAlternar} name="status" {checked} size="sm" active="bg-green-500" background="bg-red-400">{checked ? 'Ativo' : 'Inativo'}</SlideToggle>
+    <input type="hidden" name="id" value={id} />
+    <SlideToggle on:click={handleAlternar} {name} {checked} size="sm" active="bg-green-500" background="bg-red-400">{checked ? 'Ativo' : 'Inativo'}</SlideToggle>
   </form>
 </div>

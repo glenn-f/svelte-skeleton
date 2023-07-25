@@ -3,6 +3,8 @@
   import { onMount } from 'svelte'
   import Label from './Label.svelte'
   import Icon from '@iconify/svelte'
+  import { isSvelteStore } from '$lib/helpers'
+  import { getContext } from 'svelte'
   /** @type {?(string | string[])} */
   export let error = undefined
   /** @type {?string} */
@@ -94,9 +96,17 @@
   /** @type {HTMLInputElement} */
   let maskInput
 
-  onMount(() => {
-    maskInput.onbeforeinput = onBeforeInput
-  })
+  const formStore = getContext('formStore')
+
+  if (isSvelteStore(formStore)) {
+    value = $formStore[name]
+  }
+
+  function updateContext(value) {
+    if (isSvelteStore(formStore)) {
+      $formStore[name] = value
+    }
+  }
 
   function onChangeValue(v) {
     if (!maskInput) return
@@ -105,9 +115,14 @@
     if (mask !== maskInput.value) {
       maskInput.value = mask
     }
+    updateContext(value)
   }
 
   $: onChangeValue(value)
+  
+  onMount(() => {
+    maskInput.onbeforeinput = onBeforeInput
+  })
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>

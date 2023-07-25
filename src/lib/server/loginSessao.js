@@ -1,13 +1,16 @@
-import { randomBytes } from 'node:crypto'
-import { apagarSessaoDB, apagarSessoesExpiradasDB, buscarSessaoDB, criarSessaoDB, limparSessoesUsuarioDB, verificarCredenciaisUsuario } from './db'
 import { dev } from '$app/environment'
+import { apagarSessao, apagarSessoesExpiradas, detalharSessao, criarSessao, apagarSessoesUsuario } from './db/models/sessao'
+import { verificarCredenciaisUsuario } from './db/models/usuario'
+import { gerarRandomHex } from './encript'
 
+/** Configuração de cookies para HTTP Headers */
 export const sessionCookieSettings = {
   path: '/',
   httpOnly: true,
   sameSite: 'strict',
   secure: !dev,
 }
+
 /** Tempo inicial em **milissegundos** de uma sessão de usuário na aplicação. */
 export const tempoSessaoMS = 60 * (60 * 1000)
 let proximaLimpezaSessoes = Date.now() + (tempoSessaoMS / 2)
@@ -16,67 +19,66 @@ const cacheSessoes = new Map()
 /** Função de limpeza do cache em memória das sessões de usuário e do banco de dados */
 function limparSessoes() {
   const now = Date.now()
-  // Limpar cache
   for (const [sid, sessao] of cacheSessoes) { if (sessao.expiracao < now) { cacheSessoes.delete(sid) } }
-  // Limpar banco de dados
-  apagarSessoesExpiradasDB(now)
-  // Definir próxima limpeza
+  apagarSessoesExpiradas(now)
   proximaLimpezaSessoes = Date.now() + (tempoSessaoMS / 2)
 }
 
 /**
  * Cria a sessão de um usuário, salvando-a no banco de dados e em memória da aplicação.
- * @param {number} uid ID do usuário no banco de dados
- * @param {object} usuarioDados Dados do usuário que serão mesclados com os dados da sessão
- * @returns {Sessao} Sessão do usuário
+ * @param {number} usuarioId ID do usuário no banco de dados
+ * @returns {DBGet<SessaoUsuarioEmpresa>} Sessão do usuário
  */
-export function criarSessao(uid) {
-  let sid = '', sessao
+export function criarSessaoUsuario(usuarioId) {
+  let id = '', sessao
   const expiracao = Date.now() + tempoSessaoMS
-
   // Criar e salvar sessão em BD
-  for (let i = 0; i < 1 && !sessao; i++) {
-    do { sid = randomBytes(32).toString('hex') } while (cacheSessoes.has(sid))
-    criarSessaoDB(sid, expiracao, uid)
-    sessao = buscarSessaoDB(sid)
+  for (let i = 0; i < 5 && !sessao; i++) {
+    do { id = gerarRandomHex(32) } while (cacheSessoes.has(id))
+    const rs = criarSessao({ id, expiracao, usuarioId })
+    if (rs) { sessao = detalharSessao({ id }) }
   }
   if (!sessao) {
-    console.log("Não foi possível criar a sessão!")
-    return undefined
+    return { valid: false, message: "Não foi possível criar a sessão", code: "FAILED_SESSION" }
   }
-
   // Salvar sessão em memória
-  cacheSessoes.set(sid, sessao)
-
-  // Verificar limpeza do cache de sessões
+  cacheSessoes.set(id, sessao)
+  // Atualizar limpeza do cache de sessões
   if (Date.now() > proximaLimpezaSessoes) { setTimeout(limparSessoes, 5000) }
-
-  return sessao
+  return { valid: true, data: sessao }
 }
 
 /**
  * Performa o login do usuário, verificando as credenciais e criando uma sessão.
  * @param {string} email E-mail recebido do formulário de login
  * @param {string} senha Senha recebida do formulário de login
- * @returns {Sessao | undefined} Sessão do usuário ou vazio
  */
 export async function efetuarLogin(email, senha) {
-  const usuario = await verificarCredenciaisUsuario(email, senha)
-  
+  const rs = await verificarCredenciaisUsuario({ email, senha })
   // Usuário válido: devolver sessão com dados do usuário
-  if (usuario) return criarSessao(usuario.id)
-
+  if (rs.valid) {
+    const uid = rs.data.id
+    return criarSessaoUsuario(uid)
+  }
   // Usuário inválido: retornar
-  return undefined
+  return rs
 }
 
+/**
+ * Apaga todas as sessões do usuário (cache e DB) e gera uma nova sessão válida
+ * @param {number} uid ID do usuário
+ */
 export function resetarSessoesUsuario(uid) {
-  const sessoes = limparSessoesUsuarioDB(uid)
-  apagarSessoes(sessoes)
-  return criarSessao(uid)
+  const sessoes = apagarSessoesUsuario(uid)
+  apagarSessoesCache(sessoes)
+  return criarSessaoUsuario(uid)
 }
 
-function apagarSessoes(sessoes) {
+/**
+ * Apaga todas as sessões do cache
+ * @param {string[]} sessoes ID das sessões
+ */
+function apagarSessoesCache(sessoes) {
   if (Array.isArray(sessoes)) {
     for (let i = 0; i < sessoes.length; i++) {
       const sid = sessoes[i];
@@ -91,11 +93,11 @@ function apagarSessoes(sessoes) {
  * Busca a sessão no cache de memória, se não encontrar, busca no banco.
  * Por fim, retorna a sessão, se for encontrada.
  * @param {string} sid Chave da sessão do usuário que deve ser recebida via cookie
- * @returns {Sessao | undefined} Sessão do usuário
+ * @returns {SessaoUsuarioEmpresa | undefined} Sessão do usuário
  */
-export function buscarSessao(sid) {
+export function buscarSessaoUsuario(sid) {
   const sessaoCacheada = cacheSessoes.has(sid)
-  const sessao = sessaoCacheada ? cacheSessoes.get(sid) : buscarSessaoDB(sid)
+  const sessao = sessaoCacheada ? cacheSessoes.get(sid) : detalharSessao(sid)
   const sessaoValida = sessao && (sessao.expiracao > Date.now())
   // Salvar e devolver sessao válida
   if (sessaoValida) {
@@ -111,28 +113,18 @@ export function buscarSessao(sid) {
  * Apaga a sessão do usuário no banco de dados e no cache de memória.
  * @param {string} sid Chave da sessão do usuário que deve ser recebida via cookie
  */
-export function apagarSessao(sid) {
+export function apagarSessaoUsuario(sid) {
   if (sid) {
     cacheSessoes.delete(sid)
-    apagarSessaoDB(sid)
+    apagarSessao(sid)
   }
 }
 
 //* Definição de Tipos JSDoc
-
 /**
- * @typedef {Object} SessaoDB
- * @property {string} sid
- * @property {number} uid
- * @property {number} expiracao
+ * @typedef {import('./db/models/sessao').SessaoUsuarioEmpresa} SessaoUsuarioEmpresa
  */
-
 /**
- * @typedef {Object} UsuarioSessao
- * @property {string} email
- * @property {string} nome
- */
-
-/**
- * @typedef {SessaoDB | UsuarioSessao} Sessao
- */
+  * @template T
+  * @typedef {import('./db').DBGet<T>} DBGet<T>
+*/

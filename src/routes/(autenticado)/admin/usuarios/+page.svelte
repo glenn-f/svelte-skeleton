@@ -4,30 +4,31 @@
   import { modalStore } from '@skeletonlabs/skeleton'
   import { renderComponent } from '@tanstack/svelte-table'
   import CelulaAcoes from './CelulaAcoes.svelte'
-  import ModalFormUsuario from './ModalFormUsuario.svelte'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import CelulaStatus from './CelulaStatus.svelte'
+  import ModalFormUsuario from './ModalFormUsuario.svelte'
   export let data
 
   let columns = [
-    { accessorKey: 'id', header: 'ID', cell: (info) => info.getValue().toString() },
+    { accessorKey: 'id', header: 'ID' },
     { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
     { accessorKey: 'delecao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
-    { accessorKey: 'nome', header: 'Nome', cell: (info) => info.getValue() },
-    { accessorKey: 'email', header: 'E-mail', cell: (info) => info.getValue() },
-    { accessorKey: 'tipo_usuario', header: 'Permissão', cell: (info) => data.permOptions.get(info.getValue())?.label },
-    { accessorKey: 'criador', header: 'Criador', cell: (info) => info.getValue() },
+    { accessorKey: 'nome', header: 'Nome' },
+    { accessorKey: 'email', header: 'E-mail' },
+    { accessorKey: 'tipo_usuario', header: 'Tipo de Usuário', cell: (info) => data.permOptions.get(info.getValue()) },
+    { accessorKey: 'criador', header: 'Criador' },
     { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false }
+    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
+
+  $: propsAdicionar = { modo: 'adicionar', formData: data.formAdicionar, permOptions: data.permOptions }
 
   function handleAdicionar() {
     modalStore.trigger({
       type: 'component',
       component: {
         ref: ModalFormUsuario,
-        props: { modo: 'adicionar', formData: data.form, permOptions: data.permOptions }
+        props: propsAdicionar
       }
     })
   }

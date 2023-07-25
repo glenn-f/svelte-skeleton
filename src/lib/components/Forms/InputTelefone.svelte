@@ -1,6 +1,8 @@
 <script>
   import { afterUpdate } from 'svelte'
   import Label from './Label.svelte'
+  import { isSvelteStore } from '$lib/helpers'
+  import { getContext } from 'svelte'
 
   /** @type {?string} */
   export let label = undefined
@@ -95,6 +97,19 @@
     value = inputText
   }
 
+  const formStore = getContext('formStore')
+
+  if (isSvelteStore(formStore)) {
+    value = $formStore[name]
+  }
+
+  function updateContext(value) {
+    if (isSvelteStore(formStore)) {
+      $formStore[name] = value
+    }
+  }
+  $: updateContext(value)
+  
   afterUpdate(() => {
     inputMasked.setSelectionRange(selectionPos, selectionPos)
   })

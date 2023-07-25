@@ -3,6 +3,8 @@
   import { onMount } from 'svelte'
   import Label from './Label.svelte'
   import Icon from '@iconify/svelte'
+  import { isSvelteStore } from '$lib/helpers'
+  import { getContext } from 'svelte'
   /** @type {?(string | string[])} */
   export let error = undefined
   /** @type {?string} */
@@ -89,7 +91,7 @@
     /** @type {HTMLInputElement} */
     const input = e.target
     let posSel = input.value.indexOf(',')
-    posSel = posSel === -1? input.selectionEnd : posSel
+    posSel = posSel === -1 ? input.selectionEnd : posSel
     input.setSelectionRange(0, posSel)
   }
   /** @type {HTMLInputElement} */
@@ -105,6 +107,19 @@
     let mask = Number.isFinite(v) ? formatMoeda(v, casasDecimais) : ''
     if (mask !== maskInput.value) {
       maskInput.value = mask
+    }
+    updateContext(v)
+  }
+
+  const formStore = getContext('formStore')
+
+  if (isSvelteStore(formStore)) {
+    value = $formStore[name]
+  }
+
+  function updateContext(value) {
+    if (isSvelteStore(formStore)) {
+      $formStore[name] = value
     }
   }
 
@@ -127,8 +142,8 @@
       {autocomplete}
       on:focus={onFocus}
     />
-    <span class='grid border-l-[1px] border-surface-400-500-token place-items-center px-1 input-group-shim'>
-      <Icon icon={"mdi:percent"} width="24px" height="24px" />
+    <span class="grid border-l-[1px] border-surface-400-500-token place-items-center px-1 input-group-shim">
+      <Icon icon={'mdi:percent'} width="24px" height="24px" />
     </span>
   </div>
 </Label>

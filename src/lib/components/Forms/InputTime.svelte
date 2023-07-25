@@ -1,6 +1,8 @@
 <script>
   import { HTMLtimeToMillis, millisToHTMLtime } from '$lib/types'
   import Label from './Label.svelte'
+  import { isSvelteStore } from '$lib/helpers'
+  import { getContext } from 'svelte'
   /** @type {?string} */
   export let label = undefined
   /** @type {?boolean} */
@@ -43,8 +45,20 @@
     if (tmpMask !== valueMask) {
       valueMask = tmpMask
     }
+    updateContext(val)
   }
 
+  const formStore = getContext('formStore')
+
+  if (isSvelteStore(formStore)) {
+    value = $formStore[name]
+  }
+
+  function updateContext(value) {
+    if (isSvelteStore(formStore)) {
+      $formStore[name] = value
+    }
+  }
   //* atualizar a mask quando value for alterado (onMount)
   $: updateMask(value)
   //* atualizar value quando a mask for alterada

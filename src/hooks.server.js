@@ -1,9 +1,9 @@
-import { buscarSessao } from '$lib/server/session'
+import { buscarSessaoUsuario } from '$lib/server/loginSessao'
 import { Logger } from '$lib/logger'
 import { dev } from '$app/environment'
 import { sequence } from '@sveltejs/kit/hooks'
 import { error, redirect } from '@sveltejs/kit'
-import { buscarEmpresa, buscarGPE } from './lib/server/cache'
+import { buscarEmpresa, buscarGPE } from '$lib/server/cache'
 
 async function iniciarLog({ event, resolve }) {
   const headers = event.request.headers
@@ -18,7 +18,7 @@ async function iniciarLog({ event, resolve }) {
 async function lerCookies({ event, resolve }) {
   const { cookies, locals } = event
   const sid = cookies.get('sid')
-  locals.sessao = sid ? buscarSessao(sid) : null;
+  locals.sessao = sid ? buscarSessaoUsuario(sid) : null;
 
   if (!locals.sessao) {
     //* Sessão Expirada: comer cookie

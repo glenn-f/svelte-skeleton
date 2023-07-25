@@ -1,29 +1,26 @@
 <script>
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
-  import HelperMessage from './../../../../lib/components/Forms/HelperMessage.svelte'
   import { invalidateAll } from '$app/navigation'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
-  import { superForm } from 'sveltekit-superforms/client'
+  import CardModal from '$lib/components/CardModal.svelte'
+  import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
   import InputEmail from '$lib/components/Forms/InputEmail.svelte'
   import InputPassword from '$lib/components/Forms/InputPassword.svelte'
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
-  import CardModal from '$lib/components/CardModal.svelte'
+  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { onMount } from 'svelte'
+  import { superForm } from 'sveltekit-superforms/client'
   /** Modo em que o modal será aberto
-   * @type {'adicionar' | 'editar' | 'apagar'} */
+   * @type {'adicionar' | 'editar'} */
   export let modo = 'adicionar'
   /** Dados do formulário recebidos do superValidate pelo lado do servidor */
   export let formData
   /** Lista de opções de permissões que um usuário pode ter
-   * @type {Map<number, {label: string}>} */
+   * @type {Map<number, string}>} */
   export let permOptions
   /** Preenchimento inicial do formulário. Varia de acordo com o `modo` deste componente*/
   export let initialData = { senha: '', senha_repetir: '', nome: '', email: '', tipo_usuario: 0 }
 
-  formData.data = { ...initialData }
-  formData.errors = {}
-
-  const { form, errors, enhance, reset, message } = superForm(formData, {
+  const { form, errors, enhance, message } = superForm(formData, {
     resetForm: true,
     taintedMessage: false,
     onResult: async ({ result, cancel, formEl }) => {
@@ -50,19 +47,17 @@
     action = '?/editar'
     titulo = 'Editar'
     pw_placeholder = 'Não alterado'
-  } else if (modo == 'apagar') {
-    action = '?/apagar'
-    titulo = 'Apagar'
   } else {
     action = '?/adicionar'
     titulo = 'Adicionar'
     pw_placeholder = ''
   }
 
-  function onClose() {
-    modalStore.close()
-  }
-  console.log(initialData)
+  onMount(() => {
+    $form = { ...initialData }
+    $errors = {}
+    $message = ''
+  })
 </script>
 
 <form {action} method="POST" use:enhance>
@@ -71,53 +66,39 @@
       <h2 class="h2">{titulo} Usuário</h2>
     </svelte:fragment>
 
-    {#if modo != 'apagar'}
-      <section class="grid grid-cols-12 gap-1 px-3">
-        <div class="col-span-12">
-          <InputText label="Nome Completo" placeholder="Ex: Enzo Gabriel" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
-        </div>
-        <div class="col-span-12">
-          <InputEmail label="E-mail" placeholder="Ex: enzo.gabriel@email.com" name="email" bind:value={$form.email} error={$errors.email} errorSpacing required />
-        </div>
-        <div class="col-span-6">
-          <InputPassword label="Senha" placeholder={pw_placeholder} name="senha" bind:value={$form.senha} error={$errors.senha} errorSpacing required={modo == 'adicionar'} />
-        </div>
-        <div class="col-span-6">
-          <InputPassword
-            label="Repetir Senha"
-            placeholder={pw_placeholder}
-            name="senha_repetir"
-            bind:value={$form.senha_repetir}
-            error={$errors.senha_repetir}
-            errorSpacing
-            required={modo == 'adicionar'}
-          />
-        </div>
-        <div class="col-span-12">
-          <InputSelect label="Permissão na Aplicação" name="tipo_usuario" bind:value={$form.tipo_usuario} options={permOptions} error={$errors.tipo_usuario} errorSpacing required />
-        </div>
-      </section>
-    {:else}
-      <section class="grid place-items-center p-2 gap-2">
-        Tem certeza que deseja apagar o seguinte usuário: <br />
-        <h4 class=" h4 text-red-500 font-bold">
-          {initialData.nome}
-        </h4>
-        <p>E-mail: <b>{initialData.email}</b></p>
-      </section>
-    {/if}
+    <section class="grid grid-cols-12 gap-1 px-3">
+      <div class="col-span-12">
+        <InputText label="Nome Completo" placeholder="Ex: Enzo Gabriel" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
+      </div>
+      <div class="col-span-12">
+        <InputEmail label="E-mail" placeholder="Ex: enzo.gabriel@email.com" name="email" bind:value={$form.email} error={$errors.email} errorSpacing required />
+      </div>
+      <div class="col-span-6">
+        <InputPassword label="Senha" placeholder={pw_placeholder} name="senha" bind:value={$form.senha} error={$errors.senha} errorSpacing required={modo == 'adicionar'} />
+      </div>
+      <div class="col-span-6">
+        <InputPassword
+          label="Repetir Senha"
+          placeholder={pw_placeholder}
+          name="senha_repetir"
+          bind:value={$form.senha_repetir}
+          error={$errors.senha_repetir}
+          errorSpacing
+          required={modo == 'adicionar'}
+        />
+      </div>
+      <div class="col-span-12">
+        <InputSelect label="Permissão na Aplicação" name="tipo_usuario" bind:value={$form.tipo_usuario} options={permOptions} error={$errors.tipo_usuario} errorSpacing required />
+      </div>
+    </section>
 
     <div class="grid place-items-center gap-2" slot="footer">
       {#if $message}
         <HelperMessage error={$message} spaceHolding={true} />
       {/if}
       <div class="flex gap-2">
-        {#if modo != 'apagar'}
-          <button type="submit" class="btn variant-filled-primary">Enviar</button>
-        {:else}
-          <button type="submit" class="btn variant-filled-error" name="id" value={initialData.id}>Confirmar</button>
-        {/if}
-        <button type="button" class="btn variant-filled-secondary" on:click={onClose}>Cancelar</button>
+        <button type="submit" class="btn variant-filled-primary" name="id" value={$form.id}>Enviar</button>
+        <button type="button" class="btn variant-filled-secondary" on:click={modalStore.close}>Cancelar</button>
       </div>
     </div>
   </CardModal>

@@ -1,6 +1,8 @@
 <script>
   import { afterUpdate } from 'svelte'
   import Label from './Label.svelte'
+  import { isSvelteStore } from '$lib/helpers'
+  import { getContext } from 'svelte'
 
   /** @type {?string} */
   export let label = undefined
@@ -27,7 +29,7 @@
   /** @type {?string} */
   export let labelClass = ''
   export let readonly = undefined
-  const maskData = { mask: '___.___.___-__', tam: 11, pos: [3,6,9] }
+  const maskData = { mask: '___.___.___-__', tam: 11, pos: [3, 6, 9] }
   let maskValue = value ? toCPFMask(value.toString()) : maskData.mask
   let inputMasked, selectionPos
 
@@ -88,12 +90,23 @@
   })
   $: if (readonly) {
     const [maskedText, unmaskedText] = toCPFMask(maskData.mask, maskValue)
-    console.log({ value, unmaskedText, maskValue })
     if (unmaskedText != value) {
       const [_masked, _value] = toCPFMask(maskData.mask, value)
       maskValue = _masked
     }
   }
+  const formStore = getContext('formStore')
+
+  if (isSvelteStore(formStore)) {
+    value = $formStore[name]
+  }
+
+  function updateContext(value) {
+    if (isSvelteStore(formStore)) {
+      $formStore[name] = value
+    }
+  }
+  $: updateContext(value)
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>

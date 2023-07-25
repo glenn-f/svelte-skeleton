@@ -1,6 +1,8 @@
 <script>
   import Icon from '@iconify/svelte'
   import Label from './Label.svelte'
+  import { isSvelteStore } from '$lib/helpers'
+  import { getContext } from 'svelte'
 
   /** @type {?string} */
   export let label = undefined
@@ -27,6 +29,18 @@
   /** @type {?string} */
   export let autocomplete = 'off'
   export let readonly = undefined
+  const formStore = getContext('formStore')
+
+  if (isSvelteStore(formStore)) {
+    value = $formStore[name]
+  }
+
+  function updateContext(value) {
+    if (isSvelteStore(formStore)) {
+      $formStore[name] = value
+    }
+  }
+  $: updateContext(value)
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
@@ -39,7 +53,7 @@
       class:input-warning={warning && !error}
       class:input-error={error}
       type="email"
-      class={"read-only:variant-filled-surface " + inputClass}
+      class={'read-only:variant-filled-surface ' + inputClass}
       {readonly}
       {autocomplete}
       {placeholder}

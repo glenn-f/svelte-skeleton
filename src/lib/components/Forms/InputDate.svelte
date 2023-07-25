@@ -1,6 +1,8 @@
 <script>
   import { HTMLdateToMillis, millisToHTMLdate } from '$lib/types'
   import Label from './Label.svelte'
+  import { isSvelteStore } from '$lib/helpers'
+  import { getContext } from 'svelte'
   /** @type {?string} */
   export let label = undefined
   /** @type {?boolean} */
@@ -54,6 +56,19 @@
     const tmpMask = millisToHTMLdate(val)
     if (tmpMask !== valueMask) {
       valueMask = tmpMask
+    }
+    updateContext(val)
+  }
+
+  const formStore = getContext('formStore')
+
+  if (isSvelteStore(formStore)) {
+    value = $formStore[name]
+  }
+
+  function updateContext(value) {
+    if (isSvelteStore(formStore)) {
+      $formStore[name] = value
     }
   }
 

@@ -40,7 +40,7 @@ export const loginSchema = usuarioSchema.pick({
 })
 
 //* Administração.Usuários
-export const addUsuarioSchema = usuarioSchema.pick({
+export const criarUsuarioSchema = usuarioSchema.pick({
   nome: true,
   email: true,
   senha: true,
@@ -49,17 +49,21 @@ export const addUsuarioSchema = usuarioSchema.pick({
   senha_repetir: usuarioSchema.shape.senha
 }).refine(validarSenha, erroValidarSenha)
 
-export const editUsuarioSchema = usuarioSchema.pick({
+export const editarUsuarioSchema = usuarioSchema.pick({
   id: true,
   nome: true,
   email: true,
+  senha: true,
   tipo_usuario: true
-})
+}).extend({
+  senha: zOptional(usuarioSchema.shape.senha),
+  senha_repetir: zOptional(usuarioSchema.shape.senha)
+}).refine(validarSenha, erroValidarSenha)
 
 export const alterarSenhaUsuarioSchema = alterarSenha.refine(validarSenha, erroValidarSenha)
 
 //* Cadastros.Usuários (Empresa)
-export const addUsuarioEmpresaSchema = usuarioSchema.pick({
+export const criarUsuarioEmpresaSchema = usuarioSchema.pick({
   nome: true,
   email: true,
   senha: true,
@@ -68,7 +72,7 @@ export const addUsuarioEmpresaSchema = usuarioSchema.pick({
   gpe_id: usuarioEmpresaSchema.shape.gpe_id,
 }).refine(validarSenha, erroValidarSenha)
 
-export const editUsuarioEmpresaSchema = usuarioSchema.pick({
+export const editarUsuarioEmpresaSchema = usuarioSchema.pick({
   id: true,
   nome: true,
   email: true,
@@ -79,7 +83,7 @@ export const editUsuarioEmpresaSchema = usuarioSchema.pick({
 export const alterarSenhaUsuarioEmpresaSchema = alterarSenha.refine(validarSenha, erroValidarSenha)
 
 //* Perfil.Usuario (Meus Dados)
-export const editPerfilUsuarioSchema = z.object({
+export const editarPerfilUsuarioSchema = z.object({
   nome: usuarioSchema.shape.nome,
   email: usuarioSchema.shape.email,
 })

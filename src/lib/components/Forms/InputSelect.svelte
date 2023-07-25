@@ -1,6 +1,8 @@
 <script>
   import { objectToArray } from '$lib/helpers'
   import Label from './Label.svelte'
+  import { isSvelteStore } from '$lib/helpers'
+  import { getContext } from 'svelte'
 
   /** @type {?string} */
   export let label = undefined
@@ -42,6 +44,20 @@
   export let getOptionValue = (option, index) => option?.value ?? index
   export let readonly = undefined
   const _options = objectToArray(options)
+  
+  const formStore = getContext('formStore')
+
+  if (isSvelteStore(formStore)) {
+    value = $formStore[name]
+  }
+
+  function updateContext(value) {
+    if (isSvelteStore(formStore)) {
+      $formStore[name] = value
+    }
+  }
+  $: updateContext(value)
+  
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>

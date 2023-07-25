@@ -1,4 +1,5 @@
 export function sqlValor(obj) {
+  if (!obj) return [{}, '', '']
   const novoObj = {}
   //* criar novo objeto com valores formatados para os tipos de dados válidos em SQLite3
   for (const chave in obj) {
@@ -55,7 +56,8 @@ export function sqlTabela(tabela) {
   else throw new Error("Apenas strings são aceitas nesta função.")
 } */
 
-export function sqlValorUpdate(obj) {
+export function sqlValorKV(obj) {
+  if (!obj) return [{}, '']
   const novoObj = {}
   let stringKV = []
   //* criar novo objeto com valores formatados para os tipos de dados válidos em SQLite3
@@ -70,4 +72,15 @@ export function sqlValorUpdate(obj) {
   const setKV = stringKV.join(" , ")
 
   return [novoObj, setKV]
+}
+
+export function sqlValorSelect(arr) {
+  if (!arr) return ''
+  const novoArr = []
+  for (let i = 0; i < arr.length; i++) {
+    const campo = arr[i];
+    if (typeof campo !== 'string') continue
+    novoArr.push(campo.trim())
+  }
+  return novoArr.join(' , ')
 }

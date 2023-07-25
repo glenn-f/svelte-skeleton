@@ -1,18 +1,15 @@
 <script>
+  import HelperMessage from './HelperMessage.svelte'
   import { isSvelteStore } from '$lib/helpers'
   import { getContext } from 'svelte'
-  import Label from './Label.svelte'
-
   /** @type {?string} */
   export let label = undefined
   /** @type {?boolean} */
   export let required = undefined
   /** @type {?string} */
-  export let placeholder = undefined
-  /** @type {?string} */
   export let name = undefined
   /** @type {?any} */
-  export let value = undefined
+  export let checked = undefined
   /** @type {?(string | string[])} */
   export let error = undefined
   /** @type {?string} */
@@ -25,38 +22,39 @@
   export let inputClass = ''
   /** @type {?string} */
   export let labelClass = ''
-  /** @type {?string} */
-  export let autocomplete = 'off'
-  export let readonly = undefined
-  export let input = undefined
 
   const formStore = getContext('formStore')
 
   if (isSvelteStore(formStore)) {
-    value = $formStore[name]
+    checked = $formStore[name]
   }
 
-  function updateContext(value) {
+  function updateContext(checked) {
     if (isSvelteStore(formStore)) {
-      $formStore[name] = value
+      $formStore[name] = checked
     }
   }
-  $: updateContext(value)
+  $: updateContext(checked)
 </script>
 
-<Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
+<label class={'label flex items-center space-x-1 ' + labelClass}>
   <input
-    bind:this={input}
     class:input-success={success && !warning && !error}
     class:input-warning={warning && !error}
     class:input-error={error}
-    type="text"
-    class={'input read-only:variant-filled-surface ' + inputClass}
-    {readonly}
-    {autocomplete}
-    {placeholder}
+    type="checkbox"
+    class={'checkbox ' + inputClass}
     {name}
     {required}
-    bind:value
+    bind:checked
   />
-</Label>
+  <p>
+    <span class="text-xs align-text-top">
+      {label}
+      {#if label && (required === '' || Boolean(required))}
+        <span class="text-red-400">&nbsp;*</span>
+      {/if}
+    </span>
+  </p>
+  <HelperMessage {error} {warning} {success} spaceHolding={errorSpacing} />
+</label>

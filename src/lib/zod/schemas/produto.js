@@ -1,5 +1,4 @@
-import { PESSOA_FISICA, PESSOA_JURIDICA, REP_CLIENTE, REP_COLABORADOR, REP_FORNECEDOR, SEXO_FEMININO, SEXO_MASCULINO } from "$lib/globals"
-import { z, zCEP, zCNPJ, zCPF, zDate, zEmail, zID, zNumericEnum, zOptional, zRG, zTString } from "$lib/zod"
+import { z, zID, zOptional, zTString } from "$lib/zod"
 
 export const produtoSchema = z.object({
   id: zID,

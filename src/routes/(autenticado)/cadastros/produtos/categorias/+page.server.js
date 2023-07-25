@@ -11,7 +11,6 @@ export async function load({ locals }) {
     if (rs.valid) {
         categorias = rs.data
     }
-
     return { categorias, formAdicionar, formEditar };
 };
 

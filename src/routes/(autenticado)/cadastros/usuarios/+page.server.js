@@ -1,12 +1,12 @@
-import { alterarUsuarioEmpresa, criarUsuarioEmpresa, db, toggleStatusUsuarioEmpresa } from '$lib/server/db';
-import { consultarUsuarios } from '$lib/server/db/models/usuario.js';
-import { consultarGPEs } from '$lib/server/db/models/usuario_gpe.js';
+import { alterarUsuarioEmpresa, criarUsuarioEmpresa, toggleStatusUsuarioEmpresa } from '$lib/server/db';
+import { consultarGPEs } from '$lib/server/db/models/grupoPermissao';
+import { consultarUsuarios } from '$lib/server/db/models/usuarioEmpresa';
 import { idSchema } from '$lib/zod';
-import { addUsuarioEmpresaSchema, editUsuarioEmpresaSchema } from '$lib/zod/schemas/usuario';
+import { criarUsuarioEmpresaSchema, editarUsuarioEmpresaSchema } from '$lib/zod/schemas/usuario';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
 
 export async function load({ locals }) {
-  const form = await superValidate(addUsuarioEmpresaSchema)
+  const form = await superValidate(criarUsuarioEmpresaSchema)
   const { empresa_id: eid } = locals.sessao
   let usuarios, gpes, result
 
@@ -22,7 +22,7 @@ export async function load({ locals }) {
 
 export const actions = {
   adicionar: async ({ request, locals }) => {
-    const form = await superValidate(request, addUsuarioEmpresaSchema);
+    const form = await superValidate(request, criarUsuarioEmpresaSchema);
     if (form.valid) {
       const criador_id = locals.sessao.uid
       const empresa_id = locals.sessao.empresa_id
@@ -39,7 +39,7 @@ export const actions = {
   },
 
   editar: async ({ request, locals }) => {
-    const form = await superValidate(request, editUsuarioEmpresaSchema);
+    const form = await superValidate(request, editarUsuarioEmpresaSchema);
     if (form.valid) {
       const { id, nome, email, senha, gpe_id } = form.data
       const eid = locals.sessao.empresa_id

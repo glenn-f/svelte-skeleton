@@ -1,6 +1,7 @@
-import { db, encriptar } from '$lib/server/db';
-import { resetarSessoesUsuario, sessionCookieSettings } from '$lib/server/session';
-import { alterarSenhaPerfilUsuarioSchema, editPerfilUsuarioSchema } from '$lib/zod/schemas/usuario';
+import { db } from '$lib/server/db';
+import { encriptarSenha } from '$lib/server/encript.js';
+import { resetarSessoesUsuario, sessionCookieSettings } from '$lib/server/loginSessao';
+import { alterarSenhaPerfilUsuarioSchema, editarPerfilUsuarioSchema } from '$lib/zod/schemas/usuario';
 import { error } from '@sveltejs/kit';
 import { message, superValidate } from 'sveltekit-superforms/server';
 
@@ -13,7 +14,7 @@ export async function load({ locals }) {
     if (!usuario) throw error(401)
     const { nome, email } = usuario
 
-    const formEditar = await superValidate({ nome, email }, editPerfilUsuarioSchema)
+    const formEditar = await superValidate({ nome, email }, editarPerfilUsuarioSchema)
     const formAlterarSenha = await superValidate(alterarSenhaPerfilUsuarioSchema)
 
     return { formEditar, formAlterarSenha };
@@ -21,7 +22,7 @@ export async function load({ locals }) {
 
 export const actions = {
     editar: async ({ request, locals, cookies }) => {
-        const formEditar = await superValidate(request, editPerfilUsuarioSchema)
+        const formEditar = await superValidate(request, editarPerfilUsuarioSchema)
         if (formEditar.valid) {
             const id = locals.sessao.uid
             const { email, nome } = formEditar.data
@@ -33,7 +34,9 @@ export const actions = {
             if (result.changes > 0) {
                 //* Atualizar sessão
                 const sessao = resetarSessoesUsuario(id)
-                cookies.set('sid', sessao.sid, { ...sessionCookieSettings, maxAge: sessao.expiracao / 1000 })
+                if (sessao.valid) {
+                    cookies.set('sid', sessao.data.sid, { ...sessionCookieSettings, maxAge: sessao.data.expiracao / 1000 })
+                }
 
                 //* OK
                 return message(formEditar, "Seus dados foram atualizados com sucesso.")
@@ -50,7 +53,7 @@ export const actions = {
         if (formAlterarSenha.valid) {
             const id = locals.sessao.uid
             let { senha } = formAlterarSenha.data
-            senha = encriptar(senha)
+            senha = encriptarSenha(senha)
 
             //* Atualização da senha no Banco de Dados
             const query = db.prepare("UPDATE usuario SET senha = $senha WHERE id = $id")
@@ -61,7 +64,9 @@ export const actions = {
             if (result.changes > 0) {
                 //* Atualizar sessão
                 const sessao = resetarSessoesUsuario(id)
-                cookies.set('sid', sessao.sid, { ...sessionCookieSettings, maxAge: sessao.expiracao / 1000 })
+                if (sessao.valid) {
+                    cookies.set('sid', sessao.data.sid, { ...sessionCookieSettings, maxAge: sessao.data.expiracao / 1000 })
+                }
 
                 //* Ok
                 return message(formAlterarSenha, 'Sua senha foi alterada com sucesso.')

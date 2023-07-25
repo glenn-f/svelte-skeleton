@@ -2,6 +2,8 @@
   import { formatMoeda } from '$lib/helpers'
   import { onMount } from 'svelte'
   import Label from './Label.svelte'
+  import { isSvelteStore } from '$lib/helpers'
+  import { getContext } from 'svelte'
   /** @type {?(string | string[])} */
   export let error = undefined
   /** @type {?string} */
@@ -88,7 +90,7 @@
     /** @type {HTMLInputElement} */
     const input = e.target
     let posSel = input.value.indexOf(',')
-    posSel = posSel === -1? input.selectionEnd : posSel
+    posSel = posSel === -1 ? input.selectionEnd : posSel
     input.setSelectionRange(0, posSel)
   }
   /** @type {HTMLInputElement} */
@@ -104,6 +106,18 @@
     let mask = Number.isFinite(v) ? formatMoeda(v, casasDecimais) : ''
     if (mask !== maskInput.value) {
       maskInput.value = mask
+    }
+    updateContext(v)
+  }
+  const formStore = getContext('formStore')
+
+  if (isSvelteStore(formStore)) {
+    value = $formStore[name]
+  }
+
+  function updateContext(value) {
+    if (isSvelteStore(formStore)) {
+      $formStore[name] = value
     }
   }
 

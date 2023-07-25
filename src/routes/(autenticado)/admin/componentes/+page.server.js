@@ -4,7 +4,8 @@ import { z, zDate } from '$lib/zod';
 const schema = z.object({
     perc: z.any(),
     moeda: z.any(),
-    dn: z.any()
+    dn: z.any(),
+    formText: z.string().default('testee')
 })
 
 /** @type {import('./$types').PageServerLoad} */
