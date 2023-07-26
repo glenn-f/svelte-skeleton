@@ -4,21 +4,19 @@
   import { modalStore } from '@skeletonlabs/skeleton'
   import { renderComponent } from '@tanstack/svelte-table'
   import CelulaAcoes from './CelulaAcoes.svelte'
-  import CelulaStatus from './CelulaStatus.svelte'
   import ModalFormUsuario from './ModalFormUsuario.svelte'
+  import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
   export let data
-  
-  const GPEs = new Map(data.permOptions.map((v, i) => [v.id, v]))
+
+  const GPEs = new Map(data.gpes.map((v, i) => [v.id, v]))
   let columns = [
-    { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'associacao', header: 'Associação', cell: (info) => new Date(info.getValue()).toLocaleString() },
-    { accessorKey: 'desativacao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
-    { accessorKey: 'nome', header: 'Nome' },
+    { accessorKey: 'criacao', header: 'Associação', cell: (info) => new Date(info.getValue()).toLocaleString() },
+    { accessorKey: 'nome', header: 'Nome Completo' },
     { accessorKey: 'email', header: 'E-mail' },
-    { accessorKey: 'gpe_id', header: 'Grupo', cell: (info) => GPEs.get(info.getValue()).nome },
+    { accessorKey: 'gpe_id', header: 'Grupo', cell: (info) => GPEs.get(info.getValue())?.nome },
     { accessorKey: 'criador_nome', header: 'Criador' },
-    { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original, permOptions: GPEs }), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original, permOptions: GPEs }), enableSorting: false }
+    { header: 'Status', cell: (info) => renderComponent(RowStatusToggle, { id: info.row.original?.id, checked: !info.row.original?.delecao }), enableSorting: false },
+    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original, permOptions: data.gpes }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
 
@@ -27,7 +25,7 @@
       type: 'component',
       component: {
         ref: ModalFormUsuario,
-        props: { modo: 'adicionar', formData: data.form, permOptions: data.permOptions }
+        props: { modo: 'adicionar', formData: data.formAdicionar, permOptions: data.gpes }
       }
     })
   }

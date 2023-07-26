@@ -1,33 +1,54 @@
-import { db, dbInsert, dbTransaction } from ".."
+import { PESSOA_FISICA, REP_COLABORADOR, USUARIO_ADICIONAL } from "$lib/globals";
+import { encriptarSenha } from "$lib/server/encript";
+import { begin, commit, db, dbInsert, dbSelectOne, dbToggleSoftDelete, dbUpdate, rollback } from "..";
+
+/**
+ * Consulta todos os usuários associados à uma empresa da aplicação
+ * @param {{empresa_id: number}} dados Dados da consulta sobre os usuários
+ * @returns {DBAll<UsuarioEmpresa>} Lista de usuários pertencentes à empresa 
+ */
+export function consultarUsuariosEmpresa(dados) {
+  const { empresa_id } = dados
+  try {
+    const query = db.prepare("SELECT ue.gpe_id, ue.criacao, ue.delecao, u.id, u.nome, u.email, u.tipo_usuario, u.criador_id, c.nome criador_nome \
+FROM usuario u JOIN usuario_empresa ue ON ue.usuario_id = u.id LEFT JOIN usuario c ON c.id = u.criador_id WHERE ue.empresa_id = $empresa_id")
+    const data = query.all({ empresa_id })
+    return { valid: true, data }
+  } catch (e) {
+    return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+  }
+}
 
 /**
  * @param {{nome:string email:string senha:string criador_id:number empresa_id:number gpe_id:number}} dados
  * @returns {number} usuario_empresa.id
  */
-export function criarUsuarioEmpresa({ nome, email, senha, criador_id, empresa_id, gpe_id }) {
+export function criarUsuarioEmpresa(dados) {
+  const { nome, email, criador_id, empresa_id, gpe_id } = dados
+  const senha = encriptarSenha(dados.senha)
   begin.run();
   try {
-    senha = encriptar(senha)
-    const tipo_usuario = 0 // usuário criado para uma empresa tem nível de permissão 0
+    const tipo_usuario = USUARIO_ADICIONAL // usuário criado para uma empresa tem nível de permissão 0
     const resUsuario = dbInsert('usuario', { nome, email, senha, tipo_usuario, criador_id })
     if (resUsuario.changes === 0) throw new Error("Não foi possível criar o usuário")
 
-    const eh_colaborador = 1 // criado como colaborador para aparecer na listagem de vendedor e outras
-    const resPessoa = dbInsert('pessoa', { nome, email, eh_colaborador, empresa_id, criador_id })
+    const tipo_pessoa = PESSOA_FISICA // PF
+    const rep = REP_COLABORADOR // relacionamento colaborador->empresa
+    const resPessoa = dbInsert('pessoa', { nome, email, rep, tipo_pessoa, empresa_id, criador_id })
     if (resPessoa.changes === 0) throw new Error("Não foi possível criar a pessoa")
 
     const pessoa_id = resPessoa.lastInsertRowid
     const usuario_id = resUsuario.lastInsertRowid
-    const resUsuarioEmpresa = dbInsert('usuario_empresa', { usuario_id, empresa_id, pessoa_id, gpe_id })
+    const resUsuarioEmpresa = dbInsert('usuario_empresa', { usuario_id, empresa_id, pessoa_id, gpe_id, criador_id })
     if (resUsuarioEmpresa.changes === 0) throw new Error("Não foi possível criar a relação usuário-empresa")
 
     commit.run();
-    return { ok: true, id: resUsuarioEmpresa.lastInsertRowid }
+    return { valid: true, data: resUsuarioEmpresa.lastInsertRowid }
   } catch (e) {
     rollback.run();
     if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
       if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
-        return { ok: false, errors: { email: "Este e-mail já está em uso" } }
+        return { valid: false, message: "Houve problemas em alguns campos", fieldErrors: { email: "Este e-mail já está em uso" }, code: "DB_UNIQUE" }
       } else {
         console.log({ ErroSqlite: { code: e.code, message: e.message } })
       }
@@ -38,64 +59,86 @@ export function criarUsuarioEmpresa({ nome, email, senha, criador_id, empresa_id
   } finally {
     if (db.inTransaction) {
       rollback.run();
-      return { ok: false }
+      return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
     }
   }
 }
 
-export const alterarUsuarioEmpresa = dbTransaction((usuario) => {
-  const { id, nome, email, senha, gpe_id, eid } = usuario
-  if (nome || email || senha) {
-    const [dados, colunas] = sqlValorUpdate({ nome, email, senha: encriptar(senha) })
-    const query = db.prepare(`UPDATE usuario SET ${colunas} WHERE id = $id `)
-    const resUsuario = query.run({ ...dados, id })
-    if (resUsuario.changes === 0) throw new Error("Não foi possível atualizar o usuario")
-  }
-  const query = db.prepare("UPDATE usuario_empresa SET gpe_id = $gpe_id WHERE usuario_id = $id AND empresa_id = $eid")
-  const resUE = query.run({ id, gpe_id, eid })
-  if (resUE.changes === 0) throw new Error("Não foi possível atualizar o usuario")
-  return { ok: true }
-})
-
-
-
-/**
- * Consulta todos os usuários associados à uma empresa da aplicação
- * @param {{eid: number}} dados Dados da consulta sobre os usuários
- * @returns {DBAll<UsuarioEmpresa>} Lista de usuários pertencentes à empresa 
- */
-export function consultarUsuarios(dados) {
-  const { eid } = dados
+/** //TODO */
+export function editarUsuarioEmpresa(dados) {
+  const { usuario_id, empresa_id, nome, email, gpe_id } = dados
+  begin.run();
   try {
-    const query = db.prepare("SELECT ue.gpe_id, ue.criacao associacao, ue.delecao desativacao, u.id, u.nome, u.email, u.tipo_usuario, u.criador_id, c.nome criador_nome \
-FROM usuario u JOIN usuario_empresa ue ON ue.usuario_id = u.id LEFT JOIN usuario c ON c.id = u.criador_id WHERE ue.empresa_id = $eid")
-    const data = query.all({ eid })
-    return { valid: true, data }
+    const usuario = dbUpdate('usuario', { nome, email }, { id: usuario_id, tipo_usuario: USUARIO_ADICIONAL })
+    if (usuario.changes === 0) throw new Error("Não foi possível atualizar o usuário")
+
+    const usuario_empresa = dbSelectOne('usuario_empresa', ['pessoa_id'], { usuario_id, empresa_id })
+    if (!usuario_empresa) throw new Error("Usuário empresa não encontrado")
+
+    const pessoa = dbUpdate('pessoa', { nome, email }, { id: usuario_empresa.pessoa_id })
+    if (pessoa.changes === 0) throw new Error("Não foi possível atualizar a pessoa")
+
+    const resUsuarioEmpresa = dbUpdate('usuario_empresa', { gpe_id }, { usuario_id, empresa_id })
+    if (resUsuarioEmpresa.changes === 0) throw new Error("Não foi possível atualizar a relação usuário-empresa")
+
+    commit.run();
+    return { valid: true, data: null }
   } catch (e) {
-    return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+    rollback.run();
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
+        return { valid: false, message: "Houve problemas em alguns campos", fieldErrors: { email: "Este e-mail já está em uso" }, code: "DB_UNIQUE" }
+      } else {
+        console.log({ ErroSqlite: { code: e.code, message: e.message } })
+      }
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+  } finally {
+    if (db.inTransaction) {
+      rollback.run();
+      return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
+    }
   }
 }
 
-export function toggleStatusUsuarioEmpresa({ eid, uid }) {
+/** //TODO */
+export function toggleStatusUsuarioEmpresa(dados) {
+  const q = db.prepare("SELECT ue.delecao, u.tipo_usuario FROM usuario u JOIN usuario_empresa ue ON ue.usuario_id = u.id WHERE ue.empresa_id = $empresa_id AND u.id = $usuario_id")
+  const checkUser = q.get(dados)
+  // if (!checkUser || (checkUser.tipo_usuario !== USUARIO_ADICIONAL)) {
+  //   return { valid: false, message: "Permissão negada!", code: "NO_PRIVILEGES" }
+  // }
+  const estavaDesativado = checkUser.delecao
   try {
-    const query = db.prepare("SELECT delecao FROM usuario_empresa WHERE usuario_id = $uid AND empresa_id = $eid")
-    const usuario = query.get({ eid, uid })
-    if (usuario) {
-      const agora = Date.now()
-      let query, res, message
-      if (usuario.delecao) {
-        query = db.prepare("UPDATE usuario_empresa SET delecao = NULL WHERE usuario_id = $uid AND empresa_id = $eid")
-        res = query.run({ uid, eid })
-        message = 'Usuário ativado com sucesso'
-      } else {
-        query = db.prepare("UPDATE usuario_empresa SET delecao = $agora WHERE usuario_id = $uid AND empresa_id = $eid")
-        res = query.run({ uid, eid, agora })
-        message = 'Usuário desativado com sucesso'
-      }
-      if (res.changes == 0) { return { ok: false, message: "O status não foi alterado" } }
-      return { ok: true, message }
+    const res = dbToggleSoftDelete('usuario_empresa', dados)
+    if (res.changes == 0) { return { valid: false, message: "O status não foi alterado", code: "DB_UNKNOWN" } }
+    if (!estavaDesativado) {
+      return { valid: true, data: "Usuário desativado com sucesso" }
     } else {
-      return { ok: false, message: "Permissão negada" }
+      return { valid: true, data: "Usuário ativado com sucesso" }
+    }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      console.log({ ErroSqlite: { code: e.code, message: e.message } })
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
+  }
+}
+
+/** //TODO */
+export function alterarSenhaUsuarioEmpresa(dados) {
+  const id = dados.id
+  const senha = encriptarSenha(dados.senha)
+  try {
+    const { changes } = dbUpdate('usuario', { senha }, { id, tipo_usuario: USUARIO_ADICIONAL })
+    if (changes > 0) {
+      return { valid: true, data: null }
+    } else {
+      return { valid: false, message: "A senha não foi alterada", code: "DB_UNKNOWN" }
     }
   } catch (e) {
     if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
@@ -104,22 +147,11 @@ export function toggleStatusUsuarioEmpresa({ eid, uid }) {
       console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
     }
     console.error(e)
-    return { ok: false, message: 'Erro no servidor. Tente mais tarde.' }
+    return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
   }
 }
 
-export function detalharUsuario(dados) {
-
-}
-
-export function editarUsuario(dados) {
-
-}
-
-export function alternarStatusUsuario(dados) {
-
-}
-
+//!JSDocs
 /**
  * @typedef {Object} UsuarioEmpresa
  * @property {number} id - O ID do usuário

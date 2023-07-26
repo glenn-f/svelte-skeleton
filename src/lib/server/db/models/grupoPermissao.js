@@ -14,10 +14,11 @@ export function definirMenus(gpe) {
  * @param {{empresa_id: number}} dados Dados da consulta sobre os usuários
  * @returns {DBAll<GrupoPermissaoEmpresa>} Lista de usuários pertencentes à empresa 
  */
-export function consultarGPEs(dados) {
+export function consultarGPEs(dados, config = { apenasAtivos: false }) {
   const { empresa_id } = dados
   try {
-    const gpes = dbSelectAll('grupo_permissao_empresa', ['*'], { empresa_id })
+    const delecao = config.apenasAtivos ? null : undefined
+    const gpes = dbSelectAll('grupo_permissao_empresa', ['*'], { empresa_id, delecao })
     gpes.forEach(definirMenus)
     return { valid: true, data: gpes }
   } catch (e) {

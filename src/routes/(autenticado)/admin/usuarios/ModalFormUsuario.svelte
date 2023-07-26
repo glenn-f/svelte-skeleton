@@ -6,6 +6,7 @@
   import InputPassword from '$lib/components/Forms/InputPassword.svelte'
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
+  import { USUARIO_ADICIONAL } from '$lib/globals'
   import { modalStore, toastStore } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
@@ -18,7 +19,7 @@
    * @type {Map<number, string}>} */
   export let permOptions
   /** Preenchimento inicial do formulário. Varia de acordo com o `modo` deste componente*/
-  export let initialData = { senha: '', senha_repetir: '', nome: '', email: '', tipo_usuario: 0 }
+  export let initialData = { senha: '', senha_repetir: '', nome: '', email: '', tipo_usuario: USUARIO_ADICIONAL}
 
   const { form, errors, enhance, message } = superForm(formData, {
     resetForm: true,
