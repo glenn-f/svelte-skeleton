@@ -1,7 +1,7 @@
 <script>
   import { enhance } from '$app/forms'
   import { SlideToggle, toastStore } from '@skeletonlabs/skeleton'
-  export let checked, id
+  export let checked, id, disabled = undefined
   export let action = '?/alternarStatus',
     method = 'POST',
     name = 'status'
@@ -30,6 +30,6 @@
     }}
   >
     <input type="hidden" name="id" value={id} />
-    <SlideToggle on:click={handleAlternar} {name} {checked} size="sm" active="bg-green-500" background="bg-red-400">{checked ? 'Ativo' : 'Inativo'}</SlideToggle>
+    <SlideToggle {disabled} on:click={handleAlternar} {name} {checked} size="sm" active="bg-green-500" background="bg-red-400">{checked ? 'Ativo' : 'Inativo'}</SlideToggle>
   </form>
 </div>
