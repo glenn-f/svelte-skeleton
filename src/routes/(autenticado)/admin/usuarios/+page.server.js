@@ -35,7 +35,6 @@ export const actions = {
     const form = await superValidate(request, editarUsuarioSchema);
     if (form.valid) {
       const { id, email, nome, tipo_usuario, senha } = form.data
-      console.log(form.data)
       if (id === locals.sessao.uid) return message(form, 'Você não pode se editar aqui. Tente em "Minha Conta"', { status: 401 })
       const res = editarUsuario({ id, email, nome, tipo_usuario, senha })
       if (res.valid) { return message(form, "Usuário atualizado com sucesso") }

@@ -1,10 +1,11 @@
 <script>
   import { Table } from '$lib/components/Table'
+  import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
+  import { USUARIO_ADMINISTRADOR } from '$lib/globals'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
   import { renderComponent } from '@tanstack/svelte-table'
   import CelulaAcoes from './CelulaAcoes.svelte'
-  import CelulaStatus from './CelulaStatus.svelte'
   import ModalFormUsuario from './ModalFormUsuario.svelte'
   export let data
 
@@ -16,7 +17,11 @@
     { accessorKey: 'email', header: 'E-mail' },
     { accessorKey: 'tipo_usuario', header: 'Tipo de Usuário', cell: (info) => data.permOptions.get(info.getValue()) },
     { accessorKey: 'criador', header: 'Criador' },
-    { header: 'Status', cell: (info) => renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false },
+    {
+      header: 'Status',
+      cell: (info) => renderComponent(RowStatusToggle, { id: info.row.original?.id, checked: !info.row.original?.delecao, disabled: info.row.original.tipo_usuario === USUARIO_ADMINISTRADOR }),
+      enableSorting: false
+    },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original, permOptions: data.permOptions }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
