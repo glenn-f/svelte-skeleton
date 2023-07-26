@@ -9,9 +9,9 @@ const DB_SQLITE_PATH = env.DB_SQLITE_PATH ?? path.join(__dirname, '../../../../d
 
 //! DB Constants (para uso geral)
 export const db = new Database(DB_SQLITE_PATH, { verbose: console.log })
-const begin = db.prepare('BEGIN');
-const commit = db.prepare('COMMIT');
-const rollback = db.prepare('ROLLBACK');
+export const begin = db.prepare('BEGIN');
+export const commit = db.prepare('COMMIT');
+export const rollback = db.prepare('ROLLBACK');
 
 //! DB Helper Functions (apenas para casos gerais)
 export function dbTransaction(func) {
@@ -36,7 +36,7 @@ export function dbTransaction(func) {
 export function dbSelectOne(tabela, campos, filtros) {
   tabela = sqlTabela(tabela)
   const camposTemplate = sqlValorSelect(campos)
-  const [valorFiltros, filtrosTemplate] = sqlValorKV(filtros)
+  const [valorFiltros, filtrosTemplate] = sqlValorKV(filtros, "AND")
   const query = db.prepare(`SELECT ${camposTemplate} FROM ${tabela}` + (filtrosTemplate ? ` WHERE ${filtrosTemplate}` : ''))
   return query.get(valorFiltros)
 }
@@ -51,8 +51,10 @@ export function dbSelectOne(tabela, campos, filtros) {
 export function dbSelectAll(tabela, campos, filtros) {
   tabela = sqlTabela(tabela)
   const camposTemplate = sqlValorSelect(campos)
-  const [valorFiltros, filtrosTemplate] = sqlValorKV(filtros)
-  const query = db.prepare(`SELECT ${camposTemplate} FROM ${tabela}` + (filtrosTemplate ? ` WHERE ${filtrosTemplate}` : ''))
+  const [valorFiltros, filtrosTemplate] = sqlValorKV(filtros, 'AND')
+  const sql = `SELECT ${camposTemplate} FROM ${tabela}` + (filtrosTemplate ? ` WHERE ${filtrosTemplate}` : '')
+  // console.log(sql)
+  const query = db.prepare(sql)
   return query.all(valorFiltros)
 }
 
@@ -77,7 +79,7 @@ export function dbInsert(tabela, campos) {
 export function dbUpdate(tabela, campos, filtros) {
   tabela = sqlTabela(tabela)
   const [dadosValores, dadosTemplate] = sqlValorKV(campos)
-  const [filtroValores, filtroTemplate] = sqlValorKV(filtros)
+  const [filtroValores, filtroTemplate] = sqlValorKV(filtros, "AND")
   const mutation = db.prepare(`UPDATE ${tabela} SET ${dadosTemplate} WHERE ${filtroTemplate}`)
   return mutation.run({ ...dadosValores, ...filtroValores })
 }
@@ -89,9 +91,11 @@ export function dbUpdate(tabela, campos, filtros) {
  */
 export function dbToggleSoftDelete(tabela, filtros) {
   tabela = sqlTabela(tabela)
-  const [filtroValores, filtroTemplate] = sqlValorKV(filtros)
+  const [filtroValores, filtroTemplate] = sqlValorKV(filtros, "AND")
   const agora = Date.now()
-  const query = db.prepare(`UPDATE ${tabela} SET delecao = (CASE WHEN delecao IS NULL THEN $agora ELSE NULL END) WHERE ${filtroTemplate}`)
+  const sql = `UPDATE ${tabela} SET delecao = (CASE WHEN delecao IS NULL THEN $agora ELSE NULL END) WHERE ${filtroTemplate}`
+  // console.log(sql)
+  const query = db.prepare(sql)
   return query.run({ ...filtroValores, agora })
 }
 //TODOs

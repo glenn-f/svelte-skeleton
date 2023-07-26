@@ -56,7 +56,7 @@ export function sqlTabela(tabela) {
   else throw new Error("Apenas strings são aceitas nesta função.")
 } */
 
-export function sqlValorKV(obj) {
+export function sqlValorKV(obj, sep=',') {
   if (!obj) return [{}, '']
   const novoObj = {}
   let stringKV = []
@@ -66,10 +66,11 @@ export function sqlValorKV(obj) {
     //* se algum item do objeto inicial for undefined, não inserir no novo objeto *Regra de Negócio*
     if (valor === undefined) continue;
     novoObj[chave] = sqlValorInterna(valor)
-    stringKV.push(`${chave} = $${chave}`)
+    const op = valor === null ? 'IS' : '='
+    stringKV.push(`${chave} ${op} $${chave}`)
   }
   //* criar strings de colunas e valores para o código SQL conforme as colunas do novoObj (prepare sql statement)
-  const setKV = stringKV.join(" , ")
+  const setKV = stringKV.join(` ${sep} `)
 
   return [novoObj, setKV]
 }
