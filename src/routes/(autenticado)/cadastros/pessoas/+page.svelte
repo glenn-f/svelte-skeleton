@@ -1,28 +1,36 @@
 <script>
   import { Table } from '$lib/components/Table'
+  import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
+  import { PESSOA_FISICA, mapREP, mapTipoPessoa } from '$lib/globals'
   import Icon from '@iconify/svelte'
-  // import { modalStore } from '@skeletonlabs/skeleton'
+  import { modalStore } from '@skeletonlabs/skeleton'
+  import { renderComponent } from '@tanstack/svelte-table'
+  import CelulaAcoes from './CelulaAcoes.svelte'
+  import ModalFormPessoa from './ModalFormPessoa.svelte'
   export let data
-  
-  $: rows = data.rows || []
+
+  $: rows = data.pessoas || []
   let columns = [
-    { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
-    { accessorKey: 'desativacao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
-    { accessorKey: 'nome', header: 'Nome' },
-    { header: 'Status', cell: (info) => undefined/* renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original, permOptions: GPEs }) */, enableSorting: false },
-    { header: 'Ações', cell: (info) => undefined/* renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original, permOptions: GPEs }) */, enableSorting: false }
+    // { accessorKey: 'id', header: 'ID' },
+    // { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
+    // { accessorKey: 'desativacao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
+    { accessorKey: 'tipo_pessoa', header: 'Tipo Pessoa', cell: (info) => mapTipoPessoa.get(info.getValue()) },
+    { accessorKey: 'rep', header: 'Relação Empresa', cell: (info) => mapREP.get(info.getValue()) },
+    { accessorKey: 'nome', header: 'Nome Completo/Nome Fantasia' },
+    { header: 'CPF/CNPJ', cell: (info) => info.row.original.tipo_pessoa == PESSOA_FISICA ? info.row.original.cpf : info.row.original.cnpj },
+    { header: 'Status', cell: (info) => renderComponent(RowStatusToggle, { id: info.row.original?.id, checked: !info.row.original?.delecao }), enableSorting: false },
+    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
 
   function handleAdicionar() {
-  //   modalStore.trigger({
-  //     type: 'component',
-  //     component: {
-  //       ref: ModalFormUsuario,
-  //       props: { modo: 'adicionar', formData: data.form, permOptions: data.permOptions }
-  //     }
-  //   })
+    modalStore.trigger({
+      type: 'component',
+      component: {
+        ref: ModalFormPessoa,
+        props: { modo: 'adicionar', formData: data.form, permOptions: data.permOptions }
+      }
+    })
   }
 </script>
 

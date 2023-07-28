@@ -5,6 +5,27 @@ export function consultarEmpresas(dados) {
 }
 
 export function detalharEmpresa(dados) {
+  const { id } = dados
+  try {
+    const query = db.prepare("SELECT * FROM empresa WHERE id = $id AND delecao IS NULL")
+    const rs = query.get({ id })
+    return rs || undefined
+  } catch (e) {
+    console.error(e)
+    return undefined
+  }
+}
+
+export function detalharEmpresaPerfil(dados) {
+  const { dono_id } = dados
+  try {
+    const query = db.prepare("SELECT id, nome_fantasia, razao_social, cnpj, inscricao_estadual, codigo_regime_tributario, pais, uf, municipio, bairro, cep, endereco, telefone FROM empresa WHERE dono_id = $dono_id")
+    const rs = query.get({ dono_id })
+    return rs || undefined
+  } catch (e) {
+    console.error(e)
+    return undefined
+  }
 
 }
 

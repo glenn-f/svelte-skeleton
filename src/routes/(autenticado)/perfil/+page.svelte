@@ -2,8 +2,8 @@
   import Icon from '@iconify/svelte'
   import { modalStore, toastStore } from '@skeletonlabs/skeleton'
   import { superForm } from 'sveltekit-superforms/client'
-  import HelperMessage from '../../../lib/components/Forms/HelperMessage.svelte'
-  import InputText from '../../../lib/components/Forms/InputText.svelte'
+  import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
+  import InputText from '$lib/components/Forms/InputText.svelte'
   import ModalFormSenha from './ModalFormSenha.svelte'
   import { invalidateAll } from '$app/navigation'
   export let data

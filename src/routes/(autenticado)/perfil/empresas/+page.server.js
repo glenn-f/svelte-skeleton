@@ -1,99 +1,77 @@
 import { REP_COLABORADOR } from '$lib/globals'
 import { resetarEmpresa } from '$lib/server/cache'
 import { db, dbTransaction } from '$lib/server/db'
+import { detalharEmpresaPerfil } from '$lib/server/db/models/empresa'
 import { criarGPEInicial } from '$lib/server/db/models/grupoPermissao'
 import { resetarSessoesUsuario, sessionCookieSettings } from '$lib/server/loginSessao'
 import { criarEmpresaSchema, editarEmpresaSchema } from '$lib/zod/schemas/empresa'
 import { message, superValidate } from 'sveltekit-superforms/server'
 
-/** @type {import('./$types').PageServerLoad} */
 export async function load({ locals }) {
-    const id = locals.sessao.uid
-
-    const query = db.prepare('SELECT id, nome_fantasia, razao_social, cnpj, inscricao_estadual, codigo_regime_tributario, pais, uf, municipio, bairro, cep, endereco, telefone FROM empresa WHERE dono_id = $id')
-    const empresa = query.get({ id })
-
-    if (empresa) {
-        const form = await superValidate(empresa, editarEmpresaSchema, { id: "editar", errors: false })
-        return { form }
-    }
-
-    const form = await superValidate(criarEmpresaSchema, { id: "criar" })
+    const dono_id = locals.sessao.uid
+    const empresa = detalharEmpresaPerfil({ dono_id })
+    const form = empresa ?
+        superValidate(empresa, editarEmpresaSchema, { id: "editar", errors: false }) :
+        superValidate(criarEmpresaSchema, { id: "criar" })
     return { form }
-
-    // const formCriar = await superValidate(criarEmpresaSchema, { id: "criar" })
-    // const formEditar = await superValidate(empresa, editarEmpresaSchema, { id: "editar" })
 }
 
-/** @type {import("./$types").Actions} */
 export const actions = {
     cadastrar: async ({ request, locals, cookies }) => {
+        //* Validar dados recebidos
         const form = await superValidate(request, criarEmpresaSchema, { id: "criar" })
-        if (form.valid) {
-            const dono_id = locals.sessao.uid
+        if (!form.valid) return message(form, "Erro no preenchimento dos campos.", { status: 400 })
 
-            //* Criar empresa no BD
-            const result = cadastrarEmpresa({ dono_id, ...form.data })
-            if (result.ok) {
-                //* Atualizar sessão
-                const sessao = resetarSessoesUsuario(dono_id)
-                if (sessao.valid) {
-                    cookies.set('sid', sessao.data.sid, { ...sessionCookieSettings, maxAge: sessao.data.expiracao / 1000 })
-                }
+        //* Atualizar banco de dados
+        const dono_id = locals.sessao.uid
+        const resEmpresa = cadastrarEmpresa({ dono_id, ...form.data })
+        if (!resEmpresa.ok) return message(form, resEmpresa.message, { status: 500 })
+        //TODO tratar erro de banco: restrições de integridade
 
-                //* Atualizar formulário
-                const query = db.prepare('SELECT id, nome_fantasia, razao_social, cnpj, inscricao_estadual, codigo_regime_tributario, pais, uf, municipio, bairro, cep, endereco, telefone FROM empresa WHERE dono_id = $id')
-                const empresa = query.get({ id: dono_id })
+        //* Atualizar sessão
+        const resSessao = resetarSessoesUsuario(dono_id)
+        if (!resSessao.valid) return message(form, "A sessão não foi resetada", { status: 500 })
+        cookies.set('sid', resSessao.data.sid, { ...sessionCookieSettings, maxAge: resSessao.data.expiracao / 1000 })
 
-                if (empresa) {
-                    const formEditar = await superValidate(empresa, editarEmpresaSchema, { id: "editar", errors: false })
-                    resetarEmpresa(empresa.id)
-                    return message(formEditar, "Empresa cadastrada com sucesso.")
-                }
-                return message(form, "Empresa cadastrada com sucesso.")
-            } else {
-                //* Erro no servidor
-                return message(form, result.message, { status: 500 })
-            }
+        //* Carregar empresa criada
+        const empresa = detalharEmpresaPerfil({ dono_id })
+        if (empresa) {
+            const formEditar = await superValidate(empresa, editarEmpresaSchema, { id: "editar", errors: false })
+            resetarEmpresa(empresa.id)
+            return message(formEditar, "Empresa cadastrada com sucesso.")
         }
-        //* Bad Request
-        return message(form, "Erro no preenchimento dos campos.", { status: 400 })
+        return message(form, "Empresa cadastrada com sucesso.")
     },
     editar: async ({ request, locals, cookies }) => {
+        //* Validar dados recebidos
         const form = await superValidate(request, editarEmpresaSchema, { id: "editar" })
-        if (form.valid) {
-            //* Verificações de Segurança
-            const dono_id = locals.sessao.uid
-            const checkQuery = db.prepare("SELECT dono_id FROM empresa WHERE id = $id")
-            const checkResult = checkQuery.get({ id: form.data.id })
-            if (!checkResult) return message(form, "Empresa não existe", { status: 404 })
-            if (checkResult.dono_id !== dono_id) return message(form, "Permissão negada.", { status: 401 })
+        if (!form.valid) return message(form, "Erro no preenchimento dos campos.", { status: 400 })
 
-            //* Editar empresa no BD
-            const query = db.prepare(
-                "UPDATE empresa SET nome_fantasia = $nome_fantasia, razao_social = $razao_social, cnpj = $cnpj, inscricao_estadual = $inscricao_estadual, codigo_regime_tributario = $codigo_regime_tributario,\
+        //* Validar banco de dados
+        const dono_id = locals.sessao.uid
+        const empresa = db.prepare("SELECT dono_id FROM empresa WHERE id = $id").get({ id: form.data.id })
+        if (!empresa) return message(form, "Empresa não existe", { status: 404 })
+        if (empresa.dono_id !== dono_id) return message(form, "Permissão negada.", { status: 401 })
+
+        //* Atualizar banco de dados
+        const query = db.prepare("UPDATE empresa SET nome_fantasia = $nome_fantasia, razao_social = $razao_social, cnpj = $cnpj, inscricao_estadual = $inscricao_estadual, codigo_regime_tributario = $codigo_regime_tributario,\
 pais = $pais, uf = $uf, municipio = $municipio, bairro = $bairro, cep = $cep, endereco = $endereco, telefone = $telefone WHERE id = $id")
-            const result = query.run({ ...form.data })
-            if (result.changes > 0) {
-                //* Atualizar sessão
-                const empresa = resetarEmpresa(form.data.id)
-                const sessao = resetarSessoesUsuario(dono_id)
-                if (sessao.valid) {
-                    cookies.set('sid', sessao.data.sid, { ...sessionCookieSettings, maxAge: sessao.data.expiracao / 1000 })
-                }
+        const result = query.run({ ...form.data })
+        if (result.changes === 0) return message(form, "Empresa não atualizada, erro no servidor.", { status: 500 })
 
-                //* OK
-                return message(form, "Empresa atualizada com sucesso.")
-            } else {
-                //* Erro no servidor
-                return message(form, "Empresa não atualizada, erro no servidor.", { status: 500 })
-            }
-        }
-        //* Bad Request
-        return message(form, "Erro no preenchimento dos campos.", { status: 400 })
+        //* Atualizar sessão
+        resetarEmpresa(form.data.id)
+        const resSessao = resetarSessoesUsuario(dono_id)
+        if (!resSessao.valid) return message(form, "A sessão não foi resetada", { status: 500 })
+
+        //* Atualizar cookies e enviar resposta
+        const { sid, expiracao } = resSessao.data
+        cookies.set('sid', sid, { ...sessionCookieSettings, maxAge: expiracao / 1000 })
+        return message(form, "Empresa atualizada com sucesso.")
     }
 }
 
+//TODO Mover para models/empresa
 /**
  * @param {any} dados
  * @returns {{ok: boolean message: string}}

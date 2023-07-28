@@ -17,10 +17,15 @@ export function consultarUsuarios() {
   }
 }
 
-//TODO
-// export function detalharUsuario(dados) {
-
-// }
+export function detalharUsuario(dados) {
+  try {
+    const rs = db.prepare("SELECT * FROM usuario WHERE id = $id").get(dados)
+    return rs || undefined
+  } catch (e) {
+    console.error(e)
+    return undefined
+  }
+}
 
 /**
  * Cria um usuário no banco de dados, retornando o ID criado ou os erros emitidos (ADMIN)
@@ -104,7 +109,7 @@ export function alternarStatusUsuario(dados) {
     } else {
       console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
     }
-    return { ok: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
+    return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
   }
 }
 

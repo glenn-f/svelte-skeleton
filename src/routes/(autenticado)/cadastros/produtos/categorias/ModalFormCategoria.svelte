@@ -1,20 +1,20 @@
 <script>
-	import { invalidateAll } from '$app/navigation'
-	import CardModal from '$lib/components/CardModal.svelte'
-	import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
-	import InputText from '$lib/components/Forms/InputText.svelte'
-	import { modalStore, toastStore } from '@skeletonlabs/skeleton'
-	import { superForm } from 'sveltekit-superforms/client'
+  import { invalidateAll } from '$app/navigation'
+  import CardModal from '$lib/components/CardModal.svelte'
+  import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
+  import InputText from '$lib/components/Forms/InputText.svelte'
+  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { onMount } from 'svelte'
+  import { superForm } from 'sveltekit-superforms/client'
   /** Modo em que o modal será aberto
-   * @type {'adicionar' | 'editar' | 'apagar'} */
+   * @type {'adicionar' | 'editar'} */
   export let modo = 'adicionar'
   /** Dados do formulário recebidos do superValidate pelo lado do servidor */
   export let formData
   /** Preenchimento inicial do formulário. Varia de acordo com o `modo` deste componente*/
-  export let initialData = { nome: '' }
-  formData.data = { ...initialData }
-  formData.errors = {}
-  const { form, errors, enhance, reset, message } = superForm(formData, {
+  export let initialData = {}
+
+  const { form, errors, enhance, message } = superForm(formData, {
     resetForm: true,
     taintedMessage: false,
     onResult: async ({ result, cancel, formEl }) => {
@@ -36,24 +36,20 @@
     }
   })
 
-  let action, titulo, pw_placeholder
+  let action, titulo
   $: if (modo == 'editar') {
     action = '?/editar'
     titulo = 'Editar'
-    pw_placeholder = 'Não alterado'
-  } else if (modo == 'apagar') {
-    action = '?/apagar'
-    titulo = 'Apagar'
   } else {
     action = '?/adicionar'
     titulo = 'Adicionar'
-    pw_placeholder = ''
   }
 
-  function onClose() {
-    reset()
-    modalStore.close()
-  }
+  onMount(() => {
+    $form = { ...initialData }
+    $errors = {}
+    $message = ''
+  })
 </script>
 
 <form {action} method="POST" use:enhance>
@@ -74,10 +70,10 @@
       {/if}
       <div class="flex gap-2">
         {#if modo == 'editar'}
-          <input type="hidden" name="id" value={formData.id} />
+          <input type="hidden" name="id" value={initialData.id} />
         {/if}
         <button type="submit" class="btn variant-filled-primary">Enviar</button>
-        <button type="button" class="btn variant-filled-secondary" on:click={onClose}>Cancelar</button>
+        <button type="button" class="btn variant-filled-secondary" on:click={modalStore.close}>Cancelar</button>
       </div>
     </div>
   </CardModal>

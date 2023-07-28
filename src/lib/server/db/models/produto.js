@@ -1,59 +1,83 @@
-import { db, dbInsert, dbTransaction } from ".."
+import { db, dbInsert, dbSelectOne, dbToggleSoftDelete, dbUpdate } from ".."
 
 /**
  * Consulta todos os usuários associados à uma empresa da aplicação
- * @param {{eid: number}} dados Dados da consulta sobre os usuários
+ * @param {{empresa_id: number}} dados Dados da consulta sobre os usuários
  * @returns {DBAll<Produto>} Lista de usuários pertencentes à empresa 
  */
 export function consultarProdutos(dados) {
-  const { eid } = dados
+  const { empresa_id } = dados
   try {
-    const query = db.prepare("SELECT * FROM produto WHERE empresa_id = $eid")
-    /** @type {Produto[]} Listagem de produtos */
-    const data = query.all({ eid })
+    const data = db.prepare("SELECT * FROM produto WHERE empresa_id = $empresa_id").all({ empresa_id })
     return { valid: true, data }
   } catch (e) {
     return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
   }
 }
 
-
-//
-
-
+/** //TODO JSDocs */
 export function criarProduto(dados) {
-  const { empresa_id, produto_categoria_id, nome, titulo_codigo } = dados
+  // const { empresa_id, produto_categoria_id, nome, titulo_codigo, criador_id } = dados
   try {
-    const rs = dbInsert('produto', { empresa_id, produto_categoria_id, nome, titulo_codigo })
-    if (rs.changes > 0) {
-      return { ok: true, id: rs.lastInsertRowid }
-    }
+    const rs = dbInsert('produto', dados)
+    if (rs.changes > 0) return { valid: true, data: rs.lastInsertRowid }
   } catch (e) {
     if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
-      if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
-        return { ok: false, errors: { nome: "Este nome já está em uso" } }
-      } else {
-        console.log({ ErroSqlite: { code: e.code, message: e.message } })
-      }
+      console.log({ ErroSqlite: { code: e.code, message: e.message } })
     } else {
       console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
     }
     console.error(e)
   }
+  return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
 }
 
+/** //TODO JSDocs */
+export function editarProduto(dados) {
+  try {
+    const { id, nome, produto_categoria_id, titulo_codigo } = dados
+    const rs = dbUpdate('produto', { nome, produto_categoria_id, titulo_codigo }, { id })
+    if (rs.changes > 0) return { valid: true, data: null }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      console.log({ ErroSqlite: { code: e.code, message: e.message } })
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+  }
+  return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+}
+
+/** //TODO JSDocs */
+export function alternarStatusProduto(dados) {
+  const { id } = dados
+  try {
+    const res = dbToggleSoftDelete('produto', { id })
+    if (res.changes == 0) { return { valid: false, message: "O status não foi alterado", code: "DB_UNKNOWN" } }
+    const usuario = dbSelectOne('produto', ['delecao'], { id })
+    if (usuario?.delecao) {
+      return { valid: true, data: "Produto desativado com sucesso" }
+    } else {
+      return { valid: true, data: "Produto ativado com sucesso" }
+    }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      console.log({ ErroSqlite: { code: e.code, message: e.message } })
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
+  }
+}
+
+/** //TODO JSDocs & Function */
 export function detalharProduto(dados) {
 
 }
 
-export function editarProduto(dados) {
 
-}
-
-export function alternarStatusProduto(dados) {
-
-}
-
+//!JSDocs
 /**
  * @typedef {Object} Produto
  * @property {number} id - O ID do produto

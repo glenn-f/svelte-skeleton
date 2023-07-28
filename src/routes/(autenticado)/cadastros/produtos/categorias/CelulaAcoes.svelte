@@ -1,13 +1,13 @@
 <script>
   import IconButton from '$lib/components/IconButton.svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
-  import ModalFormPessoa from './ModalFormPessoa.svelte'
-  export let formData, initialData
+  import ModalFormCategoria from './ModalFormCategoria.svelte'
+  export let formData, initialData = undefined
 
   function handleEditar() {
     modalStore.trigger({
       type: 'component',
-      component: { ref: ModalFormPessoa, props: { modo: 'editar', initialData, formData } }
+      component: { ref: ModalFormCategoria, props: { modo: 'editar', initialData, formData } }
     })
   }
 </script>

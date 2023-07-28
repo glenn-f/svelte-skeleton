@@ -1,8 +1,8 @@
 <script>
   import CardModal from '$lib/components/CardModal.svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
-  import HelperMessage from '../../../lib/components/Forms/HelperMessage.svelte'
-  import InputPassword from '../../../lib/components/Forms/InputPassword.svelte'
+  import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
+  import InputPassword from '$lib/components/Forms/InputPassword.svelte'
 
   /** Dados do formulário de alterar senha como SuperForm
    * @type {import("sveltekit-superforms/client").SuperForm<any>}

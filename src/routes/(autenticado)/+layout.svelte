@@ -35,55 +35,55 @@
             <MenuItem href="/admin/componentes" titulo="Componentes" />
           </Menu>
         {/if}
-        {#if data?.sessao?.gpe || data?.sessao?.empresa?.dono_id === data?.sessao.uid}
-          {#if data.sessao.gpe.pode_iniciar_venda || data.sessao.gpe.pode_ver_estoque_disponivel || data.sessao.gpe.pode_ver_historico_vendas}
+        {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data?.sessao?.gpe || data?.sessao?.empresa?.dono_id === data?.sessao.uid}
+          {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_iniciar_venda || data.sessao.gpe?.pode_ver_estoque_disponivel || data.sessao.gpe?.pode_ver_historico_vendas}
             <Menu titulo="Loja" icon="fa6-solid:store" width="w-64">
-              {#if data.sessao.gpe.pode_iniciar_venda}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_iniciar_venda}
                 <MenuItem href="/loja/vender" titulo="Iniciar Venda" icon="mdi:point-of-sale" />
               {/if}
-              {#if data.sessao.gpe.pode_ver_estoque_disponivel}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_ver_estoque_disponivel}
                 <MenuItem href="/loja/disponivel" titulo="Estoque Disponível" icon="mdi:cart-check" />
               {/if}
-              {#if data.sessao.gpe.pode_ver_historico_vendas}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_ver_historico_vendas}
                 <MenuItem href="/loja/historico" titulo="Histórico de Vendas" icon="mdi:receipt-text-clock" />
               {/if}
             </Menu>
           {/if}
-          {#if data.sessao.gpe.pode_ver_estoque || data.sessao.gpe.pode_entrada_estoque || data.sessao.gpe.pode_saida_estoque}
+          {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_ver_estoque || data.sessao.gpe?.pode_entrada_estoque || data.sessao.gpe?.pode_saida_estoque}
             <Menu titulo="Estoque" icon="mdi:warehouse">
-              {#if data.sessao.gpe.pode_ver_estoque}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_ver_estoque}
                 <MenuItem href="/estoque/inventario" titulo="Inventário" icon="fluent-mdl2:product-list" />
               {/if}
-              {#if data.sessao.gpe.pode_entrada_estoque}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_entrada_estoque}
                 <MenuItem href="/estoque/entradas" titulo="Entradas" icon="ri:inbox-archive-fill" />
               {/if}
-              {#if data.sessao.gpe.pode_saida_estoque}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_saida_estoque}
                 <MenuItem href="/estoque/saidas" titulo="Saídas" icon="ri:inbox-unarchive-fill" />
               {/if}
             </Menu>
           {/if}
-          {#if data.sessao.gpe.pode_ver_saldo || data.sessao.gpe.pode_transacao_receita || data.sessao.gpe.pode_transacao_despesa}
+          {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_ver_saldo || data.sessao.gpe?.pode_transacao_receita || data.sessao.gpe?.pode_transacao_despesa}
             <Menu titulo="Transações" icon="ic:round-currency-exchange">
-              {#if data.sessao.gpe.pode_ver_saldo}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_ver_saldo}
                 <MenuItem href="/transacoes/saldo" titulo="Saldo de Contas" icon="fa6-solid:coins" />
               {/if}
-              {#if data.sessao.gpe.pode_transacao_receita}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_transacao_receita}
                 <MenuItem href="/transacoes/historico" titulo="Histórico" icon="mdi:cash-sync" />
               {/if}
             </Menu>
           {/if}
-          {#if data.sessao.gpe.pode_cadastrar_usuario || data.sessao.gpe.pode_cadastrar_conta || data.sessao.gpe.pode_cadastrar_produto || data.sessao.gpe.pode_cadastrar_pessoa}
+          {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_cadastrar_usuario || data.sessao.gpe?.pode_cadastrar_conta || data.sessao.gpe?.pode_cadastrar_produto || data.sessao.gpe?.pode_cadastrar_pessoa}
             <Menu titulo="Cadatros" icon="fa6-solid:book">
-              {#if data.sessao.gpe.pode_cadastrar_usuario}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_cadastrar_usuario}
                 <MenuItem href="/cadastros/usuarios" titulo="Usuários" icon="mdi:user-key" />
               {/if}
-              {#if data.sessao.gpe.pode_cadastrar_conta}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_cadastrar_conta}
                 <MenuItem href="/cadastros/contas" titulo="Contas" icon="guidance:bank" />
               {/if}
-              {#if data.sessao.gpe.pode_cadastrar_produto}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_cadastrar_produto}
                 <MenuItem href="/cadastros/produtos" titulo="Produtos" icon="fluent-mdl2:product-variant" />
               {/if}
-              {#if data.sessao.gpe.pode_cadastrar_pessoa}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_cadastrar_pessoa}
                 <MenuItem href="/cadastros/pessoas" titulo="Pessoas" icon="mdi:account-group" />
               {/if}
             </Menu>

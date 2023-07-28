@@ -2,14 +2,14 @@ import { db, dbInsert, dbTransaction } from ".."
 
 /**
  * Consulta todos os usuários associados à uma empresa da aplicação
- * @param {{eid: number}} dados Dados da consulta sobre os usuários
+ * @param {{empresa_id: number}} dados Dados da consulta sobre os usuários
  * @returns {DBAll<Pessoa>} Lista de usuários pertencentes à empresa 
  */
-export function consultarPessoas(dados) {
-  const { eid } = dados
+export function consultarPessoas(dados, rep) {
+  const { empresa_id } = dados
   try {
-    const query = db.prepare("SELECT * FROM pessoa WHERE empresa_id = $eid")
-    const data = query.all({ eid })
+    const query = db.prepare("SELECT * FROM pessoa WHERE empresa_id = $empresa_id" + (rep !== undefined ? " AND rep = $rep" : ""))
+    const data = query.all({ empresa_id, rep })
     return { valid: true, data }
   } catch (e) {
     return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }

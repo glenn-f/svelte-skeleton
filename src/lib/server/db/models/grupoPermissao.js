@@ -96,11 +96,21 @@ export function alternarStatusGPE(dados) {
     } else {
       console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
     }
-    return { ok: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
+    return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
   }
 }
 
-//TODO export function detalharGPE(dados) {}
+export function detalharGPE(dados) {
+  const { id } = dados
+  try {
+    const query = db.prepare("SELECT * FROM grupo_permissao_empresa WHERE id = $id AND delecao IS NULL")
+    const rs = query.get({ id })
+    return rs ? rs : undefined
+  } catch (e) {
+    console.error(e)
+    return undefined
+  }
+}
 
 
 //! Empresa.Criar
