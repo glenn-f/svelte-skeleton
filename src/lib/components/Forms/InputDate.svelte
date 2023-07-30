@@ -2,7 +2,7 @@
   import { HTMLdateToMillis, millisToHTMLdate } from '$lib/types'
   import Label from './Label.svelte'
   import { isSvelteStore } from '$lib/helpers'
-  import { getContext } from 'svelte'
+  import { getContext, onMount } from 'svelte'
   /** @type {?string} */
   export let label = undefined
   /** @type {?boolean} */
@@ -76,6 +76,10 @@
   $: updateMask(value)
   //* atualizar value quando a mask for alterada
   $: updateValue(valueMask)
+
+  onMount(() => {
+    updateMask(value)
+  })
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>

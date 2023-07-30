@@ -45,7 +45,6 @@ export function formatMoeda(value, qntdAposVirgula = 2) {
   if (Number.isFinite(numberValue)) {
     return numberValue.toLocaleString('pt-BR', options)
   } else {
-    console.log("Erro: formatMoeda(value) → `value` não é um número válido.")
     // throw new TypeError("O valor não é um número válido")
     return value?.toString() ?? ''
   }
@@ -57,7 +56,6 @@ export function formatTaxa(value, qntdAposVirgula = 2) {
   if (Number.isFinite(numberValue)) {
     return numberValue.toLocaleString('pt-BR', options)
   } else {
-    console.log("Erro: formatMoeda(value) → `value` não é um número válido.")
     // throw new TypeError("O valor não é um número válido")
     return ''
   }

@@ -122,7 +122,6 @@
   })
   $: if (readonly) {
     const [maskedText, unmaskedText] = applyMask(mask, maskValue)
-    console.log({ value, unmaskedText, maskValue })
     if (unmaskedText != value) {
       const [_masked, _value] = applyMask(mask, value)
       maskValue = _masked
@@ -138,13 +137,13 @@
     class:input-error={error}
     type="text"
     class={'input read-only:variant-filled-surface ' + inputClass}
+    id={'_InputMask' + name}
     {readonly}
     {autocomplete}
-    id={'InputMask' + name}
     {required}
     on:input={handleInput}
     on:blur={handleBlur}
     bind:value={maskValue}
   />
-  <input type="hidden" {name} bind:value />
+  <input type="hidden" {name} bind:value={value} />
 </Label>

@@ -103,7 +103,6 @@
   })
   $: if (readonly) {
     const [maskedText, unmaskedText] = toCNPJMask(maskData.mask, maskValue)
-    console.log({ value, unmaskedText, maskValue })
     if (unmaskedText != value) {
       const [_masked, _value] = toCNPJMask(maskData.mask, value)
       maskValue = _masked

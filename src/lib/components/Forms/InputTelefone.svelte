@@ -55,7 +55,6 @@
     } else {
       selectionPos = event.target.selectionStart
       value = inputText
-      console.log(event.inputType)
     }
   }
 
@@ -115,7 +114,6 @@
   })
   $: if (readonly) {
     const [maskedText, unmaskedText] = toTelMask(maskValue)
-    console.log({ value, unmaskedText, maskValue })
     if (unmaskedText != value) {
       const [_masked, _value] = toTelMask(value)
       maskValue = _masked

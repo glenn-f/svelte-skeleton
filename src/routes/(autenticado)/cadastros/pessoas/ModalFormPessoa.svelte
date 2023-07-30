@@ -1,4 +1,5 @@
 <script>
+  import { browser } from '$app/environment'
   import { invalidateAll } from '$app/navigation'
   import CardModal from '$lib/components/CardModal.svelte'
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
@@ -111,7 +112,7 @@
           <InputText label="RG" name="rg" bind:value={$form.rg} error={$errors.rg} errorSpacing />
         </div>
         <div class="col-span-3">
-          <InputDate name="dn" label="Data de Nascimento" error={$errors.sexo} errorSpacing />
+          <InputDate name="dn" label="Data de Nascimento" bind:value={$form.dn} error={$errors.dn} errorSpacing />
         </div>
         <Label label="Sexo Biológico" labelClass="col-span-5 flex flex-col items-center" error={$errors.sexo}>
           <RadioGroup active="bg-primary-500" background="variant-glass" hover="variant-soft hover:variant-soft-primary">
@@ -120,9 +121,13 @@
           </RadioGroup>
         </Label>
       {/if}
-      <div class="col-span-3">
-        <InputMask mask="00000-000" label="CEP" name="cep" bind:value={$form.cep} error={$errors.cep} errorSpacing />
-      </div>
+
+      {#key $form.cep}
+         <div class="col-span-3">
+           <InputMask mask="00000-000" label="CEP" name="cep" bind:value={$form.cep} error={$errors.cep} errorSpacing />
+         </div>
+      {/key}
+
       <div class="col-span-9">
         <InputText label="Endereço" name="endereco" bind:value={$form.endereco} error={$errors.endereco} errorSpacing />
       </div>
