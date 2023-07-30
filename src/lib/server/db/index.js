@@ -53,7 +53,6 @@ export function dbSelectAll(tabela, campos, filtros) {
   const camposTemplate = sqlValorSelect(campos)
   const [valorFiltros, filtrosTemplate] = sqlValorKV(filtros, { sep: "AND" })
   const sql = `SELECT ${camposTemplate} FROM ${tabela}` + (filtrosTemplate ? ` WHERE ${filtrosTemplate}` : '')
-  console.log(sql)
   const query = db.prepare(sql)
   return query.all(valorFiltros)
 }
