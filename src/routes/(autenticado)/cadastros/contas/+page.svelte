@@ -1,28 +1,34 @@
 <script>
   import { Table } from '$lib/components/Table'
+  import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
   import Icon from '@iconify/svelte'
-  // import { modalStore } from '@skeletonlabs/skeleton'
+  import { modalStore } from '@skeletonlabs/skeleton'
+  import { renderComponent } from '@tanstack/svelte-table'
+  import CelulaAcoes from './CelulaAcoes.svelte'
+  import ModalFormConta from './ModalFormConta.svelte'
+  import { formatMoeda } from '$lib/helpers'
   export let data
-  
-  $: rows = data.rows || []
+
+  $: rows = data.contas || []
   let columns = [
-    { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
-    { accessorKey: 'desativacao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
-    { accessorKey: 'nome', header: 'Nome' },
-    { header: 'Status', cell: (info) => undefined/* renderComponent(CelulaStatus, { formData: data.form, initialData: info.row.original, permOptions: GPEs }) */, enableSorting: false },
-    { header: 'Ações', cell: (info) => undefined/* renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original, permOptions: GPEs }) */, enableSorting: false }
+    // { accessorKey: 'id', header: 'ID' },
+    // { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
+    // { accessorKey: 'desativacao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
+    { accessorKey: 'nome', header: 'Nome da Conta' },
+    { accessorKey: 'saldo', header: 'Saldo da Conta', cell: (info) => formatMoeda(info.getValue()) },
+    { header: 'Status', cell: (info) => renderComponent(RowStatusToggle, { id: info.row.original?.id, checked: !info.row.original?.delecao }), enableSorting: false },
+    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
 
   function handleAdicionar() {
-  //   modalStore.trigger({
-  //     type: 'component',
-  //     component: {
-  //       ref: ModalFormUsuario,
-  //       props: { modo: 'adicionar', formData: data.form, permOptions: data.permOptions }
-  //     }
-  //   })
+    modalStore.trigger({
+      type: 'component',
+      component: {
+        ref: ModalFormConta,
+        props: { modo: 'adicionar', formData: data.form }
+      }
+    })
   }
 </script>
 

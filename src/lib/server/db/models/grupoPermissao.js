@@ -22,6 +22,7 @@ export function consultarGPEs(dados, config = { apenasAtivos: false }) {
     gpes.forEach(definirMenus)
     return { valid: true, data: gpes }
   } catch (e) {
+    console.error(e)
     return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
   }
 }
@@ -96,6 +97,7 @@ export function alternarStatusGPE(dados) {
     } else {
       console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
     }
+    console.error(e)
     return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
   }
 }

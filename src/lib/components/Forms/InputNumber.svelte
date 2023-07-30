@@ -98,6 +98,7 @@
 
   onMount(() => {
     maskInput.onbeforeinput = onBeforeInput
+    onChangeValue(value)
   })
 
   function onChangeValue(v) {

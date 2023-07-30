@@ -1,4 +1,3 @@
-import { db } from './db'
 import { detalharEmpresa } from './db/models/empresa'
 import { detalharGPE } from './db/models/grupoPermissao'
 
@@ -16,7 +15,7 @@ export function buscarEmpresa(id) {
 }
 
 export function atualizarEmpresa(id) {
-  const empresa = detalharEmpresa(id)
+  const empresa = detalharEmpresa({ id })
   if (empresa) {
     cacheEmpresa.set(id, empresa)
     return empresa
@@ -43,7 +42,7 @@ export function buscarGPE(id) {
 }
 
 export function atualizarGPE(id) {
-  const gpe = detalharGPE(id)
+  const gpe = detalharGPE({ id })
   if (gpe) {
     cacheGPE.set(id, gpe)
     return gpe

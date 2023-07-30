@@ -3,14 +3,17 @@ import { consultarPessoas } from '$lib/server/db/models/pessoa.js';
 import { criarPessoaSchema, editarPessoaSchema } from '$lib/zod/schemas/pessoa';
 import { error } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms/server';
+import { actions as pessoasActions } from '../+page.server.js';
 
 export async function load({ locals }) {
   const empresa_id = locals.sessao.empresa_id
   const res = consultarPessoas({ empresa_id }, REP_CLIENTE)
   if (!res.valid) throw error(500, "Erro no servidor")
-  
+
   const pessoas = res.data
   const formAdicionar = await superValidate(criarPessoaSchema)
   const formEditar = await superValidate(editarPessoaSchema)
   return { pessoas, formAdicionar, formEditar };
 };
+
+export const actions = { ...pessoasActions }

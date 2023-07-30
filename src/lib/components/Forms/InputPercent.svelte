@@ -79,7 +79,7 @@
     }
     //* Tratamento do valor final
     let { numJs, numBr, pos } = handleMask(textoFinal, textoAntes.length + textoInsercao.length)
-    value = numJs
+    value = Number.isFinite(numJs) ? numJs / 100 : numJs
     inputEl.value = numBr
     inputEl.setSelectionRange(pos, pos)
     e.preventDefault()
@@ -92,19 +92,20 @@
     const input = e.target
     let posSel = input.value.indexOf(',')
     posSel = posSel === -1 ? input.selectionEnd : posSel
-    input.setSelectionRange(0, posSel)
+    input.setSelectionRange(0, 100)
   }
   /** @type {HTMLInputElement} */
   let maskInput
 
   onMount(() => {
     maskInput.onbeforeinput = onBeforeInput
+    onChangeValue(value)
   })
 
   function onChangeValue(v) {
     if (!maskInput) return
     v = parseFloat(v)
-    let mask = Number.isFinite(v) ? formatMoeda(v, casasDecimais) : ''
+    let mask = Number.isFinite(v) ? formatMoeda(v * 100, casasDecimais) : ''
     if (mask !== maskInput.value) {
       maskInput.value = mask
     }
@@ -123,6 +124,14 @@
     }
   }
 
+  export let onKeyEnter = () => null
+
+  function keydown(e) {
+    if (e.key == 'Enter') {
+      onKeyEnter()
+    }
+  }
+
   $: onChangeValue(value)
 </script>
 
@@ -134,9 +143,10 @@
       class:input-warning={warning && !error}
       class:input-error={error}
       type="text"
-      class={'input read-only:variant-filled-surface ' + inputClass}
+      class={'input read-only:variant-filled-surface rounded-tr-none rounded-br-none ' + inputClass}
       id={'InputMoeda' + name}
       style={`text-align: ${align};`}
+      on:keydown={keydown}
       {readonly}
       {required}
       {autocomplete}

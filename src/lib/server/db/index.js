@@ -36,7 +36,7 @@ export function dbTransaction(func) {
 export function dbSelectOne(tabela, campos, filtros) {
   tabela = sqlTabela(tabela)
   const camposTemplate = sqlValorSelect(campos)
-  const [valorFiltros, filtrosTemplate] = sqlValorKV(filtros, "AND")
+  const [valorFiltros, filtrosTemplate] = sqlValorKV(filtros, { sep: "AND" })
   const query = db.prepare(`SELECT ${camposTemplate} FROM ${tabela}` + (filtrosTemplate ? ` WHERE ${filtrosTemplate}` : ''))
   return query.get(valorFiltros)
 }
@@ -51,9 +51,9 @@ export function dbSelectOne(tabela, campos, filtros) {
 export function dbSelectAll(tabela, campos, filtros) {
   tabela = sqlTabela(tabela)
   const camposTemplate = sqlValorSelect(campos)
-  const [valorFiltros, filtrosTemplate] = sqlValorKV(filtros, 'AND')
+  const [valorFiltros, filtrosTemplate] = sqlValorKV(filtros, { sep: "AND" })
   const sql = `SELECT ${camposTemplate} FROM ${tabela}` + (filtrosTemplate ? ` WHERE ${filtrosTemplate}` : '')
-  // console.log(sql)
+  console.log(sql)
   const query = db.prepare(sql)
   return query.all(valorFiltros)
 }
@@ -78,8 +78,8 @@ export function dbInsert(tabela, campos) {
  */
 export function dbUpdate(tabela, campos, filtros) {
   tabela = sqlTabela(tabela)
-  const [dadosValores, dadosTemplate] = sqlValorKV(campos)
-  const [filtroValores, filtroTemplate] = sqlValorKV(filtros, "AND")
+  const [dadosValores, dadosTemplate] = sqlValorKV(campos, { opNull: "=" })
+  const [filtroValores, filtroTemplate] = sqlValorKV(filtros, { sep: "AND" })
   const mutation = db.prepare(`UPDATE ${tabela} SET ${dadosTemplate} WHERE ${filtroTemplate}`)
   return mutation.run({ ...dadosValores, ...filtroValores })
 }
@@ -91,7 +91,7 @@ export function dbUpdate(tabela, campos, filtros) {
  */
 export function dbToggleSoftDelete(tabela, filtros) {
   tabela = sqlTabela(tabela)
-  const [filtroValores, filtroTemplate] = sqlValorKV(filtros, "AND")
+  const [filtroValores, filtroTemplate] = sqlValorKV(filtros, { sep: "AND" })
   const agora = Date.now()
   const sql = `UPDATE ${tabela} SET delecao = (CASE WHEN delecao IS NULL THEN $agora ELSE NULL END) WHERE ${filtroTemplate}`
   // console.log(sql)

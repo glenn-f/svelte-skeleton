@@ -7,6 +7,7 @@
   import { renderComponent } from '@tanstack/svelte-table'
   import CelulaAcoes from './CelulaAcoes.svelte'
   import ModalFormPessoa from './ModalFormPessoa.svelte'
+  import { formatCNPJ, formatCPF } from '$lib/helpers'
   export let data
 
   $: rows = data.pessoas || []
@@ -17,7 +18,7 @@
     { accessorKey: 'tipo_pessoa', header: 'Tipo Pessoa', cell: (info) => mapTipoPessoa.get(info.getValue()) },
     { accessorKey: 'rep', header: 'Relação Empresa', cell: (info) => mapREP.get(info.getValue()) },
     { accessorKey: 'nome', header: 'Nome Completo/Nome Fantasia' },
-    { header: 'CPF/CNPJ', cell: (info) => info.row.original.tipo_pessoa == PESSOA_FISICA ? info.row.original.cpf : info.row.original.cnpj },
+    { header: 'CPF/CNPJ', cell: (info) => (info.row.original.tipo_pessoa == PESSOA_FISICA ? formatCPF(info.row.original.cpf) : formatCNPJ(info.row.original.cnpj)) },
     { header: 'Status', cell: (info) => renderComponent(RowStatusToggle, { id: info.row.original?.id, checked: !info.row.original?.delecao }), enableSorting: false },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false }
   ]

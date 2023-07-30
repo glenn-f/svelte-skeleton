@@ -122,6 +122,7 @@
   
   onMount(() => {
     maskInput.onbeforeinput = onBeforeInput
+    onChangeValue(value)
   })
 </script>
 

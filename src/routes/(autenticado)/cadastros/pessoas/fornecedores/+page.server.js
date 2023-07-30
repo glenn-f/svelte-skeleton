@@ -3,6 +3,7 @@ import { consultarPessoas } from '$lib/server/db/models/pessoa.js';
 import { criarPessoaSchema, editarPessoaSchema } from '$lib/zod/schemas/pessoa';
 import { error } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms/server';
+import { actions as pessoasActions } from '../+page.server.js';
 
 export async function load({ locals }) {
   const empresa_id = locals.sessao.empresa_id
@@ -14,3 +15,5 @@ export async function load({ locals }) {
   const formEditar = await superValidate(editarPessoaSchema)
   return { pessoas, formAdicionar, formEditar };
 };
+
+export const actions = { ...pessoasActions }

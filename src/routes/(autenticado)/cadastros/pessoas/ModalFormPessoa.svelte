@@ -21,7 +21,6 @@
   export let initialData
 
   const { form, errors, enhance, message } = superForm(formData, {
-    resetForm: true,
     taintedMessage: false,
     onResult: async ({ result, cancel, formEl }) => {
       const message = result.data?.form?.message

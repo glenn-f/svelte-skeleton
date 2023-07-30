@@ -11,6 +11,7 @@ export function consultarProdutos(dados) {
     const data = db.prepare("SELECT * FROM produto WHERE empresa_id = $empresa_id").all({ empresa_id })
     return { valid: true, data }
   } catch (e) {
+    console.error(e)
     return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
   }
 }
@@ -67,6 +68,7 @@ export function alternarStatusProduto(dados) {
     } else {
       console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
     }
+    console.error(e)
     return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
   }
 }

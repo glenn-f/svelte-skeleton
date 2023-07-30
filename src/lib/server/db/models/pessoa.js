@@ -1,4 +1,4 @@
-import { db, dbInsert, dbTransaction } from ".."
+import { dbInsert, dbSelectAll, dbSelectOne, dbToggleSoftDelete, dbUpdate } from ".."
 
 /**
  * Consulta todos os usuários associados à uma empresa da aplicação
@@ -8,26 +8,90 @@ import { db, dbInsert, dbTransaction } from ".."
 export function consultarPessoas(dados, rep) {
   const { empresa_id } = dados
   try {
-    const query = db.prepare("SELECT * FROM pessoa WHERE empresa_id = $empresa_id" + (rep !== undefined ? " AND rep = $rep" : ""))
-    const data = query.all({ empresa_id, rep })
+    const data = dbSelectAll('pessoa', ['*'], { empresa_id, rep })
     return { valid: true, data }
   } catch (e) {
+    console.error(e)
     return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
   }
 }
 
+export function criarPessoa(dados) {
+  try {
+    const { changes, lastInsertRowid } = dbInsert('pessoa', dados)
+    if (changes > 0) {
+      return { valid: true, data: lastInsertRowid }
+    } else {
+      return { valid: false, message: "Pessoa não foi criada", code: "DB_UNKNOWN" }
+    }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
+        return { valid: false, message: 'Houve problemas em alguns campos', fieldMessage: { email: ['Este e-mail já está em uso.'] } }
+      } else {
+        console.log({ ErroSqlite: { code: e.code, message: e.message } })
+      }
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+    return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
+  }
+}
+
+export function editarPessoa(dados) {
+  try {
+    const { id, ...campos } = dados
+    const { changes } = dbUpdate('pessoa', campos, { id })
+    if (changes > 0) {
+      return { valid: true, data: null }
+    } else {
+      return { valid: false, message: "Nenhum dado foi atualizado", code: "DB_UNKNOWN" }
+    }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
+        return { valid: false, message: 'Houve problemas em alguns campos', fieldMessage: { email: ['Este e-mail já está em uso.'] } }
+      } else {
+        console.log({ ErroSqlite: { code: e.code, message: e.message } })
+      }
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+    return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
+  }
+}
+
+//TODO
+export function alternarStatusPessoa(dados) {
+  const { id } = dados
+  try {
+    const res = dbToggleSoftDelete('pessoa', { id })
+    if (res.changes == 0) { return { valid: false, message: "O status não foi alterado", code: "DB_UNKNOWN" } }
+    const r = dbSelectOne('pessoa', ['delecao'], { id })
+    if (r?.delecao) {
+      return { valid: true, data: "Pessoa desativada com sucesso" }
+    } else {
+      return { valid: true, data: "Pessoa ativada com sucesso" }
+    }
+  } catch (e) {
+    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
+      console.log({ ErroSqlite: { code: e.code, message: e.message } })
+    } else {
+      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
+    }
+    console.error(e)
+    return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
+  }
+}
+
+//TODO
 export function detalharPessoa(dados) {
 
 }
 
-export function editarPessoa(dados) {
-
-}
-
-export function alternarStatusPessoa(dados) {
-
-}
-
+//!JSDocs
 /**
  * @typedef {Object} Pessoa
  * @property {number} id - O ID da pessoa

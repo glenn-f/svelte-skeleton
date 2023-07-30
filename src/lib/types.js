@@ -86,3 +86,11 @@ export function currencyToInt(currencyValue) {
   }
   return undefined
 }
+
+export function percToInt(perc) {
+  return currencyToInt(perc)
+}
+
+export function intToPerc(intValue) {
+  return intToCurrency(intValue)
+}

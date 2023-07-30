@@ -109,6 +109,7 @@ export function alternarStatusUsuario(dados) {
     } else {
       console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
     }
+    console.error(e)
     return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
   }
 }

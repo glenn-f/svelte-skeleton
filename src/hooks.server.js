@@ -6,7 +6,6 @@ import { error, redirect } from '@sveltejs/kit'
 import { buscarEmpresa, buscarGPE } from '$lib/server/cache'
 
 async function iniciarLog({ event, resolve }) {
-  const headers = event.request.headers
   event.locals.log = new Logger(event, dev)
   if (event.route.id === null) {
     event.locals.log.end("Rota não encontrada", "red")
@@ -26,10 +25,8 @@ async function lerCookies({ event, resolve }) {
   }
   else {
     //* Sessão Válida: Carregar dados do Cache
-    //? EMPRESA + GRUPO DE PERMISSÃO NA EMPRESA
     locals.sessao.empresa = buscarEmpresa(locals.sessao.empresa_id)
     locals.sessao.gpe = buscarGPE(locals.sessao.gpe_id)
-    // locals.sessao.pessoa = buscarPessoa(locals.sessao.pessoa_id)
   }
 
   return resolve(event)

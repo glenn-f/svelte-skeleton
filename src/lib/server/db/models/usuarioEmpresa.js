@@ -15,6 +15,7 @@ FROM usuario u JOIN usuario_empresa ue ON ue.usuario_id = u.id LEFT JOIN usuario
     const data = query.all({ empresa_id })
     return { valid: true, data }
   } catch (e) {
+    console.error(e)
     return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
   }
 }
