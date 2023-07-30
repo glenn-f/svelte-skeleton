@@ -36,7 +36,7 @@ export const actions = {
     }
 
     //* Enviar resposta
-    return message(form, "Conta criada com sucesso")
+    return message(form, "Forma de Transação criada com sucesso")
   },
 
   editar: async ({ request, locals }) => {
@@ -54,7 +54,7 @@ export const actions = {
     }
 
     //* Enviar resposta
-    return message(form, "Conta atualizada com sucesso")
+    return message(form, "Forma de Transação atualizada com sucesso")
   },
 
   alternarStatus: async ({ request }) => {
