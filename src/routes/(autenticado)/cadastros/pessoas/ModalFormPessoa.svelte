@@ -6,6 +6,7 @@
   import InputDate from '$lib/components/Forms/InputDate.svelte'
   import InputEmail from '$lib/components/Forms/InputEmail.svelte'
   import InputMask from '$lib/components/Forms/InputMask.svelte'
+  import InputTelefone from '$lib/components/Forms/InputTelefone.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   import Label from '$lib/components/Forms/Label.svelte'
   import { PESSOA_FISICA, PESSOA_JURIDICA, REP_CLIENTE, REP_COLABORADOR, REP_FORNECEDOR } from '$lib/globals'
@@ -122,13 +123,19 @@
         </Label>
       {/if}
 
-      {#key $form.cep}
-         <div class="col-span-3">
-           <InputMask mask="00000-000" label="CEP" name="cep" bind:value={$form.cep} error={$errors.cep} errorSpacing />
-         </div>
-      {/key}
+      {#if $form.tipo_pessoa === PESSOA_FISICA || $form.tipo_pessoa === PESSOA_JURIDICA}
+        <div class="col-span-6">
+          <InputMask bind:value={$form.cep} error={$errors.cep} mask="00000-000" label="CEP" name="cep" errorSpacing />
+        </div>
+      {/if}
 
-      <div class="col-span-9">
+      {#if $form.tipo_pessoa === PESSOA_FISICA || $form.tipo_pessoa === PESSOA_JURIDICA}
+        <div class="col-span-6">
+          <InputTelefone label="Telefone" name="telefone" bind:value={$form.telefone} error={$errors.telefone} errorSpacing />
+        </div>
+      {/if}
+
+      <div class="col-span-12">
         <InputText label="Endereço" name="endereco" bind:value={$form.endereco} error={$errors.endereco} errorSpacing />
       </div>
     </section>

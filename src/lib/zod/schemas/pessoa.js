@@ -1,5 +1,4 @@
-import { PESSOA_FISICA, REP_CLIENTE } from "$lib/globals"
-import { z, zCEP, zCNPJ, zCPF, zDate, zEmail, zID, zOptional, zRG } from "$lib/zod"
+import { z, zCEP, zCNPJ, zCPF, zDate, zEmail, zID, zOptional, zRG, zTelBR } from "$lib/zod"
 
 export const pessoaSchema = z.object({
   id: zID,
@@ -12,6 +11,7 @@ export const pessoaSchema = z.object({
   cpf: zOptional(zCPF),
   cnpj: zOptional(zCNPJ),
   rg: zOptional(zRG),
+  telefone: zOptional(zTelBR),
   apelido: zOptional(z.string().trim().min(1)),
   endereco: zOptional(z.string().trim().min(5)),
   cep: zOptional(zCEP),

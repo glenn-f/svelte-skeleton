@@ -9,6 +9,7 @@ export function consultarPessoas(dados, rep) {
   const { empresa_id } = dados
   try {
     const data = dbSelectAll('pessoa', ['*'], { empresa_id, rep })
+    console.log(data)
     return { valid: true, data }
   } catch (e) {
     console.error(e)

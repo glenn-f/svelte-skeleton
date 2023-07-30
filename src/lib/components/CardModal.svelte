@@ -11,9 +11,11 @@
     </div>
     <hr class="my-2" />
   {/if}
-  <slot />
+  <div class="max-h-[70vh] overflow-y-scroll">
+    <slot />
+  </div>
   {#if $$slots.footer}
-    <hr class="my-2" />
+    <hr class="my-2   " />
     <div class="card-footer flex justify-center gap-2">
       <slot name="footer" />
     </div>
