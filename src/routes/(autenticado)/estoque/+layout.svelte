@@ -15,7 +15,7 @@
         rounded="rounded-t-md"
         class="!-0 bg-surface-200-700-token w-full rounded-container-token shadow-md"
       >
-        <TabAnchor href="/estoque/inventario" selected={$page.url.pathname === '/estoque/inventario'}>
+        <TabAnchor href="/estoque/inventario" selected={$page.url.pathname.startsWith('/estoque/inventario')}>
           <svelte:fragment slot="lead">
             <div class="grid place-items-center">
               <Icon icon="fluent-mdl2:product-list" width="32px" height="32px" />
@@ -23,7 +23,7 @@
           </svelte:fragment>
           <span>Inventário</span>
         </TabAnchor>
-        <TabAnchor href="/estoque/entradas" selected={$page.url.pathname === '/estoque/entradas'}>
+        <TabAnchor href="/estoque/entradas" selected={$page.url.pathname.startsWith('/estoque/entradas')}>
           <svelte:fragment slot="lead">
             <div class="grid place-items-center">
               <Icon icon="ri:inbox-archive-fill" width="32px" height="32px" />
@@ -31,7 +31,7 @@
           </svelte:fragment>
           <span>Entradas</span>
         </TabAnchor>
-        <TabAnchor href="/estoque/saidas" selected={$page.url.pathname === '/estoque/saidas'}>
+        <TabAnchor href="/estoque/saidas" selected={$page.url.pathname.startsWith('/estoque/saidas')}>
           <svelte:fragment slot="lead">
             <div class="grid place-items-center">
               <Icon icon="ri:inbox-unarchive-fill" width="32px" height="32px" />

@@ -4,15 +4,15 @@ import { begin, commit, db, dbInsert, dbSelectOne, dbToggleSoftDelete, dbUpdate,
 function cfToMap(cfs) {
   const mapa = new Map();
   for (let i = 0; i < cfs.length; i++) {
-    const { id, conta_id, nome, pode_parcelar, pode_receber, pode_pagar, delecao, parcela } = cfs[i];
+    const { id, conta_id, nome, pode_parcelar, pode_receber, pode_pagar, delecao, parcela, forma_transacao_id } = cfs[i];
     const taxa_encargo = intToPerc(cfs[i].taxa_encargo)
     if (!pode_parcelar) {
-      mapa.set(id, { id, conta_id, nome, pode_parcelar, pode_receber, pode_pagar, delecao, taxa_encargo })
+      mapa.set(id, { id, conta_id, nome, pode_parcelar, pode_receber, pode_pagar, delecao, taxa_encargo, forma_transacao_id })
     } else {
       if (!mapa.has(id)) {
-        mapa.set(id, { id, conta_id, nome, pode_parcelar, pode_receber, pode_pagar, delecao, parcelamentos: [{ parcela, taxa_encargo }] })
+        mapa.set(id, { id, conta_id, nome, pode_parcelar, pode_receber, pode_pagar, delecao, parcelamentos: [{ parcela, taxa_encargo, forma_transacao_id }] })
       } else {
-        mapa.get(id).parcelamentos.push({ parcela, taxa_encargo })
+        mapa.get(id).parcelamentos.push({ parcela, taxa_encargo, forma_transacao_id })
       }
     }
   }
@@ -25,6 +25,20 @@ export function consultarContaFormas(dados) {
     const data = db.prepare("SELECT cf.*, ft.parcela, ft.taxa_encargo FROM conta_forma cf JOIN conta c ON c.id = cf.conta_id LEFT JOIN forma_transacao ft ON ft.conta_forma_id = cf.id AND ft.delecao IS NULL WHERE c.empresa_id = $empresa_id")
       .all({ empresa_id })
     const mapa = cfToMap(data)
+    return { valid: true, data: mapa }
+  } catch (e) {
+    console.error(e)
+    return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+  }
+}
+
+export function consultarContaFormasEntrada(dados) {
+  const { empresa_id } = dados
+  try {
+    const data = db.prepare("SELECT cf.*, ft.id forma_transacao_id, ft.parcela, ft.taxa_encargo FROM conta_forma cf JOIN conta c ON c.id = cf.conta_id LEFT JOIN forma_transacao ft ON ft.conta_forma_id = cf.id AND ft.delecao IS NULL WHERE c.empresa_id = $empresa_id AND pode_pagar = 1")
+      .all({ empresa_id })
+    const mapa = cfToMap(data)
+    console.log(mapa)
     return { valid: true, data: mapa }
   } catch (e) {
     console.error(e)

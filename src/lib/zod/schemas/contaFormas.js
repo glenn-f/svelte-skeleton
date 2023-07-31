@@ -1,4 +1,4 @@
-import { z, zID } from "$lib/zod"
+import { z, zCurrency, zID } from "$lib/zod"
 
 export const contaFormaSchema = z.object({
   id: zID,
@@ -16,6 +16,11 @@ export const formaTransacaoSchema = z.object({
   conta_forma_id: zID,
   parcela: z.number().int().min(0),
   taxa_encargo: z.number().min(0),
+})
+
+export const addPgtoEntradaSchema = z.object({
+  forma_transacao_id: zID,
+  valor: zCurrency
 })
 
 export const criarContaFormaSchema = z.object({

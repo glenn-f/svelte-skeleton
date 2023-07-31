@@ -8,12 +8,9 @@
 
   export let data
   onMount(() => {
-    const tempoAtualizar = 5 * 60 * 1000
     const tempoSessao = Math.max((data?.sessao?.expiracao ?? 0) - Date.now(), 5000)
-    const atualizar = setInterval(invalidateAll, tempoAtualizar)
     const verificarSessao = setInterval(invalidateAll, tempoSessao)
     return () => {
-      clearInterval(atualizar)
       clearInterval(verificarSessao)
     }
   })

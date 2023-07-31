@@ -26,6 +26,48 @@ const mapSexo = new Map()
 mapSexo.set(SEXO_MASCULINO, "Masculino")
 mapSexo.set(SEXO_FEMININO, "Feminino")
 
-export { mapREP, mapSexo, mapTipoPessoa, mapTipoUsuario }
+export const PE_COMPRA = 1
+export const PE_VENDA = 2
+const mapProcessoEstoque = new Map()
+mapProcessoEstoque.set(PE_COMPRA, "Compra de Mercadorias")
+mapProcessoEstoque.set(PE_VENDA, "Venda de Mercadorias")
+
+export const FE_COMPRA = 1
+export const FE_VENDA = 2
+export const FE_BUYBACK = 3
+const mapFluxoEstoque = new Map()
+mapFluxoEstoque.set(FE_COMPRA, "Compra (Entrada)")
+mapFluxoEstoque.set(FE_VENDA, "Venda (Saída)")
+mapFluxoEstoque.set(FE_BUYBACK, "Buyback (Entrada)")
+
+export const ORIGEM_NACIONAL = 1
+export const ORIGEM_IMPORTADO = 2
+export const ORIGEM_LOCAL = 3
+const mapOrigem = new Map()
+mapOrigem.set(ORIGEM_NACIONAL, "Nacional")
+mapOrigem.set(ORIGEM_IMPORTADO, "Importado")
+mapOrigem.set(ORIGEM_LOCAL, "Local")
+
+export const CONDICAO_NOVO = 1
+export const CONDICAO_SEMINOVO = 2
+export const CONDICAO_AVARIADO = 3
+const mapCondicao = new Map()
+mapCondicao.set(CONDICAO_NOVO, "Novo")
+mapCondicao.set(CONDICAO_SEMINOVO, "Semi-Novo")
+mapCondicao.set(CONDICAO_AVARIADO, "Avariado")
+
+export const EE_DISPONIVEL = 1
+export const EE_AVALIACAO = 2
+export const EE_USOINTERNO = 3
+export const EE_MANUTENCAO = 4
+export const EE_AUDITORIA = 5
+const mapEstadoEstoque = new Map()
+mapEstadoEstoque.set(EE_DISPONIVEL, "Disponível")
+mapEstadoEstoque.set(EE_AVALIACAO, "Em Avaliação")
+mapEstadoEstoque.set(EE_USOINTERNO, "Em Uso Interno")
+mapEstadoEstoque.set(EE_MANUTENCAO, "Em Manutenção")
+mapEstadoEstoque.set(EE_AUDITORIA, "Em Auditoria")
+
+export { mapREP, mapSexo, mapTipoPessoa, mapTipoUsuario, mapProcessoEstoque, mapFluxoEstoque, mapOrigem, mapCondicao, mapEstadoEstoque, }
 
 export const fmtMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })

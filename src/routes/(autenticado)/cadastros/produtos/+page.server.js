@@ -42,7 +42,7 @@ export const actions = {
     const form = await superValidate(request, editarProdutoSchema);
     if (form.valid) {
       const res = editarProduto(form.data)
-      if (res.valid) { return message(form, "Categoria atualizada com sucesso") }
+      if (res.valid) { return message(form, "Produto atualizada com sucesso") }
       if (res.fieldErrors) {
         for (let [field, text] of Object.entries(res.fieldErrors)) setError(form, field, text)
         return message(form, res.message, { status: 400 })

@@ -1,12 +1,12 @@
-import { db, dbInsert, dbTransaction } from ".."
+import { db, dbSelectAll } from ".."
 
 export function consultarEstoques(dados) {
-  const { eid } = dados
+  const { empresa_id } = dados
   try {
-    const query = db.prepare("SELECT e.*, p.nome p_nome, p.titulo_codigo, p.produto_categoria_id FROM estoque e JOIN produto p ON p.id = e.produto_id WHERE p.empresa_id = $eid")
-    const data = query.all({ eid })
+    const data = db.prepare("SELECT e.id,e.qntd,e.produto_id,e.custo,e.preco_unitario,e.estado,e.condicao,e.codigo,e.delecao FROM estoque e JOIN produto p ON e.produto_id = p.id WHERE p.empresa_id = $empresa_id AND e.qntd > 0").all({ empresa_id })
     return { valid: true, data }
   } catch (e) {
+    console.error(e)
     return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
   }
 }

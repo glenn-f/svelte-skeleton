@@ -25,7 +25,8 @@ export const zTelBR = z.string().trim().regex(/^\d{10,11}$/, 'Telefone inválido
 export const zRG = z.string().trim().regex(/^\d+$/, 'RG inválido')
 export const zEmail = z.string().trim().email('E-mail inválido')
 export const zNumber = z.coerce.number().finite('Número inválido')
-export const zCurrency = z.coerce.number().nonnegative('Deve ser positivo ou zero')
+export const zInt = z.coerce.number({ invalid_type_error: "Campo obrigatório" }).int('Número inválido')
+export const zCurrency = z.coerce.number({ invalid_type_error: "Campo obrigatório" }).nonnegative('Deve ser positivo ou zero')
 export const zID = z.coerce.number({ invalid_type_error: "ID inválido" }).int('ID deve ser inteiro')
 
 //! Esquemas Genéricos

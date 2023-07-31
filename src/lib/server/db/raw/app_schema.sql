@@ -262,6 +262,7 @@ CREATE TABLE IF NOT EXISTS pe (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   empresa_id INTEGER NOT NULL,
   responsavel_id INTEGER,
+  participante_id INTEGER,
   tipo_pe INTEGER NOT NULL,
   observacoes TEXT,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
@@ -270,7 +271,8 @@ CREATE TABLE IF NOT EXISTS pe (
   criador_id INTEGER,
   FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
-  FOREIGN KEY (responsavel_id) REFERENCES pessoa(id)
+  FOREIGN KEY (responsavel_id) REFERENCES pessoa(id),
+  FOREIGN KEY (participante_id) REFERENCES pessoa(id)
 ) STRICT;
 --! Tabela "pe_fcg" Processo Estoque - Fluxo Contabil Grupo
 CREATE TABLE IF NOT EXISTS pe_fcg (
@@ -286,6 +288,7 @@ CREATE TABLE IF NOT EXISTS fe (
   estoque_id INTEGER NOT NULL,
   pe_id INTEGER NOT NULL,
   responsavel_id INTEGER,
+  tipo_fe INTEGER NOT NULL,
   qntd INTEGER NOT NULL,
   diferenca_preco INTEGER NOT NULL,
   observacoes TEXT,

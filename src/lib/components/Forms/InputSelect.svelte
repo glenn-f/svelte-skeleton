@@ -42,7 +42,7 @@
    * @returns {any} O valor da opção.
    */
   export let getOptionValue = (option, index) => option?.value ?? index
-
+  export let placeholderEnabled = false
   export let getDisabled = (option, index) => undefined
   export let readonly = undefined
   const _options = objectToArray(options)
@@ -76,7 +76,7 @@
     bind:value
   >
     {#if placeholder !== undefined}
-      <option value={undefined} disabled selected>{placeholder}</option>
+      <option value={undefined} disabled={!placeholderEnabled} selected>{placeholder}</option>
     {/if}
     {#each _options as [index, option]}
       <option class="text-token" disabled={getDisabled(option, index)} value={getOptionValue(option, index)}>{getOptionLabel(option, index)}</option>
