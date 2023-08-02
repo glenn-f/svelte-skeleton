@@ -7,7 +7,7 @@
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import InputNumber from '$lib/components/Forms/InputNumber.svelte'
   import InputMoeda from '$lib/components/Forms/InputMoeda.svelte'
-  import { addItemEntrada } from '$lib/zod/schemas/estoque'
+  import { addItemEntradaSchema } from '$lib/zod/schemas/estoque'
   export let produtosAutocomplete, entrada
   let buscar_produto, produto_selecionado, inputSearch
   const itemInitial = { qntd: 1 }
@@ -21,7 +21,7 @@
     buscar_produto = ''
   }
   function handleAdicionar() {
-    const validation = addItemEntrada.safeParse(item)
+    const validation = addItemEntradaSchema.safeParse(item)
     if (validation.success) {
       $entrada.estoque = [...$entrada.estoque, validation.data]
       modalStore.close()

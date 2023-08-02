@@ -46,7 +46,7 @@ function sqlValorInterna(valor) {
 }
 
 export function sqlTabela(tabela) {
-  if (typeof tabela == "string") return `'${tabela.replace(`'`, `''`)}'`
+  if (typeof tabela == "string") return `${tabela.replace(`'`, `''`)}`
   else throw new Error("Apenas strings são aceitas nesta função.")
 }
 

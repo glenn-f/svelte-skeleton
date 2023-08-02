@@ -1,9 +1,21 @@
-import { db, dbSelectAll } from ".."
+import { intToCurrency } from "$lib/types";
+import { db } from "..";
+
+function transformToCurrencyFields(array, fields) {
+  for (let i = 0; i < array.length; i++) {
+    const e = array[i]
+    for (let j = 0; j < fields.length; j++) {
+      const f = fields[j];
+      e[f] = intToCurrency(e[f])
+    }
+  }
+}
 
 export function consultarEstoques(dados) {
   const { empresa_id } = dados
   try {
-    const data = db.prepare("SELECT e.id,e.qntd,e.produto_id,e.custo,e.preco_unitario,e.estado,e.condicao,e.codigo,e.delecao FROM estoque e JOIN produto p ON e.produto_id = p.id WHERE p.empresa_id = $empresa_id AND e.qntd > 0").all({ empresa_id })
+    const data = db.prepare("SELECT e.*, p.nome AS p_nome FROM estoque e JOIN produto p ON e.produto_id = p.id WHERE p.empresa_id = $empresa_id AND e.qntd > 0").all({ empresa_id })
+    transformToCurrencyFields(data, ['preco_unitario', 'custo'])
     return { valid: true, data }
   } catch (e) {
     console.error(e)

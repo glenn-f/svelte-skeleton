@@ -1,4 +1,4 @@
-import { db, dbInsert, dbSelectOne, dbToggleSoftDelete, dbUpdate } from ".."
+import { db, dbInsert, dbSelectAll, dbSelectOne, dbToggleSoftDelete, dbUpdate } from ".."
 
 /**
  * Consulta todos os usuários associados à uma empresa da aplicação
@@ -8,7 +8,7 @@ import { db, dbInsert, dbSelectOne, dbToggleSoftDelete, dbUpdate } from ".."
 export function consultarProdutos(dados) {
   const { empresa_id } = dados
   try {
-    const data = db.prepare("SELECT * FROM produto WHERE empresa_id = $empresa_id").all({ empresa_id })
+    const data = dbSelectAll('produto', ['*'], { empresa_id })
     return { valid: true, data }
   } catch (e) {
     console.error(e)

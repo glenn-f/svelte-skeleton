@@ -23,6 +23,8 @@ export const addPgtoEntradaSchema = z.object({
   valor: zCurrency
 })
 
+export const criarEntradaTransacoesSchema = addPgtoEntradaSchema
+
 export const criarContaFormaSchema = z.object({
   conta_id: contaFormaSchema.shape.conta_id,
   nome: contaFormaSchema.shape.nome,

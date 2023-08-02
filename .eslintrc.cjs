@@ -1,5 +1,8 @@
 module.exports = {
   root: true,
+  rules: {
+    'no-unused-vars': 'warn'
+  },
   extends: ['eslint:recommended', 'plugin:svelte/recommended', 'prettier'],
   parserOptions: {
     sourceType: 'module',

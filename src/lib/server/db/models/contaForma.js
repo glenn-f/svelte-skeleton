@@ -38,7 +38,6 @@ export function consultarContaFormasEntrada(dados) {
     const data = db.prepare("SELECT cf.*, ft.id forma_transacao_id, ft.parcela, ft.taxa_encargo FROM conta_forma cf JOIN conta c ON c.id = cf.conta_id LEFT JOIN forma_transacao ft ON ft.conta_forma_id = cf.id AND ft.delecao IS NULL WHERE c.empresa_id = $empresa_id AND pode_pagar = 1")
       .all({ empresa_id })
     const mapa = cfToMap(data)
-    console.log(mapa)
     return { valid: true, data: mapa }
   } catch (e) {
     console.error(e)

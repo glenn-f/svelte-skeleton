@@ -82,7 +82,7 @@ export function intToCurrency(intValue) {
 export function currencyToInt(currencyValue) {
   currencyValue = parseFloat(currencyValue)
   if (Number.isFinite(currencyValue)) {
-    return parseInt(currencyValue * CFD)
+    return Math.round(currencyValue * CFD)
   }
   return undefined
 }

@@ -1,7 +1,14 @@
-import { db } from '..'
+import { db, dbInsert } from '..'
 
-const conta_forma_id = 2
-const parcela = 10
-const id = db.prepare("SELECT id FROM forma_transacao WHERE conta_forma_id = $conta_forma_id AND parcela = $parcela").pluck().get({ conta_forma_id, parcela })
+const transacoes = [{ forma_transacao_id: 11 }, { forma_transacao_id: 12 }]
+const forma_transacao_ids = transacoes.map((v) => v.forma_transacao_id).join(',')
+let resContas
+try {
 
-console.log(id)
+  resContas = dbInsert('fcg', { id: null })
+} catch (error) {
+  console.log('Code:', error.code)
+  console.log(error.stack)
+}
+
+console.log(resContas)

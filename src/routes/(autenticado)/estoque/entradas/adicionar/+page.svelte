@@ -1,28 +1,40 @@
 <script>
-  import Icon from '@iconify/svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
-  import ModalItem from './ModalItem.svelte'
+  import { goto } from '$app/navigation'
+  import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
-  import { writable } from 'svelte/store'
+  import InputText from '$lib/components/Forms/InputText.svelte'
   import { mapCondicao, mapEstadoEstoque, mapOrigem } from '$lib/globals'
   import { formatMoeda } from '$lib/helpers'
-  import InputText from '$lib/components/Forms/InputText.svelte'
+  import Icon from '@iconify/svelte'
+  import { modalStore } from '@skeletonlabs/skeleton'
+  import { superForm } from 'sveltekit-superforms/client'
+  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
+  import ModalItem from './ModalItem.svelte'
   import ModalPgto from './ModalPgto.svelte'
+  import { triggerMessage } from '$lib/client'
   export let data
-  const entrada = writable({ estoque: [], transacoes: [] })
 
-  $: formas = data.formas || []
-  $: mapFormas = formasMap(formas)
-  $: produtos = data.produtos || []
+  const { form, errors, enhance } = superForm(data.form, {
+    dataType: 'json',
+    taintedMessage: false,
+    resetForm: true,
+    onResult: async (event) => {
+      triggerMessage(event)
+      if (event.result.type == 'success') {
+        goto('/estoque/entradas', { invalidateAll: true })
+      }
+    }
+  })
+
   $: colaboradores = data.colaboradores || []
   $: fornecedores = data.fornecedores || []
-  $: produtosAutocomplete = produtos?.map((v) => {
-    return { label: v.nome, value: v.id, meta: v }
-  })
-  $: totalCusto = $entrada.estoque.reduce((acc, e) => e.custo + acc, 0)
-  $: totalItens = $entrada.estoque.reduce((acc, e) => e.qntd + acc, 0)
-  $: totalPago = $entrada.transacoes.reduce((acc, e) => e.valor + acc, 0)
+  $: produtos = data.produtos || []
+  $: formas = data.formas || []
+  $: mapFormas = formasMap(formas)
+  $: produtosAutocomplete = produtos?.map((p) => ({ label: p.nome, value: p.id, meta: p }))
+  $: totalCusto = $form.estoque.reduce((acc, e) => e.custo + acc, 0)
+  $: totalItens = $form.estoque.reduce((acc, e) => e.qntd + acc, 0)
+  $: totalPago = $form.transacoes.reduce((acc, e) => e.valor + acc, 0)
 
   function formasMap(formas) {
     const mapa = new Map()
@@ -36,25 +48,23 @@
     }
     return mapa
   }
-
-  function modalAdicionarItem() {
+  function abrirModalItem() {
     modalStore.trigger({
       type: 'component',
-      component: { ref: ModalItem, props: { modo: 'adicionar', entrada, produtosAutocomplete } }
+      component: { ref: ModalItem, props: { modo: 'adicionar', entrada: form, produtosAutocomplete } }
     })
   }
-  function modalAdicionarPgto() {
+  function abrirModalPgto() {
     modalStore.trigger({
       type: 'component',
-      component: { ref: ModalPgto, props: { modo: 'adicionar', entrada, formas } }
+      component: { ref: ModalPgto, props: { modo: 'adicionar', entrada: form, formas } }
     })
   }
-
   function apagarItem(index) {
-    $entrada.estoque = $entrada.estoque.filter((o, i) => i !== index)
+    $form.estoque = $form.estoque.filter((o, i) => i !== index)
   }
   function apagarPgto(index) {
-    $entrada.transacoes = $entrada.transacoes.filter((o, i) => i !== index)
+    $form.transacoes = $form.transacoes.filter((o, i) => i !== index)
   }
   function getOptionLabel(v) {
     return v.nome
@@ -75,29 +85,40 @@
   <div class="grid grid-cols-12 gap-2">
     <!-- Campos Gerais -->
     <div class="xl:col-span-8 col-span-12">
-      <InputText placeholder="Digite aqui observações sobre esta entrada..." label="Observações e Anotações" bind:value={$entrada.observacoes} />
+      <InputText placeholder="Digite aqui observações sobre esta entrada..." error={$errors.observacoes} label="Observações e Anotações" bind:value={$form.observacoes} />
     </div>
     <div class="xl:col-span-2 col-span-6">
       <InputSelect
         label="Colaborador Responsável"
+        error={$errors.responsavel_id}
+        placeholder="Selecione..."
+        bind:value={$form.responsavel_id}
+        options={colaboradores}
+        {getOptionLabel}
+        {getOptionValue}
+        {getDisabled}
+        placeholderEnabled
+      />
+    </div>
+    <div class="xl:col-span-2 col-span-6">
+      <InputSelect
+        label="Fornecedor"
+        error={$errors.participante_id}
         placeholder="Selecione..."
         placeholderEnabled
-        bind:value={$entrada.responsavel_id}
-        options={colaboradores}
+        bind:value={$form.participante_id}
+        options={fornecedores}
         {getOptionLabel}
         {getOptionValue}
         {getDisabled}
       />
     </div>
-    <div class="xl:col-span-2 col-span-6">
-      <InputSelect label="Fornecedor" placeholder="Selecione..." placeholderEnabled bind:value={$entrada.participante_id} options={fornecedores} {getOptionLabel} {getOptionValue} {getDisabled} />
-    </div>
     <!--! Esquerda -->
     <div class="col-span-12 xl:col-span-8 grid grid-cols-12 gap-2 place-content-start overflow-x-auto">
       <div class="col-span-12 self-end justify-self-end">
-        <button type="button" class="btn variant-filled" on:click={modalAdicionarItem}>Adicionar Item</button>
+        <button type="button" class="btn variant-filled" on:click={abrirModalItem}>Adicionar Item</button>
       </div>
-      <!-- Tabela -->
+      <!--* Tabela Itens -->
       <div class="col-span-12">
         <table class="table table-compact table-hover text-center">
           <thead>
@@ -113,7 +134,7 @@
             </tr>
           </thead>
           <tbody>
-            {#each $entrada.estoque as { produto_id, qntd, custo, preco_unitario, estado, condicao, origem, codigo, observacoes }, i}
+            {#each $form.estoque as { produto_id, qntd, custo, preco_unitario, estado, condicao, origem, codigo, observacoes }, i}
               <tr>
                 <td>{mapOrigem.get(origem)}</td>
                 <td>{mapCondicao.get(condicao)}</td>
@@ -149,13 +170,17 @@
           </tfoot>
         </table>
       </div>
+      <div class="col-span-12 text-center">
+        <HelperMessage error={$errors.estoque?._errors} />
+      </div>
     </div>
     <!--! Direita -->
     <div class="col-span-12 xl:col-span-4 grid grid-cols-12 place-content-start gap-2">
       <div class="col-span-12 self-end justify-self-end">
-        <button type="button" class="btn variant-filled" on:click={modalAdicionarPgto}>Adicionar Pagamento</button>
+        <button type="button" class="btn variant-filled" on:click={abrirModalPgto}>Adicionar Pagamento</button>
       </div>
       <div class="col-span-12">
+        <!--* Tabela Pagamentos -->
         <table class="table table-compact table-hover text-center">
           <thead>
             <tr class="!text-center whitespace-nowrap">
@@ -165,7 +190,7 @@
             </tr>
           </thead>
           <tbody>
-            {#each $entrada.transacoes as { forma_transacao_id, valor }, i}
+            {#each $form.transacoes as { forma_transacao_id, valor }, i}
               <tr>
                 <td>{mapFormas.get(forma_transacao_id)}</td>
                 <td>{formatMoeda(valor || 0)}</td>
@@ -188,17 +213,25 @@
           </tfoot>
         </table>
       </div>
+      <div class="col-span-12 text-center">
+        <HelperMessage error={$errors.transacoes?._errors} />
+      </div>
     </div>
 
-    <div class="col-span-12 place-self-center">
-      <button type="button" class="btn bg-gradient-to-br from-lime-500 to-orange-400" disabled={totalItens == 0 || totalCusto !== totalPago}>
-        <span>✓</span>
-        <p>Enviar</p>
-      </button>
-    </div>
+    <form method="POST" use:enhance class="col-span-12 grid gap-2 text-center">
+      <div class="col-span-full">
+        <HelperMessage error={$errors._errors} />
+      </div>
+      <div class="col-span-full">
+        <button type="submit" class="btn bg-gradient-to-br from-lime-500 to-orange-400 w-min">
+          <span>✓</span>
+          <p>Enviar</p>
+        </button>
+      </div>
+    </form>
     <!-- *Debugger -->
-    <!-- <div class="col-span-12">
-      <SuperDebug data={entrada} />
-    </div> -->
+    <div class="col-span-12">
+      <SuperDebug data={{ $errors, $form }} />
+    </div>
   </div>
 </div>
