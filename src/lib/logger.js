@@ -18,7 +18,8 @@ export class Logger {
     this.inicio = DateTime.now()
     this.fim = null
     const rota = event.route.id ? ` → ${this.ct("Rota", "magenta")} ${this.ct(event.route.id ?? "?", 'cyan')}` : ""
-    console.log(Logger.colors.blue + Logger.invert + this.inicio.toFormat("TT'.'u") + Logger.reset + ` [${this.numEvento}] ${this.ct(event.request.method, 'green')} ${this.ct(event.url.pathname, 'yellow')}` + rota)
+    console.log(Logger.colors.blue + Logger.invert + this.inicio.toFormat("TT'.'u") + Logger.reset + ` [${this.numEvento}] ${this.ct(event.request.method, 'green')} ${this.ct(event.url.pathname + event.url.search, 'yellow')}` + rota)
+    if (event.request.body) console.log(`\t${this.ct("Body:", 'blue')}`, event.request.body)
   }
 
   ct(texto, cor) {

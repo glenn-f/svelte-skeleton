@@ -1,9 +1,10 @@
 <script>
-    import { page } from '$app/stores'
-    import Icon from '@iconify/svelte'
-    import { TabAnchor, TabGroup } from '@skeletonlabs/skeleton'
-  </script>
-  
+  import { page } from '$app/stores'
+  import Icon from '@iconify/svelte'
+  import { TabAnchor, TabGroup } from '@skeletonlabs/skeleton'
+</script>
+
+{#if ['/estoque/inventario', '/estoque/entradas', '/estoque/saidas'].includes($page.url.pathname)}
   <div class="grid place-items-center">
     <div class="container">
       <TabGroup
@@ -45,4 +46,6 @@
       </TabGroup>
     </div>
   </div>
-  
+{:else}
+  <slot />
+{/if}

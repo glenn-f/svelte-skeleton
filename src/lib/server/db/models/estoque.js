@@ -14,8 +14,7 @@ function transformToCurrencyFields(array, fields) {
 export function consultarEstoques(dados) {
   const { empresa_id } = dados
   try {
-    const data = db.prepare("SELECT e.*, p.nome AS p_nome FROM estoque e JOIN produto p ON e.produto_id = p.id WHERE p.empresa_id = $empresa_id AND e.qntd > 0").all({ empresa_id })
-    transformToCurrencyFields(data, ['preco_unitario', 'custo'])
+    const data = db.prepare("SELECT pe.id entrada_id,pe.criacao data_entrada,fe.tipo_fe forma_entrada,e.id,e.produto_id,e.qntd,e.custo/10000 custo,e.preco_unitario/10000 preco_unitario,e.condicao,e.origem,e.codigo,e.estado,e.delecao,p.nome AS p_nome FROM estoque e LEFT JOIN fe ON fe.estoque_id = e.id AND fe.tipo_fe <= 100 JOIN produto p ON e.produto_id = p.id LEFT JOIN pe ON pe.id = fe.pe_id WHERE p.empresa_id = $empresa_id AND e.qntd > 0").all({ empresa_id })
     return { valid: true, data }
   } catch (e) {
     console.error(e)

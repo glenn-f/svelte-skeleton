@@ -3,18 +3,17 @@
   import { renderComponent } from '@tanstack/svelte-table'
   import CelulaAcoes from './CelulaAcoes.svelte'
   import Icon from '@iconify/svelte'
+  import { mapProcessoEstoque } from '$lib/globals'
   export let data
 
   $: rows = data.entradas || []
   let columns = [
-    { accessorKey: 'qntd', header: 'Qntd' },
-    { accessorKey: 'produto_id', header: 'Produto' },
-    { accessorKey: 'preco_unitario', header: 'Preço Unit.' },
-    { accessorKey: 'condicao', header: 'Condição' },
-    { accessorKey: 'origem', header: 'Origem' },
-    { accessorKey: 'codigo', header: 'Código' },
-    { accessorKey: 'estado', header: 'Status' },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false }
+    { accessorKey: 'id', header: 'ID' },
+    { accessorKey: 'criacao', header: 'Data Entrada', cell: (info) => new Date(info.getValue()).toLocaleString() },
+    { accessorKey: 'responsavel', header: 'Responsável' },
+    { accessorKey: 'participante', header: 'Participante' },
+    { accessorKey: 'tipo_pe', header: 'Processo de Entrada', cell: (info) => mapProcessoEstoque.get(info.getValue()) },
+    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { data: info.row.original }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]
 </script>

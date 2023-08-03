@@ -6,7 +6,7 @@
   export let id
 </script>
 
-<div class={`card ${padding} ${margin} ${background} ${border}`} data-popup={id}>
+<div class={`card ${padding} ${margin} ${background} ${border}`} data-popup="{id}">
   <p><slot>Tooltip text</slot></p>
   <div class={`arrow ${background} ${border}`} />
 </div>

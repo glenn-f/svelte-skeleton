@@ -1,18 +1,10 @@
 <script>
   import IconButton from '$lib/components/IconButton.svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
-  // import ModalFormConta from './ModalFormConta.svelte'
-  export let formData, initialData
-
-  function handleEditar() {
-    // modalStore.trigger({
-    //   type: 'component',
-    //   component: { ref: ModalFormConta, props: { modo: 'editar', initialData, formData } }
-    // })
-  }
+  export let data
 </script>
 
 <div class="flex flex-nowrap gap-3">
-  <!-- <IconButton href="usuarios/1" icon="fa6-solid:arrow-up-right-from-square">Abrir Detalhes</IconButton> -->
-  <IconButton on:click={handleEditar} icon="fa6-solid:pen-to-square">Editar</IconButton>
+  <IconButton href={`/loja/vender?eid=${data.id ?? ''}`} icon="mdi:point-of-sale" width='20px' height='20px'>Iniciar Venda</IconButton>
+  <IconButton href={`/estoque/inventario/${data.id ?? ''}`} icon="fa6-solid:eye" width='20px' height='20px'>Ver Detalhes</IconButton>
+  <IconButton href={`/estoque/entradas/${data.entrada_id ?? ''}`} icon="ri:inbox-archive-fill" width='20px' height='20px'>Abrir Entrada</IconButton>
 </div>

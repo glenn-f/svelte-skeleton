@@ -53,12 +53,30 @@ mapProcessoEstoque.set(PE_COMPRA, "Compra de Mercadorias")
 mapProcessoEstoque.set(PE_VENDA, "Venda de Mercadorias")
 
 export const FE_COMPRA = 1
-export const FE_VENDA = 2
-export const FE_BUYBACK = 3
+export const FE_BUYBACK = 2
+export const FE_ESTORNO_SAIDA = 100
+export const FE_VENDA = 101
+export const FE_EXTRAVIO = 102
+export const FE_ROUBO = 103
+export const FE_DEFEITO = 104
+export const FE_ESTORNO_ENTRADA = 200
+export const FE_DIVISAO = 201
+export const FE_MELHORIA = 202
+export const FE_AVARIA = 203
+export const FE_ATUALIZACAO = 204
 const mapFluxoEstoque = new Map()
-mapFluxoEstoque.set(FE_COMPRA, "Compra (Entrada)")
-mapFluxoEstoque.set(FE_VENDA, "Venda (Saída)")
-mapFluxoEstoque.set(FE_BUYBACK, "Buyback (Entrada)")
+mapFluxoEstoque.set(FE_COMPRA, "Compra")
+mapFluxoEstoque.set(FE_BUYBACK, "Buyback")
+mapFluxoEstoque.set(FE_ESTORNO_SAIDA, "Estorno Saída")
+mapFluxoEstoque.set(FE_VENDA, "Venda")
+mapFluxoEstoque.set(FE_EXTRAVIO, "Extravio")
+mapFluxoEstoque.set(FE_ROUBO, "Roubo ou Furto")
+mapFluxoEstoque.set(FE_DEFEITO, "Descarte po Defeito")
+mapFluxoEstoque.set(FE_ESTORNO_ENTRADA, "Estorno Entrada")
+mapFluxoEstoque.set(FE_DIVISAO, "Divisão de Estoque")
+mapFluxoEstoque.set(FE_MELHORIA, "Melhoria")
+mapFluxoEstoque.set(FE_AVARIA, "Avaria")
+mapFluxoEstoque.set(FE_ATUALIZACAO, "Atualização de Dados")
 
 export const ORIGEM_NACIONAL = 1
 export const ORIGEM_IMPORTADO = 2

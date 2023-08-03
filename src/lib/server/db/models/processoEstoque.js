@@ -3,22 +3,23 @@ import { handleAnyError, rateioEstoque, roundBy } from "$lib/helpers"
 import { currencyToInt, intToPerc } from "$lib/types"
 import { begin, commit, db, dbInsert, rollback } from ".."
 
+/**
+ * @param {{empresa_id: number}} dados 
+ */
 export function consultarEntradas(dados) {
   const { empresa_id } = dados
   try {
-    const data = db.prepare("SELECT id,responsavel_id,tipo_pe,delecao FROM pe WHERE empresa_id = $empresa_id").all({ empresa_id })
+    const data = db.prepare("SELECT pe.id,pe.criacao,pe.responsavel_id,r.nome responsavel,pe.participante_id,p.nome participante,pe.tipo_pe,pe.delecao FROM pe LEFT JOIN pessoa r ON r.id = pe.responsavel_id LEFT JOIN pessoa p ON p.id = pe.participante_id WHERE pe.empresa_id = $empresa_id").all({ empresa_id })
     return { valid: true, data }
   } catch (e) {
-    console.error(e)
-    return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+    const { cause, errorType, fieldErrors } = handleAnyError(e)
+    return { valid: false, message: mapCausasErro.get(cause), errorType, fieldErrors, code: cause }
   }
 }
 
-/**
- * Insere os dados da entrada de estoque no banco de dados
+/** Insere os dados da entrada de estoque no banco de dados
  * @param {DadosCriarEntrada} dados 
- * @returns {DBRun<Entrada>} 
- */
+ * @returns {DBRun<Entrada>} */
 export function criarEntrada(dados) {
   const { criador_id, empresa_id, participante_id, responsavel_id, observacoes, estoque, transacoes } = dados
 
@@ -136,6 +137,10 @@ export function criarEntrada(dados) {
         //? Criar Associação do Fluxo Contábil com o Fluxo Financeiro
         const resFC_FF = dbInsert('fc_ff', { fc_id, ff_id })
         if (resFC_FF.changes === 0) throw new Error(`(Compra) FC_FF[${i}] não foi criado`)
+
+        //? Atualizar custo do estoque
+        const resUpdateEstoque = db.prepare("UPDATE estoque SET custo = custo + $valor WHERE id = $estoque_id").run({ valor, estoque_id })
+        if (resUpdateEstoque.changes === 0) throw new Error(`(Compra) Atualização do custo do estoque ${estoque_id} - custo transacao rateado [${i}] falhou`)
       }
     }
     commit.run()
