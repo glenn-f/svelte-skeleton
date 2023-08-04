@@ -2,9 +2,10 @@
   import CardModal from '$lib/components/CardModal.svelte'
   import InputMoeda from '$lib/components/Forms/InputMoeda.svelte'
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
+  import { formatMoeda } from '$lib/helpers'
   import { addPgtoEntradaSchema } from '$lib/zod/schemas/contaFormas'
   import { modalStore } from '@skeletonlabs/skeleton'
-  export let formas, entrada
+  export let formas, entrada, totalFinal
   let pagamento = {}
   let errors = {}
   let errorMessage = ''
@@ -26,6 +27,10 @@
       pagamento.forma_transacao_id = v?.forma_transacao_id
     }
   }
+  function definirPrecoRestante() {
+    pagamento.valor = totalFinal
+    setFocus()
+  }
 
   $: formas_parcelamentos = pagamento.forma?.parcelamentos
   $: onFormaChange(pagamento.forma)
@@ -36,6 +41,15 @@
     <h2 class="h2">Adicionar Pagamento</h2>
   </svelte:fragment>
   <section class="grid grid-cols-12 gap-1 px-3">
+    {#if totalFinal > 0}
+      <div class="col-span-12 grid grid-cols-12">
+        <div class="col-span-5">
+          <button type="button" class="btn variant-filled" on:click={definirPrecoRestante}>
+            Restante: R$ {formatMoeda(totalFinal)}
+          </button>
+        </div>
+      </div>
+    {/if}
     <div class="col-span-12 grid grid-cols-12 gap-2">
       <div class="col-span-5">
         <InputMoeda label="Preço Unitário" bind:value={pagamento.valor} error={errors.valor} required />

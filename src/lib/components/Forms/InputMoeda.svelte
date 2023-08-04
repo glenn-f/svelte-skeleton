@@ -24,7 +24,7 @@
   export let autocomplete = 'off'
   export let label = undefined
   export let required = undefined
-  export let name
+  export let name = undefined
   export let value = undefined
 
   if (typeof value == 'string') {
@@ -119,7 +119,7 @@
   }
 
   $: onChangeValue(value)
-  
+
   onMount(() => {
     maskInput.onbeforeinput = onBeforeInput
     onChangeValue(value)

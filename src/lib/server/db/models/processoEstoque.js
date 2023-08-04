@@ -1,4 +1,4 @@
-import { FCC_CUSTO, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FE_COMPRA, FF_ENCARGO, FF_PAGAMENTO, PE_COMPRA, mapCausasErro } from "$lib/globals"
+import { FCC_CUSTO, FCC_RECEITA, FCC_SOCIAL, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FE_COMPRA, FF_ENCARGO, FF_PAGAMENTO, PE_COMPRA, mapCausasErro } from "$lib/globals"
 import { handleAnyError, rateioEstoque, roundBy } from "$lib/helpers"
 import { currencyToInt, intToPerc } from "$lib/types"
 import { begin, commit, db, dbInsert, rollback } from ".."
@@ -21,7 +21,7 @@ export function consultarEntradas(dados) {
  * @param {DadosCriarEntrada} dados 
  * @returns {DBRun<Entrada>} */
 export function criarEntrada(dados) {
-  const { criador_id, empresa_id, participante_id, responsavel_id, observacoes, estoque, transacoes } = dados
+  const { criador_id, empresa_id, participante_id, responsavel_id, observacoes, estoque, transacoes, contabil } = dados
 
   //! Preparar rateio
   const totalCustoEstoque = estoque.reduce((acc, { custo }) => acc + custo, 0)
@@ -29,6 +29,7 @@ export function criarEntrada(dados) {
     const e = estoque[i]
     e.percRateio = totalCustoEstoque ? e.custo / totalCustoEstoque : 1 / estoque.length
     e.rateiosFinanceiro = []
+    e.rateiosContabil = []
     //TODO adicionar outros rateios ex: rateiosCustosProcesso -> brindes, transporte, frete, troco etc
   }
 
@@ -96,9 +97,24 @@ export function criarEntrada(dados) {
       if (resPE_FCG.changes === 0) throw new Error(`(Compra) Associação de Grupo de Custo com PE falhou. Encargo [${i}]`)
     }
 
+    //! Rateio de Custos e Receitas (Contábil)
+    for (let i = 0; i < contabil.length; i++) {
+      const { classe_fc, tipo_fc, valor, observacoes } = contabil[i]
+
+      //* Criar Grupo de Fluxo Contábil
+      const resFCG = dbInsert('fcg', { id: null })
+      if (resFCG.changes === 0) throw new Error(`(Compra) Criação de Grupo de Custo para Contabil[${i}] falhou`)
+      const fcg_id = resFCG.lastInsertRowid
+      rateioEstoque(currencyToInt(valor), estoque, 'rateiosContabil', { fcg_id, classe_fc, tipo_fc, observacoes })
+
+      //* Associar Grupo ao Processo do Estoque (Compra)
+      const resPE_FCG = dbInsert('pe_fcg', { fcg_id, pe_id })
+      if (resPE_FCG.changes === 0) throw new Error(`(Compra) Associação de Grupo de Custo com PE falhou. Contabil [${i}]`)
+    }
+
     //! Criar Estoques
     for (let i = 0; i < estoque.length; i++) {
-      let { codigo, condicao, custo, estado, observacoes, origem, preco_unitario, produto_id, qntd, rateiosFinanceiro } = estoque[i]
+      let { codigo, condicao, custo, estado, observacoes, origem, preco_unitario, produto_id, qntd, rateiosFinanceiro, rateiosContabil } = estoque[i]
       custo = currencyToInt(custo)
       preco_unitario = Number.isFinite(preco_unitario) ? currencyToInt(preco_unitario) : undefined
 
@@ -132,7 +148,7 @@ export function criarEntrada(dados) {
 
         //? Criar Associação do Estoque com Custo Financeiro
         const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: valor })
-        if (resFC_FE.changes === 0) throw new Error(`(Compra) FC_FF[${i}] não foi criado`)
+        if (resFC_FE.changes === 0) throw new Error(`(Compra) FC_FE Financeiro[${i}] não foi criado`)
 
         //? Criar Associação do Fluxo Contábil com o Fluxo Financeiro
         const resFC_FF = dbInsert('fc_ff', { fc_id, ff_id })
@@ -142,18 +158,31 @@ export function criarEntrada(dados) {
         const resUpdateEstoque = db.prepare("UPDATE estoque SET custo = custo + $valor WHERE id = $estoque_id").run({ valor, estoque_id })
         if (resUpdateEstoque.changes === 0) throw new Error(`(Compra) Atualização do custo do estoque ${estoque_id} - custo transacao rateado [${i}] falhou`)
       }
+      //* Criar Custos Contábeis Rateado para o Estoque
+      for (let i = 0; i < rateiosContabil.length; i++) {
+        let { fcg_id, classe_fc, tipo_fc, valor, observacoes } = rateiosContabil[i];
+
+        //? Criar Fluxo Contábil
+        const resFC = dbInsert('fc', { empresa_id, criador_id, classe_fc, tipo_fc, valor, fcg_id, observacoes })
+        if (resFC.changes === 0) throw new Error(`(Compra) FC[${i}] não foi criado`)
+        const fc_id = resFC.lastInsertRowid
+
+        //? Criar Associação de Fluxo Contábil ao Fluxo de Estoque
+        const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: valor })
+        if (resFC_FE.changes === 0) throw new Error(`(Compra) FC_FE[${i}] não foi criado`)
+
+        //? Atualizar custo do estoque
+        valor = valor * (classe_fc === FCC_RECEITA ? -1 : 1)
+        const resUpdateEstoque = db.prepare("UPDATE estoque SET custo = custo + $valor WHERE id = $estoque_id").run({ valor, estoque_id })
+        if (resUpdateEstoque.changes === 0) throw new Error(`(Compra) Atualização do custo do estoque ${estoque_id} - custo contabil rateado [${i}] falhou`)
+      }
     }
     commit.run()
     return { valid: true, data: pe_id }
   } catch (e) {
     if (db.inTransaction) rollback.run()
-    let { errorType, message, cause, fieldErrors, errorCode } = handleAnyError(e)
-
-    //TODO criar mensagem a partir do message / errorCode / errorType
-    //TODO verificar necessidade de alterar code de acordo com cause
-    //TODO fieldErrors verificar alteracoes
-
-    return { valid: false, fieldErrors, message: mapCausasErro.get(cause), errorType, code: cause }
+    const { errorType, cause, fieldErrors, message } = handleAnyError(e)
+    return { valid: false, fieldErrors, message, errorType, code: cause }
   }
 }
 

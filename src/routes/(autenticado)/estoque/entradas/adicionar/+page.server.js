@@ -3,6 +3,7 @@ import { consultarContaFormasEntrada } from '$lib/server/db/models/contaForma'
 import { consultarPessoas } from '$lib/server/db/models/pessoa'
 import { criarEntrada } from '$lib/server/db/models/processoEstoque'
 import { consultarProdutos } from '$lib/server/db/models/produto'
+import { setDBErrors } from '$lib/zod/index.js'
 import { criarEntradaSchema } from '$lib/zod/schemas/processoEstoque'
 import { error } from '@sveltejs/kit'
 import { message, setError, superValidate } from 'sveltekit-superforms/server'
@@ -33,7 +34,7 @@ export const actions = {
     const criador_id = locals.sessao.uid
     const res = criarEntrada({ empresa_id, criador_id, ...form.data })
     if (!res.valid) {
-      if (res.fieldErrors) for (let [field, text] of Object.entries(res.fieldErrors)) setError(form, field, text)
+      setDBErrors(form, res)
       return message(form, res.message, { status: res.code })
     }
 

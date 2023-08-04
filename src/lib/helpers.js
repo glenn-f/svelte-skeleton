@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { ERRO_CAMPOS, ERRO_SERVIDOR } from "./globals";
+import { ERRO_CAMPOS, ERRO_SERVIDOR, mapCausasErro } from "./globals";
 
 export function isIterable(value) {
   return typeof value == 'object' && typeof value[Symbol.iterator] === 'function';
@@ -81,7 +81,7 @@ export function log(data) {
  */
 function handleSqliteError(descriptor) {
   const errorCode = descriptor.error.code
-  let msg = ''
+  let msg = 'Erro no banco de dados'
   if (errorCode == 'SQLITE_CONSTRAINT_UNIQUE' || errorCode == 'SQLITE_CONSTRAINT_PRIMARYKEY') {
     msg = 'Já está em uso'
   } else if (errorCode == 'UNKNOWN_SQLITE_ERROR_3091' || errorCode == 'SQLITE_CONSTRAINT_DATATYPE') {
@@ -100,8 +100,9 @@ function handleSqliteError(descriptor) {
   const tableColumn = regexMatch ? { table: regexMatch[1], column: regexMatch[2] } : null
   const fieldErrors = tableColumn ? { [tableColumn.column]: [msg] } : false
   const cause = fieldErrors ? ERRO_CAMPOS : ERRO_SERVIDOR
+  const message = mapCausasErro.get(cause)
 
-  return { cause, fieldErrors, errorCode }
+  return { message, cause, fieldErrors, errorCode }
   // const sqliteErrorCodes = ["SQLITE_ABORT", "SQLITE_AUTH", "SQLITE_BUSY", "SQLITE_CANTOPEN", "SQLITE_CONSTRAINT", "SQLITE_CORRUPT", "SQLITE_EMPTY", "SQLITE_ERROR",
   // "SQLITE_FORMAT", "SQLITE_FULL", "SQLITE_INTERNAL", "SQLITE_INTERRUPT", "SQLITE_IOERR", "SQLITE_LOCKED", "SQLITE_MISMATCH", "SQLITE_MISUSE", "SQLITE_NOLFS", "SQLITE_NOMEM",
   // "SQLITE_NOTADB", "SQLITE_NOTFOUND", "SQLITE_NOTICE", "SQLITE_PERM", "SQLITE_PROTOCOL", "SQLITE_RANGE", "SQLITE_READONLY", "SQLITE_SCHEMA", "SQLITE_TOOBIG", "SQLITE_WARNING"]
@@ -118,7 +119,7 @@ function handleSqliteError(descriptor) {
  */
 export function handleAnyError(error) {
   const desc = describeError(error)
-  let res = { message: desc.message, errorType: desc.errorType, fieldErrors: false, cause: ERRO_SERVIDOR }
+  let res = { message: mapCausasErro.get(ERRO_SERVIDOR), errorMessage: desc.message, errorType: desc.errorType, fieldErrors: false, cause: ERRO_SERVIDOR }
 
   //* Tratamento de erros conhecidos
   if (desc.errorType == "SqliteError") {
@@ -168,7 +169,8 @@ export function describeError(error) {
 /** @typedef {400 | 401 | 403 | 404 | 423 | 429 | 500 | 501 | 503} ErrorCauses */
 /**
  * @typedef {Object} HandledError Objeto com descrição detalhada de um erro tratado
- * @property {string} message Mensagem de especificação do erro emitido
+ * @property {string} message Mensagem final do erro tratado
+ * @property {string} errorMessage Mensagem inicial do erro emitido
  * @property {string} errorType Nome da **classe** ou do **tipo** do erro emitido
  * @property {FieldErrors} fieldErrors Mapeamento de campos que geraram o erro emitido ou `false`
  * @property {ErrorCauses} cause Código genérico da causa do erro

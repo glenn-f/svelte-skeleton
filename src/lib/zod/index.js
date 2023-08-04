@@ -1,3 +1,4 @@
+import { setError } from 'sveltekit-superforms/server';
 import { ZodIssueCode, ZodParsedType, z } from 'zod';
 
 //! Helpers
@@ -6,6 +7,17 @@ export function deleteUndefined(obj) {
     if (obj[key] === undefined)
       delete obj[key]
   return obj;
+}
+
+/**
+ * 
+ * @param {import('sveltekit-superforms').SuperValidated<import('sveltekit-superforms').ZodValidation<z.AnyZodObject>} form 
+ * @param {import('$lib/server/db').DBRun<import('$lib/server/db/models/processoEstoque').Entrada} res 
+ */
+export function setDBErrors(form, res) {
+  if (res.fieldErrors)
+    for (let [field, text] of Object.entries(res.fieldErrors))
+      setError(form, field, text)
 }
 
 export function stringUndefined(schema) {

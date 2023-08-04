@@ -1,5 +1,5 @@
 <script>
-  import { fmtMoeda } from '$lib/globals.js'
+  import { formatMoeda } from '$lib/helpers'
   import Icon from '@iconify/svelte'
   import { rankItem } from '@tanstack/match-sorter-utils'
   import { createSvelteTable, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, renderComponent } from '@tanstack/svelte-table'
@@ -9,11 +9,7 @@
   import TablePaginator from './TablePaginator.svelte'
   import TableSearchInput from './TableSearchInput.svelte'
 
-  export let rows = [
-    { id: 1, date: '2022-01-01', country: 'Hungria', state: 'AM', city: 'Manaus', address: 'SEMSA', total: 50 },
-    { id: 1, date: '2022-01-01', country: 'Brasil', state: 'AM', city: 'Manaus', address: 'SEMSA', total: 50 },
-    { id: 1, date: '2022-01-01', country: 'Brasil', state: 'AM', city: 'Manaus', address: 'SEMSA', total: 50 }
-  ]
+  export let rows = []
 
   export let columns = [
     { accessorKey: 'id', header: 'ID', cell: (info) => info.getValue().toString() },
@@ -22,7 +18,7 @@
     { accessorKey: 'state', header: 'State', cell: (info) => info.getValue() },
     { accessorKey: 'city', header: 'City', cell: (info) => info.getValue() },
     { accessorKey: 'address', header: 'Address', cell: (info) => info.getValue(), enableSorting: false },
-    { accessorKey: 'total', header: 'Total', cell: (info) => fmtMoeda.format(info.getValue()) },
+    { accessorKey: 'total', header: 'Total', cell: (info) => formatMoeda(info.getValue()) },
     { header: 'Ações', cell: (info) => renderComponent(TableActions, { id: parseInt(info.row.getValue('id')) }), enableSorting: false }
   ]
 

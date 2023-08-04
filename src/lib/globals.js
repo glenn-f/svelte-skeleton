@@ -194,6 +194,19 @@ mapFluxoContabilClasse.set(FCC_RECEITA, "Receita")
 mapFluxoContabilClasse.set(FCC_DESPESA, "Despesa")
 mapFluxoContabilClasse.set(FCC_SOCIAL, "Capital Social")
 
-export { mapCausasErro, mapREP, mapSexo, mapTipoPessoa, mapTipoUsuario, mapProcessoEstoque, mapFluxoEstoque, mapOrigem, mapCondicao, mapEstadoEstoque, mapFluxoFinanceiro, mapFluxoContabil, mapFluxoContabilClasse }
+function getTipos(classe) {
+  const lim_inf = (classe - 1) * 1000
+  const lim_sup = lim_inf + 1000
+  const tipos = []
+  for (const [value, label] of mapFluxoContabil.entries())
+    if (value > lim_inf && value <= lim_sup)
+      tipos.push({ label, value })
+  return tipos
+}
 
-export const fmtMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+export const TIPOS_RECEITA = getTipos(FCC_RECEITA)
+export const TIPOS_CUSTO = getTipos(FCC_CUSTO)
+export const TIPOS_DESPESA = getTipos(FCC_DESPESA)
+export const TIPOS_SOCIAL = getTipos(FCC_SOCIAL)
+
+export { mapCausasErro, mapREP, mapSexo, mapTipoPessoa, mapTipoUsuario, mapProcessoEstoque, mapFluxoEstoque, mapOrigem, mapCondicao, mapEstadoEstoque, mapFluxoFinanceiro, mapFluxoContabil, mapFluxoContabilClasse }
