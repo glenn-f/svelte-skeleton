@@ -27,6 +27,11 @@ export function formatCNPJ(value) {
   return cnpj.replace(regex, mask)
 }
 
+export function formatDateTime(date) {
+  if (!date) return ''
+  return new Date(date).toLocaleString()
+}
+
 export function formatCPF(value) {
   if (!value) return ''
   const cpf = toNumericText(value, 11)
@@ -49,6 +54,12 @@ export function formatMoeda(value, qntdAposVirgula = 2) {
     // throw new TypeError("O valor não é um número válido")
     return value?.toString() ?? ''
   }
+}
+
+export function formatInteger(value) {
+  const numberValue = parseInt(value)
+  if (!Number.isInteger(numberValue)) return ''
+  return numberValue.toLocaleString('pt-BR'/* ,{ minimumFractionDigits: 0, maximumFractionDigits: 0 } */)
 }
 
 export function roundBy(value, by = 0) {
@@ -93,7 +104,8 @@ function handleSqliteError(descriptor) {
     console.log('Code: ', errorCode)
     console.log(descriptor.error.stack)
   } else {
-    console.log(descriptor.error.message)
+    console.log(descriptor.errorType, "→", errorCode)
+    console.log("Mensagem do erro:", descriptor.error.message)
   }
 
   const regexMatch = descriptor.message.match(/([\w]+)\.([\w]+)$/)
@@ -121,6 +133,7 @@ export function handleAnyError(error) {
   const desc = describeError(error)
   let res = { message: mapCausasErro.get(ERRO_SERVIDOR), errorMessage: desc.message, errorType: desc.errorType, fieldErrors: false, cause: ERRO_SERVIDOR }
 
+  console.log('\x1b[31m')
   //* Tratamento de erros conhecidos
   if (desc.errorType == "SqliteError") {
     res = { ...res, ...handleSqliteError(desc) }
@@ -129,7 +142,7 @@ export function handleAnyError(error) {
     console.log(dados)
     console.error(error)
   }
-
+  console.log('\x1b[0m', {})
   //* Resultado do tratamento
   return res
 }

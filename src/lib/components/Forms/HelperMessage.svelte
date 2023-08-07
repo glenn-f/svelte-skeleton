@@ -62,9 +62,3 @@
 >
   {_message}
 </span>
-
-<style>
-  .spaceHolding:empty:before {
-    content: '\200b';
-  }
-</style>

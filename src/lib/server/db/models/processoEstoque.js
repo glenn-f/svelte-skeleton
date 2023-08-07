@@ -1,7 +1,47 @@
-import { FCC_CUSTO, FCC_RECEITA, FCC_SOCIAL, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FE_COMPRA, FF_ENCARGO, FF_PAGAMENTO, PE_COMPRA, mapCausasErro } from "$lib/globals"
-import { handleAnyError, rateioEstoque, roundBy } from "$lib/helpers"
+import { FCC_CUSTO, FCC_RECEITA, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FE_COMPRA, FF_ENCARGO, FF_PAGAMENTO, PE_COMPRA, mapCausasErro } from "$lib/globals"
+import { handleAnyError, rateioEstoque } from "$lib/helpers"
 import { currencyToInt, intToPerc } from "$lib/types"
 import { begin, commit, db, dbInsert, rollback } from ".."
+
+/**
+ * @param {{id: number}} dados 
+ */
+export function detalharEntrada(dados) {
+  const { id } = dados
+  try {
+    //* Processo de Estoque
+    const data = db.prepare("SELECT pe.*,r.nome responsavel,p.nome participante,u.nome criador FROM pe LEFT JOIN pessoa r ON r.id = pe.responsavel_id \
+LEFT JOIN pessoa p ON p.id = pe.participante_id LEFT JOIN usuario u ON u.id = pe.criador_id WHERE pe.id = $id").get({ id })
+    if (!data) throw new Error("ID da entrada não existe")
+    //* Fluxo de Estoque
+    data.fe = db.prepare("SELECT fe.id,fe.tipo_fe,fe.qntd,fe.observacoes,fe.responsavel_id,r.nome responsavel,fe.estoque_id,e.produto_id,p.nome produto, \
+e.estado, e.condicao, e.origem, e.codigo,fc_fe.valor_inicial/10000 custo,fc.classe_fc,fc.tipo_fc FROM fe \
+LEFT JOIN pessoa r ON r.id = fe.responsavel_id \
+LEFT JOIN estoque e ON e.id = fe.estoque_id \
+LEFT JOIN produto p ON p.id = e.produto_id \
+LEFT JOIN fc_fe ON fc_fe.fe_id = fe.id \
+JOIN fc ON fc.id = fc_fe.fc_id AND fc.fcg_id IS NULL \
+WHERE fe.pe_id = $id").all({ id })
+    //* Transações + Encargos (Custo Encargo)
+    data.ff = db.prepare("SELECT t.id,ff.conta_id,tc.nome conta,tft.conta_forma_id,tcf.nome conta_forma,t.forma_transacao_id,tft.parcela parcela,ff.valor/10000 valor,ff.tipo_ff,enc_ff.valor/10000 encargo_valor,enc_ff.tipo_ff encargo_tipo_ff FROM ff \
+JOIN transacao t ON ff.id = t.transacao_ff_id \
+JOIN pe_transacao pet ON t.id = pet.transacao_id AND pet.pe_id = $id \
+JOIN forma_transacao tft ON tft.id = t.forma_transacao_id \
+JOIN conta_forma tcf ON tcf.id = tft.conta_forma_id \
+JOIN conta tc ON tc.id = tcf.conta_id \
+LEFT JOIN ff enc_ff ON enc_ff.id = t.encargo_ff_id").all({ id })
+    //* Outros Lançamentos
+    data.fc = db.prepare("SELECT fc.fcg_id,fc.classe_fc,fc.tipo_fc,SUM(fc.valor)/10000 valor,fc.observacoes FROM pe_fcg p JOIN fc ON fc.fcg_id = p.fcg_id \
+WHERE p.pe_id = $id GROUP BY fc.fcg_id").all({ id })
+    return { valid: true, data }
+  } catch (e) {
+    const { cause, errorType, fieldErrors } = handleAnyError(e)
+    const msg = errorType == 'Error' ? e.message : mapCausasErro.get(cause)
+    const code = errorType == 'Error' ? 400 : cause
+    return { valid: false, message: msg, errorType, fieldErrors, code }
+  }
+}
+
 
 /**
  * @param {{empresa_id: number}} dados 
