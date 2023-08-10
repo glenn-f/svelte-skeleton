@@ -23,7 +23,8 @@
     onResult: async (event) => {
       triggerMessage(event)
       if (event.result.type == 'success') {
-        goto('/estoque/entradas', { invalidateAll: true })
+        const id = event.result.data.form.data
+        await goto(`/estoque/entradas/${id}`, { invalidateAll: true })
       }
     }
   })

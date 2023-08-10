@@ -8,7 +8,7 @@
   import { modalStore } from '@skeletonlabs/skeleton'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   /** @type {import('svelte/store').Writable} */
-  export let entrada
+  export let store
   export let classe = FCC_CUSTO
   let contabil = {},
     errors = {}
@@ -16,7 +16,7 @@
   function handleAdicionar() {
     const validation = addLancamentoEntradaSchema.safeParse(contabil)
     if (validation.success) {
-      $entrada.contabil = [...($entrada.contabil ?? []), validation.data]
+      $store.contabil = [...($store.contabil ?? []), validation.data]
       modalStore.close()
     } else {
       errors = { ...validation.error?.flatten()?.fieldErrors }

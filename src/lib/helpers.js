@@ -151,7 +151,7 @@ export function rateioEstoque(valorEncargoInt, estoque, campo, dadosPush) {
   let totalDividido = 0
   for (let i = 1; i < estoque.length; i++) {
     const est = estoque[i];
-    const valor = Math.floor(est.percRateio * valorEncargoInt)
+    const valor = Math.floor(est.percRateio * valorEncargoInt / 100) * 100
     if (valor === 0) continue
     totalDividido += valor
     est[campo].push({ ...dadosPush, valor })

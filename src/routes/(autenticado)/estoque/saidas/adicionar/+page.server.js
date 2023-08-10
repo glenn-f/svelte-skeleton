@@ -3,6 +3,7 @@ import { consultarContaFormasSaida } from '$lib/server/db/models/contaForma'
 import { consultarEstoqueSaida } from '$lib/server/db/models/estoque.js'
 import { consultarPessoas } from '$lib/server/db/models/pessoa'
 import { criarEntrada } from '$lib/server/db/models/processoEstoque'
+import { consultarProdutos } from '$lib/server/db/models/produto.js'
 import { setDBErrors } from '$lib/zod/index.js'
 import { criarSaidaSchema } from '$lib/zod/schemas/processoEstoque'
 import { error } from '@sveltejs/kit'
@@ -10,6 +11,9 @@ import { message, superValidate } from 'sveltekit-superforms/server'
 
 export async function load({ locals }) {
   const empresa_id = locals.sessao.empresa_id
+  const resProdutosBuyback = consultarProdutos({ empresa_id })
+  if (!resProdutosBuyback.valid) throw error(500, 'Erro no servidor')
+  const produtosEntrada = resProdutosBuyback.data
   const resProdutos = consultarEstoqueSaida({ empresa_id })
   if (!resProdutos.valid) throw error(500, 'Erro no servidor')
   const produtos = resProdutos.data
@@ -22,7 +26,7 @@ export async function load({ locals }) {
   const formas = resFormas.data
   const form = await superValidate(criarSaidaSchema);
 
-  return { form, produtos, colaboradores, clientes, formas }
+  return { form, produtos, produtosEntrada, colaboradores, clientes, formas }
 };
 
 export const actions = {
@@ -39,7 +43,7 @@ export const actions = {
       setDBErrors(form, res)
       return message(form, res.message, { status: res.code })
     }
-
+    form.data = res.data
     //* Enviar resposta de sucesso
     return message(form, 'Entrada de estoque efetuada com sucesso', { status: 201 })
   }

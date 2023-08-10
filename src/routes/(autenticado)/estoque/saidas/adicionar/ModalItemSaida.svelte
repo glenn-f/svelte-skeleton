@@ -7,16 +7,16 @@
   import InputText from '$lib/components/Forms/InputText.svelte'
   import IconButton from '$lib/components/IconButton.svelte'
   import ShowBox from '$lib/components/ShowBox.svelte'
-  import { PE_VENDA, PE_VENDA_COM_BUYBACK, mapCondicao, mapEstadoEstoque, mapOrigem } from '$lib/globals'
+  import { FE_VENDA, PE_PERDA, PE_VENDA, PE_VENDA_COM_BUYBACK, mapCondicao, mapEstadoEstoque, mapFEPerdas, mapFluxoEstoque, mapOrigem } from '$lib/globals'
   import { formatInteger, formatMoeda } from '$lib/helpers'
   import { addItemSaidaSchema } from '$lib/zod/schemas/estoque'
   import { Autocomplete, modalStore } from '@skeletonlabs/skeleton'
   import { Searcher } from 'fast-fuzzy'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
-  export let produtos, store, colaboradores
+  export let produtos, store, colaboradores, labelTitle
 
   let buscar_produto, produtoSelecionado, inputSearch, filtroCondicao, filtroOrigem, filtroEstado, filtroGeral, estoque
-  const itemInitial = { qntd: 1, valor: undefined, responsavel_id: $store.responsavel_id, observacoes: undefined }
+  const itemInitial = { tipo_fe: undefined, qntd: 1, valor: undefined, responsavel_id: $store.responsavel_id, observacoes: undefined }
 
   let item = { ...itemInitial }
   let errors = {}
@@ -48,14 +48,23 @@
     buscar_produto = ''
   }
   const keySelector = (o) => [o.codigo ?? '', o.observacoes ?? '']
+  //!
   function handleAdicionar() {
+    if (isVenda) {
+      item.tipo_fe = FE_VENDA
+    } else if (isPerda) {
+      item.tipo_fe = parseInt(item.tipo_fe)
+      item.valor = 0
+      item.responsavel_id = undefined
+    }
     const validation = addItemSaidaSchema.safeParse({ estoque, id: estoque.id, ...item })
+
     if (validation.success) {
       const { id, produto_id } = estoque
       const qntd = validation.data.qntd
       $produtos.get(produto_id).estoque.get(id).qntd_carrinho += qntd
       $produtos.get(produto_id).qntd_carrinho += qntd
-      $store.estoque = [...$store.estoque, validation.data]
+      $store.estoque_saida = [...$store.estoque_saida, validation.data]
       modalStore.close()
     } else {
       errors = { ...validation.error?.flatten()?.fieldErrors }
@@ -125,6 +134,7 @@
     lastChange = Date.now()
   }
   $: isVenda = $store.tipo_pe === PE_VENDA || $store.tipo_pe === PE_VENDA_COM_BUYBACK
+  $: isPerda = $store.tipo_pe === PE_PERDA
   $: if (!produtoSelecionado) inputSearch?.focus()
   $: onEstoqueChange(estoque)
   $: filtrarItens(filtroCondicao, filtroEstado, filtroOrigem)
@@ -133,7 +143,7 @@
 
 <CardModal width="w-full max-w-screen-xl">
   <svelte:fragment slot="header">
-    <h2 class="h2">Adicionar Item</h2>
+    <h2 class="h2">Adicionar Item ({labelTitle})</h2>
   </svelte:fragment>
   <section class="grid grid-cols-12 gap-1 px-3">
     <div class="col-span-12 grid grid-cols-12 gap-2">
@@ -240,8 +250,28 @@
               {estoque.observacoes ?? ''}
             </ShowBox>
           </div>
-          {#if isVenda}
-            <div class="col-span-3">
+          <div class="col-span-3">
+            <ShowBox label="Qntd. Disponível">
+              {formatInteger(estoque.qntd)}
+            </ShowBox>
+          </div>
+          <div class="col-span-3">
+            <InputNumber label={`Qntd. ${isPerda ? "Perdida": "Vendida"}`} bind:value={item.qntd} error={errors.qntd} required />
+          </div>
+          <div class="col-span-3">
+            {#if isVenda}
+              <ShowBox label="Preço Unit. Recomendado">
+                {formatMoeda(estoque.preco_unitario) ?? '-'}
+              </ShowBox>
+            {/if}
+          </div>
+          <div class="col-span-3">
+            {#if isVenda}
+              <InputMoeda label="Preço Unit. Final" bind:value={item.valor} error={errors.valor} required />
+            {/if}
+          </div>
+          <div class="col-span-4">
+            {#if isVenda}
               <InputSelect
                 label="Vendedor"
                 placeholder="Selecione..."
@@ -252,30 +282,12 @@
                 bind:value={item.responsavel_id}
                 error={errors.responsavel_id}
               />
-            </div>
-          {/if}
-          <div class={`col-span-${isVenda ? 9 : 12}`}>
-            <InputText label="Detalhes de saída deste estoque" bind:value={item.observacoes} error={errors.observacoes} />
+            {:else if $store.tipo_pe === PE_PERDA}
+              <InputSelect label="Forma de Perda" options={mapFEPerdas} bind:value={item.tipo_fe} error={errors.tipo_fe} placeholder="Selecione..." placeholderEnabled required />
+            {/if}
           </div>
-          <div class="col-span-12 flex justify-center gap-2">
-            <div class="w-52">
-              <ShowBox label="Qntd. Disponível">
-                {formatInteger(estoque.qntd)}
-              </ShowBox>
-            </div>
-            <div class="w-52">
-              <ShowBox label="Preço Unit. Recomendado">
-                {formatMoeda(estoque.preco_unitario) ?? '-'}
-              </ShowBox>
-            </div>
-          </div>
-          <div class="col-span-12 flex justify-center gap-2">
-            <div class="w-52">
-              <InputNumber label="Qntd. Escolhida" bind:value={item.qntd} error={errors.qntd} required />
-            </div>
-            <div class="w-52">
-              <InputMoeda label="Preço Unit. Final" bind:value={item.valor} error={errors.valor} required />
-            </div>
+          <div class="col-span-8">
+            <InputText label={`Detalhes da saída deste estoque (${labelTitle})`} bind:value={item.observacoes} error={errors.observacoes} />
           </div>
         {/if}
       {:else}

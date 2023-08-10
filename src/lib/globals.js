@@ -82,12 +82,16 @@ mapFluxoEstoque.set(FE_ESTORNO_SAIDA, "Estorno Saída")
 mapFluxoEstoque.set(FE_VENDA, "Venda")
 mapFluxoEstoque.set(FE_EXTRAVIO, "Extravio")
 mapFluxoEstoque.set(FE_ROUBO, "Roubo ou Furto")
-mapFluxoEstoque.set(FE_DEFEITO, "Descarte po Defeito")
+mapFluxoEstoque.set(FE_DEFEITO, "Descarte ou Defeito")
 mapFluxoEstoque.set(FE_ESTORNO_ENTRADA, "Estorno Entrada")
 mapFluxoEstoque.set(FE_DIVISAO, "Divisão de Estoque")
 mapFluxoEstoque.set(FE_MELHORIA, "Melhoria")
 mapFluxoEstoque.set(FE_AVARIA, "Avaria")
 mapFluxoEstoque.set(FE_ATUALIZACAO, "Atualização de Dados")
+export const mapFEPerdas = new Map()
+mapFEPerdas.set(FE_EXTRAVIO, "Extravio")
+mapFEPerdas.set(FE_ROUBO, "Roubo ou Furto")
+mapFEPerdas.set(FE_DEFEITO, "Descarte ou Defeito")
 
 export const ORIGEM_NACIONAL = 1
 export const ORIGEM_IMPORTADO = 2

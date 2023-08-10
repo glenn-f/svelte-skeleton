@@ -38,6 +38,7 @@ export const actions = {
       return message(form, res.message, { status: res.code })
     }
 
+    form.data = res.data
     //* Enviar resposta de sucesso
     return message(form, 'Entrada de estoque efetuada com sucesso', { status: 201 })
   }

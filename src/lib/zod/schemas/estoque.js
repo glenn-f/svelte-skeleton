@@ -27,6 +27,7 @@ export const addItemEntradaSchema = estoqueEsquema.pick({ produto_id: true, prec
   .transform(({ custo_unitario, qntd, ...dados }) => ({ custo: custo_unitario * qntd, qntd, ...dados }))
 
 export const addItemSaidaSchema = z.object({
+  tipo_fe: z.number({invalid_type_error: "Campo obrigatório"}).int("Escolha uma opção"),
   estoque: z.any(),
   id: zID,
   qntd: zInt.min(1),
@@ -37,9 +38,10 @@ export const addItemSaidaSchema = z.object({
   .transform(({ estoque, ...d }) => d)
 
 export const criarSaidaEstoqueSchema = z.object({
+  tipo_fe: zID,
   id: zID,
   qntd: zInt.min(1),
-  valor: zOptional(zCurrency),
+  valor: zCurrency,
   observacoes: zOptional(zTString),
   responsavel_id: zOptional(zID),
 })

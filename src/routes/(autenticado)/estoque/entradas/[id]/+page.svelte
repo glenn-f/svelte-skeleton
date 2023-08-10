@@ -152,7 +152,7 @@
                     <ExternalLinkIcon href={`/cadastros/produtos/${fluxo.produto_id}`} data-tooltip="Abrir Cadastro do Produto" data-placement="top" />
                   </div>
                 </td>
-                <td>{fluxo.codigo}</td>
+                <td>{fluxo.codigo ?? ''}</td>
                 <td>{fluxo.observacoes ?? ''}</td>
                 <!-- <td>{mapFluxoContabil.get(fluxo.tipo_fc) ?? ''}</td> -->
                 <td><VariacaoNumero value={fluxo.qntd} /></td>

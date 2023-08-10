@@ -5,7 +5,7 @@
   import { formatMoeda } from '$lib/helpers'
   import { addPgtoEntradaSchema } from '$lib/zod/schemas/contaFormas'
   import { modalStore } from '@skeletonlabs/skeleton'
-  export let formas, entrada, totalFinal
+  export let formas, store, totalFinal
   let pagamento = {}
   let errors = {}
   let errorMessage = ''
@@ -13,7 +13,7 @@
   function handleAdicionar() {
     const validation = addPgtoEntradaSchema.safeParse(pagamento)
     if (validation.success) {
-      $entrada.transacoes = [...$entrada.transacoes, validation.data]
+      $store.transacoes = [...$store.transacoes, validation.data]
       modalStore.close()
     } else {
       errors = { ...validation.error?.flatten()?.fieldErrors }
@@ -29,7 +29,6 @@
   }
   function definirPrecoRestante() {
     pagamento.valor = totalFinal
-    setFocus()
   }
 
   $: formas_parcelamentos = pagamento.forma?.parcelamentos
@@ -38,7 +37,7 @@
 
 <CardModal>
   <svelte:fragment slot="header">
-    <h2 class="h2">Adicionar Pagamento</h2>
+    <h2 class="h2">Adicionar Recebimento</h2>
   </svelte:fragment>
   <section class="grid grid-cols-12 gap-1 px-3">
     {#if totalFinal > 0}
