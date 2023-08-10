@@ -24,6 +24,34 @@ export function consultarEstoques(dados) {
   }
 }
 
+function produtosSaidaMap(produtos, estoques) {
+  const map = new Map();
+  for (let i = 0; i < produtos.length; i++) {
+    const p = produtos[i];
+    p.estoque = new Map(estoques.filter((v) => v.produto_id === p.id).map((v) => [v.id, v]))
+    map.set(p.id, p)
+  }
+  return map
+}
+
+
+export function consultarEstoqueSaida(dados) {
+  const { empresa_id } = dados
+  try {
+    const produtos = db.prepare("SELECT 0 qntd_carrinho, p.id, p.nome, SUM(e.qntd) qntd, AVG(e.preco_unitario)/10000 preco_medio, pc.id categoria_id, pc.nome categoria FROM produto p LEFT JOIN produto_categoria pc ON pc.id = p.produto_categoria_id \
+JOIN estoque e ON e.produto_id = p.id AND e.qntd > 0 WHERE p.empresa_id = $empresa_id GROUP BY p.id ").all({ empresa_id })
+    const estoques = db.prepare(
+      "SELECT 0 qntd_carrinho, e.id, e.produto_id, e.qntd, e.custo/10000 custo, e.preco_unitario/10000 preco_unitario, e.condicao, e.origem, e.codigo, e.estado, e.observacoes FROM estoque e \
+JOIN produto p ON e.produto_id = p.id AND p.empresa_id = $empresa_id WHERE e.qntd > 0 \
+ORDER BY e.preco_unitario DESC, e.qntd ASC").all({ empresa_id })
+    const data = produtosSaidaMap(produtos, estoques)
+    return { valid: true, data }
+  } catch (e) {
+    console.error(e)
+    return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+  }
+}
+
 function custosToMap(custos) {
   const mapa = new Map();
   for (let i = 0; i < custos.length; i++) {
@@ -46,7 +74,6 @@ LEFT JOIN produto p ON p.id = e.produto_id LEFT JOIN produto_categoria pc ON pc.
 WHERE e.id = $id").get({ id })
     const pes = db.prepare("SELECT pe.id pe_id,pe.tipo_pe,pe.criacao,fe.tipo_fe,fe.qntd,fe.observacoes fe_observacoes,fc_fe.valor_inicial/10000 valor,fc.classe_fc,fc.tipo_fc,fc.observacoes fc_observacoes FROM pe LEFT JOIN fe ON pe.id = pe_id LEFT JOIN fc_fe ON fc_fe.fe_id = fe.id LEFT JOIN fc ON fc.id = fc_fe.fc_id WHERE fe.estoque_id = $id").all({ id })
     data.pes = custosToMap(pes)
-    console.log(data.pes)
     return { valid: true, data }
 
   } catch (e) {

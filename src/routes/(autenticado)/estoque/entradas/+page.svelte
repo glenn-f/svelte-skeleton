@@ -10,9 +10,9 @@
   let columns = [
     { accessorKey: 'id', header: 'ID' },
     { accessorKey: 'criacao', header: 'Data Entrada', cell: (info) => new Date(info.getValue()).toLocaleString() },
+    { accessorKey: 'tipo_pe', header: 'Processo de Estoque', cell: (info) => mapProcessoEstoque.get(info.getValue()) },
     { accessorKey: 'responsavel', header: 'Responsável' },
     { accessorKey: 'participante', header: 'Participante' },
-    { accessorKey: 'tipo_pe', header: 'Processo de Entrada', cell: (info) => mapProcessoEstoque.get(info.getValue()) },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { data: info.row.original }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]

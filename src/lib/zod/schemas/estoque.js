@@ -25,3 +25,21 @@ export const addItemEntradaSchema = estoqueEsquema.pick({ produto_id: true, prec
   custo_unitario: zCurrency
 }).refine(({ preco_unitario, estado }) => !(estado == EE_DISPONIVEL && !Number.isFinite(preco_unitario)), { message: "Campo obrigatório", path: ['preco_unitario'] })
   .transform(({ custo_unitario, qntd, ...dados }) => ({ custo: custo_unitario * qntd, qntd, ...dados }))
+
+export const addItemSaidaSchema = z.object({
+  estoque: z.any(),
+  id: zID,
+  qntd: zInt.min(1),
+  valor: zCurrency,
+  observacoes: zOptional(zTString),
+  responsavel_id: zOptional(zID),
+}).refine(({ qntd, estoque }) => estoque?.qntd >= qntd, { message: "Quantidade indisponível", path: ['qntd'] })
+  .transform(({ estoque, ...d }) => d)
+
+export const criarSaidaEstoqueSchema = z.object({
+  id: zID,
+  qntd: zInt.min(1),
+  valor: zOptional(zCurrency),
+  observacoes: zOptional(zTString),
+  responsavel_id: zOptional(zID),
+})

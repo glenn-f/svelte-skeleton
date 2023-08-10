@@ -138,7 +138,6 @@
       class:input-error={error}
       type="text"
       class={'input rounded-tl-none rounded-bl-none read-only:variant-filled-surface ' + inputClass}
-      id={'InputMoeda' + name}
       style={`text-align: ${align};`}
       {readonly}
       {required}

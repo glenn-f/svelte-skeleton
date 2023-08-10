@@ -45,6 +45,19 @@ export function consultarContaFormasEntrada(dados) {
   }
 }
 
+export function consultarContaFormasSaida(dados) {
+  const { empresa_id } = dados
+  try {
+    const data = db.prepare("SELECT cf.*, ft.id forma_transacao_id, ft.parcela, ft.taxa_encargo FROM conta_forma cf JOIN conta c ON c.id = cf.conta_id LEFT JOIN forma_transacao ft ON ft.conta_forma_id = cf.id AND ft.delecao IS NULL WHERE c.empresa_id = $empresa_id AND pode_receber = 1")
+      .all({ empresa_id })
+    const mapa = cfToMap(data)
+    return { valid: true, data: mapa }
+  } catch (e) {
+    console.error(e)
+    return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+  }
+}
+
 export function criarContaForma(dados) {
   try {
     begin.run();

@@ -42,14 +42,13 @@ WHERE p.pe_id = $id GROUP BY fc.fcg_id").all({ id })
   }
 }
 
-
 /**
  * @param {{empresa_id: number}} dados 
  */
 export function consultarEntradas(dados) {
   const { empresa_id } = dados
   try {
-    const data = db.prepare("SELECT pe.id,pe.criacao,pe.responsavel_id,r.nome responsavel,pe.participante_id,p.nome participante,pe.tipo_pe,pe.delecao FROM pe LEFT JOIN pessoa r ON r.id = pe.responsavel_id LEFT JOIN pessoa p ON p.id = pe.participante_id WHERE pe.empresa_id = $empresa_id").all({ empresa_id })
+    const data = db.prepare("SELECT pe.id,pe.criacao,pe.responsavel_id,r.nome responsavel,pe.participante_id,p.nome participante,pe.tipo_pe,pe.delecao FROM pe LEFT JOIN pessoa r ON r.id = pe.responsavel_id LEFT JOIN pessoa p ON p.id = pe.participante_id WHERE pe.empresa_id = $empresa_id AND pe.tipo_pe > 0 AND pe.tipo_pe <= 100").all({ empresa_id })
     return { valid: true, data }
   } catch (e) {
     const { cause, errorType, fieldErrors } = handleAnyError(e)
@@ -226,6 +225,21 @@ export function criarEntrada(dados) {
   }
 }
 
+/**
+ * @param {{empresa_id: number}} dados 
+ */
+export function consultarSaidas(dados) {
+  const { empresa_id } = dados
+  try {
+    const data = db.prepare("SELECT pe.id,pe.criacao,pe.responsavel_id,r.nome responsavel,pe.participante_id,p.nome participante,pe.tipo_pe,pe.delecao FROM pe LEFT JOIN pessoa r ON r.id = pe.responsavel_id LEFT JOIN pessoa p ON p.id = pe.participante_id WHERE pe.empresa_id = $empresa_id AND pe.tipo_pe > 100 AND pe.tipo_pe <= 200").all({ empresa_id })
+    return { valid: true, data }
+  } catch (e) {
+    const { cause, errorType, fieldErrors } = handleAnyError(e)
+    return { valid: false, message: mapCausasErro.get(cause), errorType, fieldErrors, code: cause }
+  }
+}
+
+//!JSDocs
 /**
  * @typedef {Object} Entrada
  * @property {number} id -

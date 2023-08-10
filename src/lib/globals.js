@@ -47,10 +47,21 @@ mapSexo.set(SEXO_MASCULINO, "Masculino")
 mapSexo.set(SEXO_FEMININO, "Feminino")
 
 export const PE_COMPRA = 1
-export const PE_VENDA = 2
+export const PE_VENDA = 101
+export const PE_VENDA_COM_BUYBACK = 102
+export const PE_PERDA = 103
+export const PE_ALTERACAO = 201
+export const PE_ESTORNO_PARCIAL = 301
+export const PE_ESTORNO_TOTAL = 302
 const mapProcessoEstoque = new Map()
-mapProcessoEstoque.set(PE_COMPRA, "Compra de Mercadorias")
-mapProcessoEstoque.set(PE_VENDA, "Venda de Mercadorias")
+mapProcessoEstoque.set(PE_COMPRA, "Compra")
+mapProcessoEstoque.set(PE_VENDA, "Venda")
+mapProcessoEstoque.set(PE_VENDA_COM_BUYBACK, "Venda com Buyback")
+mapProcessoEstoque.set(PE_PERDA, "Perda de Estoque")
+mapProcessoEstoque.set(PE_ALTERACAO, "Alteração de Processo")
+mapProcessoEstoque.set(PE_ESTORNO_PARCIAL, "Estorno Parcial")
+mapProcessoEstoque.set(PE_ESTORNO_TOTAL, "Estorno Total")
+export const PES_SAIDA = new Map(Array.from(mapProcessoEstoque.entries()).filter(([value]) => value > 100 && value <= 200))
 
 export const FE_COMPRA = 1
 export const FE_BUYBACK = 2
