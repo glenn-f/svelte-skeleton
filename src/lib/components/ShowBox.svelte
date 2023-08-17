@@ -13,7 +13,7 @@
       {label}
     {/if}
   </span>
-  <div class={'flex items-center gap-1 justify-center rounded-token variant-soft mt-1 py-2 px-3 spaceHolding' + boxClass}>
+  <div class={`flex items-center gap-1 justify-center rounded-token variant-soft mt-1 py-2 px-3 spaceHolding ` + boxClass}>
     <slot>(slot: default)</slot>
   </div>
 </div>

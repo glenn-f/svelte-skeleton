@@ -1,4 +1,4 @@
-import { z, zCurrency, zID, zOptional, zTString } from "..";
+import { z, zContabil, zCurrency, zID, zMoeda, zOptional, zTString } from "..";
 
 export const addLancamentoEntradaSchema = z.object({
   classe_fc: zID,
@@ -7,4 +7,14 @@ export const addLancamentoEntradaSchema = z.object({
   observacoes: zOptional(zTString)
 })
 
+export const addLancamentoSaidaSchema = z.object({
+  valor: zMoeda,
+  observacoes: zOptional(zTString),
+})
+
+export const criarSaidaContabilSchema = z.object({
+  tipo_fc: zID,
+  valor: zContabil,
+  observacoes: zOptional(zTString),
+})
 export const criarEntradaContabilSchema = addLancamentoEntradaSchema

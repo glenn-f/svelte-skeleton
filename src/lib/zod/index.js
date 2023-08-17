@@ -39,6 +39,8 @@ export const zEmail = z.string().trim().email('E-mail inválido')
 export const zNumber = z.coerce.number().finite('Número inválido')
 export const zInt = z.coerce.number({ invalid_type_error: "Campo obrigatório" }).int('Número inválido')
 export const zCurrency = z.coerce.number({ invalid_type_error: "Campo obrigatório" }).nonnegative('Deve ser positivo ou zero')
+export const zMoeda = z.number({ invalid_type_error: "Campo obrigatório" }).min(0.0001, 'Deve ser maior que zero')
+export const zContabil = z.number({ invalid_type_error: "Campo obrigatório" })
 export const zID = z.coerce.number({ invalid_type_error: "ID inválido" }).int('ID deve ser inteiro')
 
 //! Esquemas Genéricos

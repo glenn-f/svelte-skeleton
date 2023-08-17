@@ -17,8 +17,18 @@ const estoqueEsquema = z.object({
 })
 
 export const criarEntradaEstoqueSchema = estoqueEsquema.pick({ produto_id: true, custo: true, preco_unitario: true, estado: true, condicao: true, origem: true, codigo: true, observacoes: true }).extend({
-  qntd: zInt.min(1)
+  qntd: zInt.min(1),
 })
+
+export const criarSaidaBuybackSchema = estoqueEsquema.pick({ produto_id: true, condicao: true, origem: true, codigo: true, observacoes: true }).extend({
+  qntd: zInt.min(1),
+  custo: zCurrency,
+})
+
+export const addBuybackSaidaSchema = estoqueEsquema.pick({ produto_id: true, condicao: true, origem: true, codigo: true, observacoes: true }).extend({
+  qntd: zInt.min(1),
+  custo_unitario: zCurrency,
+}).transform(({ custo_unitario, qntd, ...dados }) => ({ custo: custo_unitario * qntd, qntd, ...dados }))
 
 export const addItemEntradaSchema = estoqueEsquema.pick({ produto_id: true, preco_unitario: true, estado: true, condicao: true, origem: true, codigo: true, observacoes: true }).extend({
   qntd: zInt.min(1),

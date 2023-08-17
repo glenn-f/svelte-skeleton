@@ -212,7 +212,6 @@ CREATE TABLE IF NOT EXISTS fc (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   empresa_id INTEGER NOT NULL,
   fcg_id INTEGER,
-  classe_fc INTEGER NOT NULL,
   tipo_fc INTEGER NOT NULL,
   valor INTEGER NOT NULL,
   observacoes TEXT,
@@ -238,23 +237,14 @@ CREATE TABLE IF NOT EXISTS estoque (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   produto_id INTEGER NOT NULL,
   qntd INTEGER NOT NULL,
-  -- transferivel, quantidade deste estoque (no estado atual: em avaliacao, disponivel)
   custo INTEGER NOT NULL,
-  -- transferivel,  custo bruto Acumulado do estoque (total custo_manutencao + total custo_entrada) 
   preco_unitario INTEGER,
-  --atualizavel
   estado INTEGER NOT NULL DEFAULT 1,
-  --atualizavel (disponivel para em avaliacao)
   condicao INTEGER NOT NULL DEFAULT 1,
   origem INTEGER NOT NULL DEFAULT 1,
   codigo TEXT,
   dados_json TEXT,
   observacoes TEXT,
-  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
-  alteracao INTEGER,
-  delecao INTEGER,
-  criador_id INTEGER,
-  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (produto_id) REFERENCES produto(id)
 ) STRICT;
 --! Tabela "pe" Processo Estoque
@@ -289,9 +279,10 @@ CREATE TABLE IF NOT EXISTS fe (
   pe_id INTEGER NOT NULL,
   responsavel_id INTEGER,
   tipo_fe INTEGER NOT NULL,
-  qntd INTEGER NOT NULL,
-  diferenca_preco INTEGER NOT NULL,
+  var_qntd INTEGER NOT NULL,
+  var_custo INTEGER NOT NULL,
   observacoes TEXT,
+  alteracoes_json TEXT,
   FOREIGN KEY (estoque_id) REFERENCES estoque(id),
   FOREIGN KEY (pe_id) REFERENCES pe(id),
   FOREIGN KEY (responsavel_id) REFERENCES pessoa(id)

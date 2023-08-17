@@ -5,30 +5,17 @@
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputSelectRadio from '$lib/components/Forms/InputSelectRadio.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
-  import {
-    FCC_CUSTO,
-    FCC_RECEITA,
-    PES_SAIDA,
-    PE_PERDA,
-    PE_VENDA,
-    PE_VENDA_COM_BUYBACK,
-    mapCondicao,
-    mapEstadoEstoque,
-    mapFEPerdas,
-    mapFluxoContabil,
-    mapFluxoContabilClasse,
-    mapOrigem
-  } from '$lib/globals'
+  import { PES_SAIDA, PE_PERDA, PE_VENDA, PE_VENDA_COM_BUYBACK, isCusto, isReceita, mapCondicao, mapEstadoEstoque, mapFEPerdas, mapFluxoContabil, mapOrigem } from '$lib/globals'
   import { formatMoeda } from '$lib/helpers'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
+  import { writable } from 'svelte/store'
   import { superForm } from 'sveltekit-superforms/client'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import ModalContabil from './ModalContabil.svelte'
+  import ModalItemBuyback from './ModalItemBuyback.svelte'
   import ModalItemSaida from './ModalItemSaida.svelte'
   import ModalPgto from './ModalRcbto.svelte'
-  import { writable } from 'svelte/store'
-  import ModalItemBuyback from './ModalItemBuyback.svelte'
   export let data
   let inputForm
   const { form, errors, enhance, submitting } = superForm(data.form, {
@@ -55,14 +42,18 @@
   $: isVenda = [PE_VENDA_COM_BUYBACK, PE_VENDA].includes($form.tipo_pe)
   $: isPerda = $form.tipo_pe === PE_PERDA
   $: hasBuyback = $form.tipo_pe === PE_VENDA_COM_BUYBACK
-  $: totalSaida = $form.estoque_saida?.reduce((acc, e) => e.valor * e.qntd + acc, 0) ?? 0
   $: totalItens = $form.estoque_saida?.reduce((acc, e) => e.qntd + acc, 0) ?? 0
+  $: totalItensBuyback = $form.buyback?.reduce((acc, e) => e.qntd + acc, 0) ?? 0
+  $: totalSaida = $form.estoque_saida?.reduce((acc, e) => e.valor * e.qntd + acc, 0) ?? 0
   $: totalBuyback = hasBuyback ? $form.buyback?.reduce((acc, e) => e.custo + acc, 0) ?? 0 : 0
-  $: totalRecebido = $form.transacoes?.reduce((acc, e) => e.valor + acc, 0) ?? 0
-  $: totalOutrosCustos = $form.contabil?.reduce((acc, e) => (e.classe_fc == FCC_CUSTO ? e.valor : 0) + acc, 0) ?? 0
-  $: totalOutrasReceitas = $form.contabil?.reduce((acc, e) => (e.classe_fc == FCC_RECEITA ? e.valor : 0) + acc, 0) ?? 0
-  $: totalFinal = isPerda ? 0 : totalSaida + totalOutrasReceitas - (totalOutrosCustos + totalRecebido + totalBuyback)
+  $: totalTransacoes = $form.transacoes?.reduce((acc, e) => e.valor + acc, 0) ?? 0
+  $: totalOutrosCustos = $form.contabil?.reduce((acc, e) => (isCusto(e.tipo_fc) ? e.valor : 0) + acc, 0) ?? 0
+  $: totalOutrasReceitas = $form.contabil?.reduce((acc, e) => (isReceita(e.tipo_fc) ? e.valor : 0) + acc, 0) ?? 0
+  $: totalAReceber = totalSaida + totalOutrasReceitas
+  $: totalRecebido = totalTransacoes + totalBuyback
+  $: totalFinal = isPerda ? 0 : totalAReceber - totalRecebido
   $: labelItem = isVenda ? 'Venda' : isPerda ? 'Perda' : 'Saída'
+  $: fimMsg = totalFinal > 0 ? `Falta receber ${formatMoeda(totalFinal)} em transações ou buybacks` : totalFinal < 0 ? `Adicione ${formatMoeda(-totalFinal)} em lançamentos ou vendas` : ''
   function estoquesMap(prods) {
     const tmp = new Map()
     prods.forEach((p) => {
@@ -78,9 +69,9 @@
     for (let i = 0; i < formas?.length; i++) {
       const f = formas[i]
       if (f.parcelamentos) {
-        f.parcelamentos.forEach((p) => mapa.set(p.forma_transacao_id, `${f.nome} ${p.parcela}x`))
+        f.parcelamentos.forEach((p) => mapa.set(p.forma_transacao_id, { conta: f.conta, forma_completa: `${f.forma} ${p.parcela}x` }))
       } else {
-        mapa.set(f.forma_transacao_id, f.nome)
+        mapa.set(f.forma_transacao_id, { conta: f.conta, forma_completa: f.forma })
       }
     }
     return mapa
@@ -97,10 +88,10 @@
       component: { ref: ModalItemBuyback, props: { modo: 'adicionar', store: form, produtos: produtosEntrada, buybackAutocomplete } }
     })
   }
-  function abrirModalContabil(classe) {
+  function abrirModalContabil() {
     modalStore.trigger({
       type: 'component',
-      component: { ref: ModalContabil, props: { modo: 'adicionar', store: form, classe } }
+      component: { ref: ModalContabil, props: { modo: 'adicionar', store: form } }
     })
   }
   function abrirModalRcbto() {
@@ -236,7 +227,7 @@
               {#each $form.estoque_saida ?? [] as { tipo_fe, id, valor, qntd, responsavel_id, observacoes }, i}
                 <tr>
                   {#if isPerda}
-                    <td>{mapFEPerdas.get(tipo_fe)}</td>
+                    <td>{mapFEPerdas.get(tipo_fe) ?? ''}</td>
                     <td>{observacoes ?? ''}</td>
                   {:else}
                     <td>{colaboradores.find((v) => v.id == responsavel_id)?.nome ?? ''}</td>
@@ -276,7 +267,7 @@
                 <td>{totalItens}</td>
                 {#if !isPerda}
                   <td />
-                  <td>{totalItens}</td>
+                  <td>{totalSaida}</td>
                 {/if}
                 <td colspan="100" />
               </tr>
@@ -290,7 +281,7 @@
       {#if $form.tipo_pe === PE_VENDA_COM_BUYBACK}
         <div class="groupbox col-span-12 grid grid-cols-12 gap-2 place-content-start overflow-x-auto">
           <div class="col-span-12 flex justify-between items-center">
-            <h4 class="h4 whitespace-nowrap">Produtos Recebidos em Buyback</h4>
+            <h4 class="h4 whitespace-nowrap">Buybacks Efetuados</h4>
             <hr class="w-full mx-2 !border-primary-300-600-token" />
             <button type="button" class="btn btn-sm variant-filled" on:click={abrirModalItemBuyback}>
               <Icon icon="fa6-solid:plus" />
@@ -342,9 +333,9 @@
               <tfoot class="!variant-soft">
                 <tr class="!text-center">
                   <th colspan="5" class="text-right">Totais</th>
-                  <td>{totalItens}</td>
+                  <td>{totalItensBuyback}</td>
                   <td />
-                  <td>{formatMoeda(totalSaida)}</td>
+                  <td>{formatMoeda(totalBuyback)}</td>
                   <td colspan="100" />
                 </tr>
               </tfoot>
@@ -361,13 +352,9 @@
           <div class="col-span-12 flex justify-between items-center gap-2">
             <h4 class="h4 whitespace-nowrap">Outros Lançamentos</h4>
             <hr class="w-full !border-primary-300-600-token" />
-            <button type="button" class="btn btn-sm variant-filled" on:click={() => abrirModalContabil(FCC_RECEITA)}>
+            <button type="button" class="btn btn-sm variant-filled" on:click={abrirModalContabil}>
               <Icon icon="fa6-solid:plus" />
-              <span>Receita</span>
-            </button>
-            <button type="button" class="btn btn-sm variant-filled" on:click={() => abrirModalContabil(FCC_CUSTO)}>
-              <Icon icon="fa6-solid:plus" />
-              <span>Desconto</span>
+              <span>Lançamento</span>
             </button>
           </div>
           <!--* Tabela Itens -->
@@ -375,33 +362,35 @@
             <table class="table table-compact table-hover text-center">
               <thead>
                 <tr class="!text-center whitespace-nowrap">
-                  <th>Classe</th>
                   <th>Tipo</th>
-                  <th>Valor</th>
                   <th>Observações</th>
+                  <th>Acréscimo à Venda </th>
+                  <th>Custo Interno</th>
                   <th class="w-0">#</th>
                 </tr>
               </thead>
               <tbody>
-                {#each $form.contabil ?? [] as { classe_fc, tipo_fc, valor, observacoes }, i}
+                {#each $form.contabil ?? [] as { tipo_fc, valor, observacoes }, i}
                   <tr>
-                    <td>{mapFluxoContabilClasse.get(classe_fc)}</td>
                     <td>{mapFluxoContabil.get(tipo_fc)}</td>
-                    <td>{formatMoeda(valor)}</td>
                     <td class="max-w-[50ch] overflow-ellipsis overflow-hidden">{observacoes ?? ''}</td>
+                    <td>{isReceita(tipo_fc) ? formatMoeda(valor) : '0,00'}</td>
+                    <td>{isCusto(tipo_fc) ? formatMoeda(valor) : '0,00'}</td>
                     <td class="!whitespace-nowrap">
                       <button type="button" class="text-error-400 hover:text-error-600 transition-colors" on:click={() => apagarContabil(i)}><Icon icon="fa6-solid:trash" /></button>
                     </td>
                   </tr>
                 {:else}
                   <tr>
-                    <td colspan="100" class="variant-glass">Nenhum custo ou receita adicionado.</td>
+                    <td colspan="100" class="variant-glass">Nenhum lançamento adicionado.</td>
                   </tr>
                 {/each}
               </tbody>
               <tfoot class="!variant-soft">
                 <tr class="!text-center">
-                  <th colspan="2" class="text-right">Total</th>
+                  <td />
+                  <th class="text-right">Total</th>
+                  <td>{formatMoeda(totalOutrasReceitas)}</td>
                   <td>{formatMoeda(totalOutrosCustos)}</td>
                   <td colspan="100" />
                 </tr>
@@ -427,6 +416,7 @@
             <table class="table table-compact table-hover text-center">
               <thead>
                 <tr class="!text-center whitespace-nowrap">
+                  <th>Conta</th>
                   <th>Forma de Transação</th>
                   <th>Valor Recebimento</th>
                   <th class="w-0">#</th>
@@ -435,7 +425,8 @@
               <tbody>
                 {#each $form.transacoes ?? [] as { forma_transacao_id, valor }, i}
                   <tr>
-                    <td>{mapFormas.get(forma_transacao_id)}</td>
+                    <td>{mapFormas.get(forma_transacao_id).conta}</td>
+                    <td>{mapFormas.get(forma_transacao_id).forma_completa}</td>
                     <td>{formatMoeda(valor || 0)}</td>
                     <td class="!whitespace-nowrap">
                       <button type="button" class="text-error-400 hover:text-error-600 transition-colors" on:click={() => apagarPgto(i)}><Icon icon="fa6-solid:trash" /></button>
@@ -449,9 +440,10 @@
               </tbody>
               <tfoot class="!variant-soft">
                 <tr class="!text-center">
-                  <th class="text-right">Total</th>
-                  <td>{formatMoeda(totalRecebido)}</td>
                   <td />
+                  <th class="text-right">Total</th>
+                  <td>{formatMoeda(totalTransacoes)}</td>
+                  <td colspan="100" />
                 </tr>
               </tfoot>
             </table>
@@ -466,74 +458,55 @@
         </div>
       {/if}
 
-      <div class="col-span-6 place-self-end">
+      <div class="col-span-12 flex gap-2 justify-center items-center">
         {#if totalItens > 0 && !isPerda}
-          <table class="text-right">
+          <table class="text-right whitespace-nowrap">
             <tr>
-              <th>Total da Venda</th>
+              <th>Vendas</th>
               <td class="px-2">{formatMoeda(totalSaida)}</td>
-              <td class="w-5 !text-center badge variant-glass-success">+</td>
+              <th>Transações</th>
+              <td class="px-2">{formatMoeda(totalTransacoes)}</td>
             </tr>
-            {#if totalOutrasReceitas !== 0}
-              <tr>
-                <th>Outras Receitas</th>
-                <td class="px-2">{formatMoeda(totalOutrasReceitas)}</td>
-                <td class="w-5 !text-center badge variant-glass-success">+</td>
-              </tr>
-            {/if}
             <tr>
-              <th>Recebimento em Transações</th>
-              <td class="px-2">{formatMoeda(totalRecebido)}</td>
-              <td class="w-5 !text-center badge variant-glass-error">-</td>
-            </tr>
-            {#if hasBuyback}
-            <tr>
-              <th>Recebimento em Buybacks</th>
+              <th>Lançamentos</th>
+              <td class="px-2">{formatMoeda(totalOutrasReceitas)}</td>
+              <th>Buybacks</th>
               <td class="px-2">{formatMoeda(totalBuyback)}</td>
-              <td class="w-5 !text-center badge variant-glass-error">-</td>
             </tr>
-            {/if}
-            {#if totalOutrosCustos !== 0}
-              <tr>
-                <th>Outros Descontos</th>
-                <td class="px-2">{formatMoeda(totalOutrosCustos)}</td>
-              <td class="w-5 !text-center badge variant-glass-error">-</td>
-              </tr>
-            {/if}
             <tr>
               <td colspan="100">
                 <hr />
               </td>
             </tr>
             <tr>
-              <th>Total Final</th>
-              <td class="px-2">{formatMoeda(totalFinal)}</td>
-              {#if totalFinal === 0}
-                <td class="w-5 !text-center badge variant-filled-success">✓</td>
-              {:else}
-                <td class="w-5 !text-center badge variant-filled-error">✕</td>
-              {/if}
+              <th>Total a Receber</th>
+              <td class="px-2" class:text-success-500={totalFinal === 0} class:text-error-500={totalFinal < 0}>{formatMoeda(totalAReceber)}</td>
+              <th>Total Recebido</th>
+              <td class="px-2" class:text-success-500={totalFinal === 0} class:text-error-500={totalFinal > 0}>{formatMoeda(totalRecebido)}</td>
             </tr>
           </table>
         {/if}
+        <div class="grid gap-2">
+          <HelperMessage message={fimMsg} type={totalFinal > 0 ? 'warning' : 'success'} />
+          <form bind:this={inputForm} method="POST" use:enhance>
+            <button
+              type="submit"
+              on:click|preventDefault={abrirModalConfirmacao}
+              class="btn bg-gradient-to-br from-lime-500 to-orange-400 w-min"
+              disabled={totalFinal !== 0 || totalItens === 0 || $submitting}
+            >
+              {#if $submitting}
+                <Icon icon="line-md:loading-twotone-loop" width="24px" height="24px" />
+                <p>Enviando...</p>
+              {:else}
+                <Icon icon="mdi:package-variant-closed-check" width="24px" height="24px" />
+                <p>Finalizar</p>
+              {/if}
+            </button>
+          </form>
+        </div>
       </div>
 
-      <form bind:this={inputForm} method="POST" use:enhance class="col-span-6 self-center">
-        <button
-          type="submit"
-          on:click|preventDefault={abrirModalConfirmacao}
-          class="btn bg-gradient-to-br from-lime-500 to-orange-400 w-min"
-          disabled={totalFinal !== 0 || totalItens === 0 || $submitting}
-        >
-          {#if $submitting}
-            <Icon icon="line-md:loading-twotone-loop" width="24px" height="24px" />
-            <p>Enviando...</p>
-          {:else}
-            <Icon icon="mdi:package-variant-closed-check" width="24px" height="24px" />
-            <p>Finalizar</p>
-          {/if}
-        </button>
-      </form>
       <!-- *Debugger -->
       <div class="col-span-12">
         <SuperDebug data={{ $form }} />

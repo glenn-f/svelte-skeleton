@@ -2,7 +2,7 @@ import { ERRO_CAMPOS, REP_CLIENTE, REP_COLABORADOR } from '$lib/globals'
 import { consultarContaFormasSaida } from '$lib/server/db/models/contaForma'
 import { consultarEstoqueSaida } from '$lib/server/db/models/estoque.js'
 import { consultarPessoas } from '$lib/server/db/models/pessoa'
-import { criarEntrada } from '$lib/server/db/models/processoEstoque'
+import { criarSaida } from '$lib/server/db/models/processoEstoque'
 import { consultarProdutos } from '$lib/server/db/models/produto.js'
 import { setDBErrors } from '$lib/zod/index.js'
 import { criarSaidaSchema } from '$lib/zod/schemas/processoEstoque'
@@ -33,18 +33,18 @@ export const actions = {
   default: async ({ request, locals }) => {
     //* Validar Formulário
     const form = await superValidate(request, criarSaidaSchema);
+    console.log(form, form.data)
     if (!form.valid) return message(form, 'Erro no preenchimento dos campos', { status: ERRO_CAMPOS })
-
     //* Inserir dados no DB
     const empresa_id = locals.sessao.empresa_id
     const criador_id = locals.sessao.uid
-    const res = criarEntrada({ empresa_id, criador_id, ...form.data })
+    const res = criarSaida({ empresa_id, criador_id, ...form.data })
     if (!res.valid) {
       setDBErrors(form, res)
       return message(form, res.message, { status: res.code })
     }
     form.data = res.data
     //* Enviar resposta de sucesso
-    return message(form, 'Entrada de estoque efetuada com sucesso', { status: 201 })
+    return message(form, 'Saída de estoque efetuada com sucesso', { status: 201 })
   }
 }
