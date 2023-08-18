@@ -15,7 +15,7 @@
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   export let produtos, store, colaboradores, labelTitle
 
-  let buscar_produto, produtoSelecionado, inputSearch, filtroCondicao, filtroOrigem, filtroEstado, filtroGeral, estoque
+  let buscarProduto, produtoSelecionado, inputSearch, filtroCondicao, filtroOrigem, filtroEstado, filtroGeral, estoqueSelecionado
   const itemInitial = { tipo_fe: undefined, qntd: 1, valor: undefined, responsavel_id: $store.responsavel_id, observacoes: undefined }
 
   let item = { ...itemInitial }
@@ -45,7 +45,7 @@
     produtoSelecionado = event.detail.meta
     searcher = new Searcher(produtoSelecionado.estoque, { keySelector, ignoreCase: true })
     filtrarItens(filtroCondicao, filtroEstado, filtroOrigem)
-    buscar_produto = ''
+    buscarProduto = ''
   }
   const keySelector = (o) => [o.codigo ?? '', o.observacoes ?? '']
   //!
@@ -57,10 +57,10 @@
       item.valor = 0
       item.responsavel_id = undefined
     }
-    const validation = addItemSaidaSchema.safeParse({ estoque, id: estoque.id, ...item })
+    const validation = addItemSaidaSchema.safeParse({ estoque: estoqueSelecionado, id: estoqueSelecionado.id, ...item })
 
     if (validation.success) {
-      const { id, produto_id } = estoque
+      const { id, produto_id } = estoqueSelecionado
       const qntd = validation.data.qntd
       $produtos.get(produto_id).estoque.get(id).qntd_carrinho += qntd
       $produtos.get(produto_id).qntd_carrinho += qntd
@@ -76,7 +76,7 @@
     handleEscolherOutro()
   }
   function handleEscolherOutro() {
-    estoque = undefined
+    estoqueSelecionado = undefined
     filtroCondicao = undefined
     filtroEstado = undefined
     filtroOrigem = undefined
@@ -136,7 +136,7 @@
   $: isVenda = $store.tipo_pe === PE_VENDA || $store.tipo_pe === PE_VENDA_COM_BUYBACK
   $: isPerda = $store.tipo_pe === PE_PERDA
   $: if (!produtoSelecionado) inputSearch?.focus()
-  $: onEstoqueChange(estoque)
+  $: onEstoqueChange(estoqueSelecionado)
   $: filtrarItens(filtroCondicao, filtroEstado, filtroOrigem)
   $: filtrarTexto(filtroGeral)
 </script>
@@ -162,7 +162,7 @@
           <Button text="Resetar" icon="fa6-solid:xmark" class="variant-filled-warning" on:click={handleResetar} />
         </div>
 
-        {#if !estoque}
+        {#if !estoqueSelecionado}
           <!-- <div class="col-span-12 flex gap-2 items-center">
             <hr width="100%" />
             <h4 class="h4 text-center whitespace-nowrap">Listagem de Itens em Estoque</h4>
@@ -201,7 +201,7 @@
               <tbody>
                 {#each itensFiltrados ?? [] as e, i}
                   {#if e.qntd - e.qntd_carrinho > 0}
-                    <tr data-tooltip="Escolher este item" on:click={() => (estoque = e)}>
+                    <tr data-tooltip="Escolher este item" on:click={() => (estoqueSelecionado = e)}>
                       <td>{mapEstadoEstoque.get(e.estado)}</td>
                       <td>{mapOrigem.get(e.origem)}</td>
                       <td>{mapCondicao.get(e.condicao)}</td>
@@ -219,22 +219,22 @@
         {:else}
           <div class="col-span-2">
             <ShowBox label="Origem">
-              {mapOrigem.get(estoque.estado)}
+              {mapOrigem.get(estoqueSelecionado.estado)}
             </ShowBox>
           </div>
           <div class="col-span-2">
             <ShowBox label="Condição">
-              {mapCondicao.get(estoque.condicao)}
+              {mapCondicao.get(estoqueSelecionado.condicao)}
             </ShowBox>
           </div>
           <div class="col-span-2">
             <ShowBox label="Estado Atual">
-              {mapEstadoEstoque.get(estoque.estado)}
+              {mapEstadoEstoque.get(estoqueSelecionado.estado)}
             </ShowBox>
           </div>
           <div class="col-span-3">
             <ShowBox label={'Código' + (produtoSelecionado.titulo_codigo ? ` (${produtoSelecionado.titulo_codigo})` : '')}>
-              {estoque.codigo ?? ''}
+              {estoqueSelecionado.codigo ?? ''}
             </ShowBox>
           </div>
           <div class="col-span-3 self-end justify-self-center">
@@ -242,17 +242,17 @@
           </div>
           <div class="col-span-2">
             <ShowBox label="Custo Unitário">
-              {formatMoeda(estoque.custo / estoque.qntd)}
+              {formatMoeda(estoqueSelecionado.custo / estoqueSelecionado.qntd)}
             </ShowBox>
           </div>
           <div class="col-span-10">
             <ShowBox label="Observações">
-              {estoque.observacoes ?? ''}
+              {estoqueSelecionado.observacoes ?? ''}
             </ShowBox>
           </div>
           <div class="col-span-3">
             <ShowBox label="Qntd. Disponível">
-              {formatInteger(estoque.qntd)}
+              {formatInteger(estoqueSelecionado.qntd)}
             </ShowBox>
           </div>
           <div class="col-span-3">
@@ -261,7 +261,7 @@
           <div class="col-span-3">
             {#if isVenda}
               <ShowBox label="Preço Unit. Recomendado">
-                {formatMoeda(estoque.preco_unitario) ?? '-'}
+                {formatMoeda(estoqueSelecionado.preco_unitario) ?? '-'}
               </ShowBox>
             {/if}
           </div>
@@ -292,9 +292,9 @@
         {/if}
       {:else}
         <div class="col-span-12">
-          <input bind:this={inputSearch} class="input" type="search" name="demo" bind:value={buscar_produto} placeholder="Buscar produto..." />
+          <input bind:this={inputSearch} class="input" type="search" name="demo" bind:value={buscarProduto} placeholder="Buscar produto..." />
           <div class="card w-full max-h-40 p-4 overflow-y-auto" tabindex="-1">
-            <Autocomplete emptyState="Nenhum item encontrado." bind:input={buscar_produto} options={produtosAutocomplete} on:selection={onSelection} />
+            <Autocomplete emptyState="Nenhum item encontrado." bind:input={buscarProduto} options={produtosAutocomplete} on:selection={onSelection} />
           </div>
         </div>
       {/if}
@@ -303,7 +303,7 @@
 
   <div class="grid place-items-center gap-2" slot="footer">
     <div class="flex gap-2">
-      {#if estoque}
+      {#if estoqueSelecionado}
         <button type="button" class="btn variant-filled-primary" on:click={handleAdicionar}>Adicionar</button>
       {/if}
       <button type="button" class="btn variant-filled-secondary" on:click={modalStore.close}>Cancelar</button>

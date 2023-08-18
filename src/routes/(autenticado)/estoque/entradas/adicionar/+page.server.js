@@ -28,6 +28,7 @@ export const actions = {
     //* Validar Formulário
     const form = await superValidate(request, criarEntradaSchema);
     if (!form.valid) return message(form, 'Erro no preenchimento dos campos', { status: ERRO_CAMPOS })
+    console.log(form, form.data)
 
     //* Inserir dados no DB
     const empresa_id = locals.sessao.empresa_id

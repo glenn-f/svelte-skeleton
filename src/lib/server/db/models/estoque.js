@@ -16,7 +16,7 @@ function transformToCurrencyFields(array, fields) {
 export function consultarEstoques(dados) {
   const { empresa_id } = dados
   try {
-    const data = db.prepare("SELECT pe.id entrada_id,pe.criacao data_entrada,fe.tipo_fe forma_entrada,e.id,e.produto_id,e.qntd,CAST(e.custo AS REAL)/10000 custo,CAST(e.preco_unitario AS REAL)/10000 preco_unitario,e.condicao,e.origem,e.codigo,e.estado,e.delecao,p.nome AS p_nome FROM estoque e LEFT JOIN fe ON fe.estoque_id = e.id AND fe.tipo_fe <= 100 JOIN produto p ON e.produto_id = p.id LEFT JOIN pe ON pe.id = fe.pe_id WHERE p.empresa_id = $empresa_id AND e.qntd > 0").all({ empresa_id })
+    const data = db.prepare("SELECT pe.id entrada_id,pe.criacao data_entrada,fe.tipo_fe forma_entrada,e.id,e.produto_id,e.qntd,CAST(e.custo AS REAL)/10000 custo,CAST(e.preco_unitario AS REAL)/10000 preco_unitario,e.condicao,e.origem,e.codigo,e.estado,p.nome AS p_nome FROM estoque e LEFT JOIN fe ON fe.estoque_id = e.id AND fe.tipo_fe <= 100 JOIN produto p ON e.produto_id = p.id LEFT JOIN pe ON pe.id = fe.pe_id WHERE p.empresa_id = $empresa_id AND e.qntd > 0").all({ empresa_id })
     return { valid: true, data }
   } catch (e) {
     console.error(e)
@@ -55,12 +55,13 @@ ORDER BY e.preco_unitario DESC, e.qntd ASC").all({ empresa_id })
 function custosToMap(custos) {
   const mapa = new Map();
   for (let i = 0; i < custos.length; i++) {
-    const { pe_id, tipo_pe, criacao, tipo_fe, qntd, fe_observacoes, valor, classe_fc, tipo_fc, fc_observacoes } = custos[i];
+    const { pe_id, valor, tipo_fc, fc_observacoes, ...pe } = custos[i];
+    const lancamento = { valor, tipo_fc, fc_observacoes }
 
     if (!mapa.has(pe_id)) {
-      mapa.set(pe_id, { pe_id, tipo_pe, criacao, tipo_fe, qntd, fe_observacoes, contabil: [{ valor, classe_fc, tipo_fc, fc_observacoes }] })
+      mapa.set(pe_id, { pe_id, ...pe, contabil: [lancamento] })
     } else {
-      mapa.get(pe_id).contabil.push({ valor, classe_fc, tipo_fc, fc_observacoes })
+      mapa.get(pe_id).contabil.push(lancamento)
     }
   }
   return Array.from(mapa.values())
@@ -69,10 +70,10 @@ function custosToMap(custos) {
 export function detalharEstoque(dados) {
   const { empresa_id, id } = dados
   try {
-    const data = db.prepare("SELECT e.*, CAST(e.custo AS REAL)/10000 custo, CAST(e.preco_unitario AS REAL)/10000 preco_unitario, p.nome produto_nome, p.titulo_codigo, pc.nome categoria, pc.id categoria_id, criador.nome criador FROM estoque e \
-LEFT JOIN produto p ON p.id = e.produto_id LEFT JOIN produto_categoria pc ON pc.id = p.produto_categoria_id LEFT JOIN usuario criador ON criador.id = e.criador_id \
+    const data = db.prepare("SELECT e.*, CAST(e.custo AS REAL)/10000 custo, CAST(e.preco_unitario AS REAL)/10000 preco_unitario, p.nome produto_nome, p.titulo_codigo, pc.nome categoria, pc.id categoria_id FROM estoque e \
+LEFT JOIN produto p ON p.id = e.produto_id LEFT JOIN produto_categoria pc ON pc.id = p.produto_categoria_id \
 WHERE e.id = $id").get({ id })
-    const pes = db.prepare("SELECT pe.id pe_id,pe.tipo_pe,pe.criacao,fe.tipo_fe,fe.qntd,fe.observacoes fe_observacoes, CAST(fc_fe.valor_inicial AS REAL)/10000 valor,fc.classe_fc,fc.tipo_fc,fc.observacoes fc_observacoes FROM pe LEFT JOIN fe ON pe.id = pe_id LEFT JOIN fc_fe ON fc_fe.fe_id = fe.id LEFT JOIN fc ON fc.id = fc_fe.fc_id WHERE fe.estoque_id = $id").all({ id })
+    const pes = db.prepare("SELECT pe.id pe_id,pe.tipo_pe,pe.criacao,fe.tipo_fe,fe.var_qntd,CAST(fe.var_custo AS REAL)/10000 var_custo,fe.observacoes fe_observacoes, CAST(fc_fe.valor_inicial AS REAL)/10000 valor,fc.tipo_fc,fc.observacoes fc_observacoes FROM pe LEFT JOIN fe ON pe.id = pe_id LEFT JOIN fc_fe ON fc_fe.fe_id = fe.id LEFT JOIN fc ON fc.id = fc_fe.fc_id WHERE fe.estoque_id = $id").all({ id })
     data.pes = custosToMap(pes)
     return { valid: true, data }
 

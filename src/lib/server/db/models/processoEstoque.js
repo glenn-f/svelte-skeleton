@@ -1,4 +1,4 @@
-import { EE_AVALIACAO, FCC_CUSTO, FCC_RECEITA, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FC_C_RECOMPRA_MERCADORIA, FC_R_VENDA_MERCADORIA, FE_BUYBACK, FE_COMPRA, FE_VENDA, FF_ENCARGO, FF_PAGAMENTO, FF_RECEBIMENTO, PE_COMPRA, PE_PERDA, mapCausasErro } from "$lib/globals"
+import { EE_AVALIACAO, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FC_C_RECOMPRA_MERCADORIA, FC_R_VENDA_MERCADORIA, FE_BUYBACK, FE_COMPRA, FF_ENCARGO, FF_PAGAMENTO, FF_RECEBIMENTO, PE_COMPRA, PE_PERDA, mapCausasErro } from "$lib/globals"
 import { handleAnyError, rateioEstoque, roundBy } from "$lib/helpers"
 import { currencyToInt, intToPerc } from "$lib/types"
 import { begin, commit, db, dbInsert, dbSelectOne, dbUpdate, rollback } from ".."
@@ -14,13 +14,11 @@ export function detalharEntrada(dados) {
 LEFT JOIN pessoa p ON p.id = pe.participante_id LEFT JOIN usuario u ON u.id = pe.criador_id WHERE pe.id = $id").get({ id })
     if (!data) throw new Error("ID da entrada não existe")
     //* Fluxo de Estoque
-    data.fe = db.prepare("SELECT fe.id,fe.tipo_fe,fe.qntd,fe.observacoes,fe.responsavel_id,r.nome responsavel,fe.estoque_id,e.produto_id,p.nome produto, \
-e.estado, e.condicao, e.origem, e.codigo,CAST(fc_fe.valor_inicial AS REAL)/10000 custo,fc.classe_fc,fc.tipo_fc FROM fe \
+    data.fe = db.prepare("SELECT fe.id,fe.tipo_fe,fe.var_qntd,fe.observacoes,fe.responsavel_id,r.nome responsavel,fe.estoque_id,e.produto_id,p.nome produto, \
+e.estado, e.condicao, e.origem, e.codigo,CAST(fe.var_custo AS REAL)/10000 var_custo FROM fe \
 LEFT JOIN pessoa r ON r.id = fe.responsavel_id \
 LEFT JOIN estoque e ON e.id = fe.estoque_id \
 LEFT JOIN produto p ON p.id = e.produto_id \
-LEFT JOIN fc_fe ON fc_fe.fe_id = fe.id \
-JOIN fc ON fc.id = fc_fe.fc_id AND fc.fcg_id IS NULL \
 WHERE fe.pe_id = $id").all({ id })
     //* Transações + Encargos (Custo Encargo)
     data.ff = db.prepare("SELECT t.id,ff.conta_id,tc.nome conta,tft.conta_forma_id,tcf.nome conta_forma,t.forma_transacao_id,tft.parcela parcela,CAST(ff.valor AS REAL)/10000 valor,ff.tipo_ff,CAST(enc_ff.valor AS REAL)/10000 encargo_valor,enc_ff.tipo_ff encargo_tipo_ff FROM ff \
@@ -30,9 +28,15 @@ JOIN forma_transacao tft ON tft.id = t.forma_transacao_id \
 JOIN conta_forma tcf ON tcf.id = tft.conta_forma_id \
 JOIN conta tc ON tc.id = tcf.conta_id \
 LEFT JOIN ff enc_ff ON enc_ff.id = t.encargo_ff_id").all({ id })
-    //* Outros Lançamentos
-    data.fc = db.prepare("SELECT fc.fcg_id,fc.classe_fc,fc.tipo_fc,CAST(SUM(fc.valor) AS REAL)/10000 valor,fc.observacoes FROM pe_fcg p JOIN fc ON fc.fcg_id = p.fcg_id \
+    //* Lançamentos nos Estoques
+    data.fc = db.prepare("SELECT p.nome produto,fe.estoque_id,fc.fcg_id,fc.tipo_fc,CAST(fc.valor AS REAL)/10000 valor,fc.observacoes FROM fe JOIN estoque e ON e.id = fe.estoque_id JOIN produto p ON e.produto_id = p.id JOIN fc_fe ON fc_fe.fe_id = fe.id JOIN fc ON fc.id = fc_fe.fc_id \
+WHERE fe.pe_id = $id").all({ id })
+    //* Lançamentos por Grupo
+    data.fcg = db.prepare("SELECT fc.fcg_id,fc.tipo_fc,CAST(SUM(fc.valor) AS REAL)/10000 valor,fc.observacoes FROM pe_fcg p JOIN fc ON fc.fcg_id = p.fcg_id \
 WHERE p.pe_id = $id GROUP BY fc.fcg_id").all({ id })
+    const contabilFluxoEstoque = db.prepare("SELECT fc.fcg_id,fc.tipo_fc,CAST(SUM(fc.valor) AS REAL)/10000 valor,fc.observacoes FROM fe JOIN fc_fe ON fc_fe.fe_id = fe.id JOIN fc ON fc_fe.fc_id = fc.id \
+WHERE fe.pe_id = $id AND fc.fcg_id IS NULL GROUP BY fc.tipo_fc").all({ id })
+    data.fcg = data.fcg.concat(contabilFluxoEstoque)
     return { valid: true, data }
   } catch (e) {
     const { cause, errorType, fieldErrors } = handleAnyError(e)
@@ -62,18 +66,22 @@ export function consultarEntradas(dados) {
  * @returns {DBRun<Entrada>} */
 export function criarEntrada(dados) {
   const { criador_id, empresa_id, participante_id, responsavel_id, observacoes, estoque, transacoes, contabil } = dados
+  const totalLancamentos = contabil.reduce((acc, { valor }) => acc + valor, 0)
+  const totalTransacoes = transacoes.reduce((acc, { valor }) => acc + valor, 0)
+  const totalCustoEstoque = estoque.reduce((acc, { custo }) => acc + custo, 0)
+  const totalAPagar = roundBy(totalCustoEstoque - totalLancamentos, 2)
+  const totalPago = roundBy(totalTransacoes, 2)
 
   //! Preparar rateio
-  const totalCustoEstoque = estoque.reduce((acc, { custo }) => acc + custo, 0)
   for (let i = 0; i < estoque.length; i++) {
     const e = estoque[i]
     e.percRateio = totalCustoEstoque ? e.custo / totalCustoEstoque : 1 / estoque.length
     e.rateiosFinanceiro = []
     e.rateiosContabil = []
-    //TODO adicionar outros rateios ex: rateiosCustosProcesso -> brindes, transporte, frete, troco etc
   }
 
   try {
+    if (totalAPagar !== totalPago) throw new Error("(Compra) Totais são divergentes")
     begin.run()
     //! Criar Entrada
     const resPE = dbInsert('pe', { tipo_pe: PE_COMPRA, criador_id, empresa_id, participante_id, responsavel_id, observacoes })
@@ -83,17 +91,17 @@ export function criarEntrada(dados) {
     //! Criar Transações
     const encargos = []
     const forma_transacao_ids = transacoes.map((v) => v.forma_transacao_id).join(',')
-    const contas = db.prepare(`SELECT cf.conta_id,ft.id,ft.taxa_encargo FROM forma_transacao ft JOIN conta_forma cf ON cf.id = ft.conta_forma_id WHERE ft.id IN (${forma_transacao_ids})`).all()
+    const contas = db.prepare(`SELECT cf.conta_id,ft.id,ft.taxa_encargo/10000 taxa_encargo FROM forma_transacao ft JOIN conta_forma cf ON cf.id = ft.conta_forma_id WHERE ft.id IN (${forma_transacao_ids})`).all()
     for (let i = 0; i < transacoes.length; i++) {
       let { forma_transacao_id, valor } = transacoes[i];
       let { conta_id, taxa_encargo } = contas.find((v) => v.id === forma_transacao_id) ?? {}
+      valor = -Math.abs(currencyToInt(valor))
 
       //*Verificar se há encargo de transação
       let encargo_ff_id = undefined
-      let valor_encargo = intToPerc(taxa_encargo) * valor
-      if (Number.isFinite(valor_encargo) && valor_encargo !== 0) {
+      let valor_encargo = (taxa_encargo * valor) || 0
+      if (valor_encargo) {
         //? Criar Fluxo Financeiro - Encargo
-        valor_encargo = currencyToInt(valor_encargo)
         const resEncargoFF = dbInsert('ff', { conta_id, tipo_ff: FF_ENCARGO, valor: valor_encargo, criador_id })
         if (resEncargoFF.changes === 0) throw new Error(`(Compra) Fluxo Financeiro - Encargo[${i}] não foi criado`)
         encargo_ff_id = resEncargoFF.lastInsertRowid
@@ -101,7 +109,6 @@ export function criarEntrada(dados) {
       }
 
       //* Criar Fluxo Financeiro - Pagamento
-      valor = currencyToInt(valor)
       const resPagamentoFF = dbInsert('ff', { conta_id, tipo_ff: FF_PAGAMENTO, valor, criador_id })
       if (resPagamentoFF.changes === 0) throw new Error(`(Compra) Fluxo Financeiro - Pagamento[${i}] não foi criado`)
       const transacao_ff_id = resPagamentoFF.lastInsertRowid
@@ -115,10 +122,10 @@ export function criarEntrada(dados) {
       const resPETransacao = dbInsert('pe_transacao', { pe_id, transacao_id })
       if (resPETransacao.changes === 0) throw new Error(`(Compra) Associação Processo Estoque - Transação[${i}] não foi criada`)
 
-      //* Subtrair saldo da conta
+      //* Atualizar saldo da conta
       valor = valor + valor_encargo
       if (valor === 0) continue
-      const resUpdateConta = db.prepare("UPDATE conta SET saldo = saldo - $valor WHERE id = $conta_id").run({ valor, conta_id })
+      const resUpdateConta = db.prepare("UPDATE conta SET saldo = saldo + $valor WHERE id = $conta_id").run({ valor, conta_id })
       if (resUpdateConta.changes === 0) throw new Error(`(Compra) Atualização do saldo da conta ${conta_id} - transação [${i}] falhou`)
     }
 
@@ -130,7 +137,7 @@ export function criarEntrada(dados) {
       const resFCG = dbInsert('fcg', { id: null })
       if (resFCG.changes === 0) throw new Error(`(Compra) Criação de Grupo de Custo para Encargo[${i}] falhou`)
       e.fcg_id = resFCG.lastInsertRowid
-      rateioEstoque(e.valor, estoque, 'rateiosFinanceiro', { fcg_id: e.fcg_id, ff_id: e.ff_id, classe_fc: FCC_CUSTO, tipo_fc: FC_C_ENCARGO_TRANSACAO })
+      rateioEstoque(e.valor, estoque, 'rateiosFinanceiro', { fcg_id: e.fcg_id, ff_id: e.ff_id, tipo_fc: FC_C_ENCARGO_TRANSACAO })
 
       //* Associar Grupo ao Processo do Estoque (Compra)
       const resPE_FCG = dbInsert('pe_fcg', { fcg_id: e.fcg_id, pe_id })
@@ -139,50 +146,51 @@ export function criarEntrada(dados) {
 
     //! Rateio de Custos e Receitas (Contábil)
     for (let i = 0; i < contabil.length; i++) {
-      const { classe_fc, tipo_fc, valor, observacoes } = contabil[i]
+      const { tipo_fc, valor, observacoes } = contabil[i]
 
       //* Criar Grupo de Fluxo Contábil
       const resFCG = dbInsert('fcg', { id: null })
       if (resFCG.changes === 0) throw new Error(`(Compra) Criação de Grupo de Custo para Contabil[${i}] falhou`)
       const fcg_id = resFCG.lastInsertRowid
-      rateioEstoque(currencyToInt(valor), estoque, 'rateiosContabil', { fcg_id, classe_fc, tipo_fc, observacoes })
+      rateioEstoque(currencyToInt(valor), estoque, 'rateiosContabil', { fcg_id, tipo_fc, observacoes })
 
       //* Associar Grupo ao Processo do Estoque (Compra)
       const resPE_FCG = dbInsert('pe_fcg', { fcg_id, pe_id })
       if (resPE_FCG.changes === 0) throw new Error(`(Compra) Associação de Grupo de Custo com PE falhou. Contabil [${i}]`)
     }
 
-    //! Criar Estoques
+    //! Criar Entrada de Estoque
     for (let i = 0; i < estoque.length; i++) {
       let { codigo, condicao, custo, estado, observacoes, origem, preco_unitario, produto_id, qntd, rateiosFinanceiro, rateiosContabil } = estoque[i]
-      custo = currencyToInt(custo)
+      custo = currencyToInt(custo) /** Valor do Fluxo de Estoque */
       preco_unitario = Number.isFinite(preco_unitario) ? currencyToInt(preco_unitario) : undefined
+      const eFinal = { produto_id, qntd, custo, preco_unitario, estado, condicao, origem, codigo, observacoes }
 
       //* Criar Estoque
-      const resEstoque = dbInsert('estoque', { produto_id, qntd, custo, preco_unitario, estado, condicao, origem, codigo, observacoes, criador_id })
+      const resEstoque = dbInsert('estoque', eFinal)
       if (resEstoque.changes === 0) throw new Error(`(Compra) Estoque[${i}] não foi criado`)
       const estoque_id = resEstoque.lastInsertRowid
 
       //* Criar Fluxo de Estoque
-      const resFE = dbInsert('fe', { estoque_id, pe_id, responsavel_id, qntd, diferenca_preco: 0, observacoes, tipo_fe: FE_COMPRA })
-      if (resEstoque.changes === 0) throw new Error(`(Compra) FE[${i}] não foi criado`)
+      const resFE = dbInsert('fe', { estoque_id, pe_id, responsavel_id, tipo_fe: FE_COMPRA, var_qntd: qntd, var_custo: custo, observacoes })
+      if (resFE.changes === 0) throw new Error(`(Compra) FE[${i}] não foi criado`)
       const fe_id = resFE.lastInsertRowid
 
       //* Criar Fluxo Contábil para Custo da Mercadoria
-      const resFC = dbInsert('fc', { empresa_id, criador_id, classe_fc: FCC_CUSTO, tipo_fc: FC_C_COMPRA_MERCADORIA, valor: custo })
+      const resFC = dbInsert('fc', { empresa_id, criador_id, tipo_fc: FC_C_COMPRA_MERCADORIA, valor: -custo })
       if (resFC.changes === 0) throw new Error(`(Compra) FC[${i}] não foi criado`)
       const fc_id = resFC.lastInsertRowid
 
       //* Criar Associação do Estoque com Custo de Aquisição
-      const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: custo })
+      const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: -custo })
       if (resFC_FE.changes === 0) throw new Error(`(Compra) FC_FE[${i}] não foi criado`)
 
       //* Criar Custos de Transação Rateado para o Estoque
       for (let i = 0; i < rateiosFinanceiro.length; i++) {
-        const { fcg_id, ff_id, classe_fc, tipo_fc, valor } = rateiosFinanceiro[i];
+        const { fcg_id, ff_id, tipo_fc, valor } = rateiosFinanceiro[i];
 
         //? Criar Fluxo Contábil para Custo Financeiro
-        const resFC = dbInsert('fc', { empresa_id, criador_id, classe_fc, tipo_fc, valor, fcg_id })
+        const resFC = dbInsert('fc', { empresa_id, criador_id, tipo_fc, valor, fcg_id })
         if (resFC.changes === 0) throw new Error(`(Compra) FC Financeiro[${i}] não foi criado`)
         const fc_id = resFC.lastInsertRowid
 
@@ -194,16 +202,15 @@ export function criarEntrada(dados) {
         const resFC_FF = dbInsert('fc_ff', { fc_id, ff_id })
         if (resFC_FF.changes === 0) throw new Error(`(Compra) FC_FF[${i}] não foi criado`)
 
-        //? Atualizar custo do estoque
-        const resUpdateEstoque = db.prepare("UPDATE estoque SET custo = custo + $valor WHERE id = $estoque_id").run({ valor, estoque_id })
-        if (resUpdateEstoque.changes === 0) throw new Error(`(Compra) Atualização do custo do estoque ${estoque_id} - custo transacao rateado [${i}] falhou`)
+        //? Atualizar custo do estoque (subtrair, pq contábil é inverso do valor patrimonial)
+        eFinal.custo -= valor
       }
       //* Criar Custos Contábeis Rateado para o Estoque
       for (let i = 0; i < rateiosContabil.length; i++) {
-        let { fcg_id, classe_fc, tipo_fc, valor, observacoes } = rateiosContabil[i];
+        let { fcg_id, tipo_fc, valor, observacoes } = rateiosContabil[i];
 
         //? Criar Fluxo Contábil
-        const resFC = dbInsert('fc', { empresa_id, criador_id, classe_fc, tipo_fc, valor, fcg_id, observacoes })
+        const resFC = dbInsert('fc', { empresa_id, criador_id, tipo_fc, valor, fcg_id, observacoes })
         if (resFC.changes === 0) throw new Error(`(Compra) FC[${i}] não foi criado`)
         const fc_id = resFC.lastInsertRowid
 
@@ -211,12 +218,24 @@ export function criarEntrada(dados) {
         const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: valor })
         if (resFC_FE.changes === 0) throw new Error(`(Compra) FC_FE[${i}] não foi criado`)
 
-        //? Atualizar custo do estoque
-        valor = valor * (classe_fc === FCC_RECEITA ? -1 : 1)
-        const resUpdateEstoque = db.prepare("UPDATE estoque SET custo = custo + $valor WHERE id = $estoque_id").run({ valor, estoque_id })
-        if (resUpdateEstoque.changes === 0) throw new Error(`(Compra) Atualização do custo do estoque ${estoque_id} - custo contabil rateado [${i}] falhou`)
+        //? Atualizar custo do estoque (subtrair, pq contábil é inverso do valor patrimonial)
+        eFinal.custo -= valor
       }
+      //* Atualizar Fluxo de Estoque e Estoque
+      const resUpdateEstoque = db.prepare("UPDATE estoque SET custo = $valor WHERE id = $estoque_id").run({ valor: eFinal.custo, estoque_id })
+      if (resUpdateEstoque.changes === 0) throw new Error(`(Compra) Atualização do estoque ${estoque_id} falhou`)
+
+      const alteracoes_json = JSON.stringify([eFinal])
+      const resUpdateFE = db.prepare("UPDATE fe SET var_custo = $valor , alteracoes_json = $alteracoes_json WHERE id = $fe_id").run({ valor: eFinal.custo, fe_id, alteracoes_json })
+      if (resUpdateFE.changes === 0) throw new Error(`(Compra) Atualização do fluxo de estoque ${estoque_id} falhou`)
     }
+
+    const checkEstoque = db.prepare("SELECT CAST(SUM(e.custo) AS REAL)/10000 custo, CAST(SUM(fe.var_custo) AS REAL)/10000 var_custo FROM estoque e JOIN fe ON fe.estoque_id = e.id WHERE fe.pe_id = $pe_id").get({ pe_id })
+    const checkTransacoes = db.prepare("SELECT CAST(SUM(ff.valor) AS REAL)/10000 pagamento FROM pe_transacao p JOIN transacao t ON p.transacao_id = t.id JOIN ff ON ff.id = t.transacao_ff_id WHERE p.pe_id = $pe_id").get({ pe_id })
+
+    if (!checkEstoque || checkEstoque.custo !== checkEstoque.var_custo) throw new Error ("(Compra) comparação de totais de estoque deu diferente")
+    if (checkEstoque.var_custo !== checkTransacoes?.pagamento || 0) throw new Error ("(Compra) comparação de totais de estoque e pagamento deu diferente")
+
     commit.run()
     return { valid: true, data: pe_id }
   } catch (e) {
@@ -230,9 +249,8 @@ export function criarEntrada(dados) {
  * @param {DadosCriarSaida} dados 
  * @returns {DBRun<{}>} */ //TODO
 export function criarSaida(dados) {
-  const { criador_id, empresa_id, participante_id, responsavel_id, tipo_pe, observacoes, buyback, contabil, estoque_saida, transacoes } = dados
+  let { criador_id, empresa_id, participante_id, responsavel_id, tipo_pe, observacoes, buyback, contabil, estoque_saida, transacoes } = dados
 
-  if (tipo_pe === PE_PERDA) return; //TODO perda
   //! Preparar rateio
   const totalVendas = roundBy(estoque_saida.reduce((acc, { valor }) => acc + valor, 0), 2)
   for (let i = 0; i < estoque_saida.length; i++) {
@@ -311,7 +329,7 @@ export function criarSaida(dados) {
       const resPETransacao = dbInsert('pe_transacao', { pe_id, transacao_id })
       if (resPETransacao.changes === 0) throw new Error(`(Venda) Associação Processo Estoque - Transação[${i}] não foi criada`)
 
-      //* Subtrair saldo da conta
+      //* Atualizar saldo da conta
       valor = valor + valor_encargo
       if (valor === 0) continue
       const resUpdateConta = db.prepare("UPDATE conta SET saldo = saldo + $valor WHERE id = $conta_id").run({ valor, conta_id })
@@ -358,7 +376,7 @@ export function criarSaida(dados) {
       if (!eInicial || qntd > eInicial.qntd) throw new Error(`Estoque[${i}].qntd maior que e_inicial.qntd: ${qntd} > ${eInicial?.qntd}`)
       const var_qntd = -qntd
       const var_custo = -Math.floor(eInicial.custo * (qntd / eInicial.qntd))
-      const eFinal = { qntd: eInicial.custo + var_custo, custo: eInicial.qntd + var_custo }
+      const eFinal = { qntd: eInicial.qntd + var_qntd, custo: eInicial.custo + var_custo }
       const alteracoes_json = JSON.stringify([eFinal, eInicial])
 
       //* Atualizar Estoque
@@ -371,13 +389,15 @@ export function criarSaida(dados) {
       const fe_id = resFE.lastInsertRowid
 
       //* Criar Fluxo Contábil para a Venda de Mercadoria
-      const resFC = dbInsert('fc', { empresa_id, criador_id, tipo_fc: FC_R_VENDA_MERCADORIA, valor })
-      if (resFC.changes === 0) throw new Error(`(Venda) FC[${i}] não foi criado`)
-      const fc_id = resFC.lastInsertRowid
+      if (valor !== 0) {
+        const resFC = dbInsert('fc', { empresa_id, criador_id, tipo_fc: FC_R_VENDA_MERCADORIA, valor })
+        if (resFC.changes === 0) throw new Error(`(Venda) FC[${i}] não foi criado`)
+        const fc_id = resFC.lastInsertRowid
 
-      //* Criar Associação do Estoque com a Venda da Mercadoria
-      const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: valor })
-      if (resFC_FE.changes === 0) throw new Error(`(Venda) FC_FE[${i}] não foi criado`)
+        //* Criar Associação do Estoque com a Venda da Mercadoria
+        const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: valor })
+        if (resFC_FE.changes === 0) throw new Error(`(Venda) FC_FE[${i}] não foi criado`)
+      }
 
       //* Criar Custos de Transação Rateado para o Estoque
       for (let i = 0; i < rateiosFinanceiro.length; i++) {
@@ -411,7 +431,8 @@ export function criarSaida(dados) {
 
       }
       //TODO definir a atualização de custo de (estoque ou fluxo de estoque) ou criação de um FC_Social para Resultado Comercial
-      //TODO estes lançamentos contabeis estão associados ao fluxo de estoque, mais não gerar resultado nem são deduzidos ou somados ao estoque.custo
+      //TODO estes lançamentos contabeis estão associados ao fluxo de estoque, mais não gera resultado nem são deduzidos ou somados ao estoque.custo
+      //TODO check total final similar ao check da entrada
     }
     commit.run()
     return { valid: true, data: pe_id }

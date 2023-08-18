@@ -5,7 +5,7 @@
   import InputText from '$lib/components/Forms/InputText.svelte'
   import ShowBox from '$lib/components/ShowBox.svelte'
   import { FCC_RECEITA, mapSaidaFC } from '$lib/globals'
-  import { addLancamentoSaidaSchema } from '$lib/zod/schemas/contabil'
+  import { criarContabilSchema } from '$lib/zod/schemas/contabil'
   import { modalStore } from '@skeletonlabs/skeleton'
   /** @type {import('svelte/store').Writable} */
   export let store
@@ -15,13 +15,13 @@
   let lancamento = undefined
 
   function handleAdicionar() {
-    const validation = addLancamentoSaidaSchema.safeParse(form)
+    const validation = criarContabilSchema.safeParse(form)
     if (validation.success) {
       const { observacoes, valor } = validation.data
       const dados = {
         observacoes,
         valor: valor * lancamento.multiplicador,
-        tipo_fc: lancamento.tipo_fc,
+        tipo_fc: lancamento.tipo_fc
       }
       $store.contabil = [...($store.contabil ?? []), dados]
       modalStore.close()
@@ -33,10 +33,12 @@
   }
   let labelValor
   $: if (lancamento === undefined) {
+    form.tipo_fc = undefined
     errors = {}
     globalError = ''
   } else {
     labelValor = lancamento.classe === FCC_RECEITA ? (lancamento.multiplicador == 1 ? 'Valor do Acréscimo' : 'Valor do Desconto') : 'Valor do Custo Interno'
+    form.tipo_fc = lancamento.tipo_fc
   }
 </script>
 
@@ -48,7 +50,8 @@
     {#if !lancamento}
       <!-- ! Receitas -->
       <div class="col-span-12">
-        <h5 class="h5 inline">Acréscimos e Serviços</h5> - Aumentam o valor final
+        <h5 class="h5 inline">Acréscimos e Serviços</h5>
+         - Aumentam o valor final
       </div>
       <div class="col-span-12 flex flex-wrap gap-1">
         {#each mapSaidaFC.receitas as r, i}
@@ -57,7 +60,8 @@
       </div>
       <!-- ! Descontos -->
       <div class="col-span-12">
-        <h5 class="h5 inline">Descontos sobre a Venda</h5> - Diminuem o valor final
+        <h5 class="h5 inline">Descontos sobre a Venda</h5>
+         - Diminuem o valor final
       </div>
       <div class="col-span-12 flex flex-wrap gap-1">
         {#each mapSaidaFC.descontos as d, i}
@@ -66,7 +70,8 @@
       </div>
       <!-- ! Custos Internos -->
       <div class="col-span-12">
-        <h5 class="h5 inline">Custos Internos</h5> - Não alteram o valor final
+        <h5 class="h5 inline">Custos Internos</h5>
+         - Não alteram o valor final
       </div>
       <div class="col-span-12 flex flex-wrap gap-1 mb-2">
         {#each mapSaidaFC.custos as c, i}

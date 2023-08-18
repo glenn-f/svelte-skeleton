@@ -35,21 +35,23 @@
   $: formas = data.formas || []
   $: mapFormas = formasMap(formas)
   $: produtosAutocomplete = produtos?.map((p) => ({ label: p.nome, value: p.id, meta: p }))
-  $: totalCustoItens = $form.estoque?.reduce((acc, e) => e.custo + acc, 0) ?? 0
   $: totalItens = $form.estoque?.reduce((acc, e) => e.qntd + acc, 0) ?? 0
-  $: totalPago = $form.transacoes?.reduce((acc, e) => e.valor + acc, 0) ?? 0
-  $: totalOutrosCustos = $form.contabil?.reduce((acc, e) => (e.classe_fc == FCC_CUSTO ? e.valor : 0) + acc, 0) ?? 0
-  $: totalOutrasReceitas = $form.contabil?.reduce((acc, e) => (e.classe_fc == FCC_RECEITA ? e.valor : 0) + acc, 0) ?? 0
-  $: totalFinal = totalCustoItens + totalOutrosCustos - (totalOutrasReceitas + totalPago)
-
+  $: totalValorEntrada = $form.estoque?.reduce((acc, e) => e.custo + acc, 0) ?? 0
+  $: totalTransacoes = $form.transacoes?.reduce((acc, e) => e.valor + acc, 0) ?? 0
+  $: totalLancamentos = $form.contabil?.reduce((acc, e) => e.valor + acc, 0) ?? 0
+  $: totalFinal = totalValorEntrada - totalLancamentos - totalTransacoes
+  $: fimMsg = totalFinal > 0 ? `Falta adicionar ${formatMoeda(totalFinal)} em transações` : totalFinal < 0 ? `Adicione ${formatMoeda(-totalFinal)} compras` : ''
+  $: totalAPagar = totalValorEntrada - totalLancamentos
+  $: totalPago = totalTransacoes
+  
   function formasMap(formas) {
     const mapa = new Map()
     for (let i = 0; i < formas?.length; i++) {
       const f = formas[i]
       if (f.parcelamentos) {
-        f.parcelamentos.forEach((p) => mapa.set(p.forma_transacao_id, `${f.nome} ${p.parcela}x`))
+        f.parcelamentos.forEach((p) => mapa.set(p.forma_transacao_id, { conta: f.conta, forma_completa: `${f.forma} ${p.parcela}x` }))
       } else {
-        mapa.set(f.forma_transacao_id, f.nome)
+        mapa.set(f.forma_transacao_id, { conta: f.conta, forma_completa: f.forma })
       }
     }
     return mapa
@@ -57,19 +59,19 @@
   function abrirModalItem() {
     modalStore.trigger({
       type: 'component',
-      component: { ref: ModalItem, props: { modo: 'adicionar', entrada: form, produtosAutocomplete } }
+      component: { ref: ModalItem, props: { modo: 'adicionar', store: form, produtosAutocomplete } }
     })
   }
-  function abrirModalContabil(classe) {
+  function abrirModalContabil() {
     modalStore.trigger({
       type: 'component',
-      component: { ref: ModalContabil, props: { modo: 'adicionar', entrada: form, classe } }
+      component: { ref: ModalContabil, props: { modo: 'adicionar', store: form } }
     })
   }
   function abrirModalPgto() {
     modalStore.trigger({
       type: 'component',
-      component: { ref: ModalPgto, props: { modo: 'adicionar', entrada: form, formas, totalFinal } }
+      component: { ref: ModalPgto, props: { modo: 'adicionar', store: form, formas, totalFinal } }
     })
   }
   function abrirModalConfirmacao() {
@@ -165,8 +167,8 @@
               <tr class="!text-center whitespace-nowrap">
                 <th class="w-0">Origem</th>
                 <th class="w-0">Condição</th>
-                <th class="">Produto</th>
-                <th class="w-0">Código</th>
+                <th>Produto</th>
+                <th>Código</th>
                 <th class="w-0">Qntd</th>
                 <th class="w-0">Custo Unit.</th>
                 <th class="w-0">Custo Total</th>
@@ -206,7 +208,7 @@
                 <th colspan="4" class="text-right">Totais</th>
                 <td>{totalItens}</td>
                 <td />
-                <td>{formatMoeda(totalCustoItens)}</td>
+                <td>{formatMoeda(totalValorEntrada)}</td>
                 <td colspan="100" />
               </tr>
             </tfoot>
@@ -221,13 +223,9 @@
         <div class="col-span-12 flex justify-between items-center gap-2">
           <h4 class="h4 whitespace-nowrap">Outros Lançamentos</h4>
           <hr class="w-full !border-primary-300-600-token" />
-          <button type="button" class="btn btn-sm variant-filled" on:click={() => abrirModalContabil(FCC_RECEITA)}>
+          <button type="button" class="btn btn-sm variant-filled" on:click={abrirModalContabil}>
             <Icon icon="fa6-solid:plus" />
-            <span>Receita</span>
-          </button>
-          <button type="button" class="btn btn-sm variant-filled" on:click={() => abrirModalContabil(FCC_CUSTO)}>
-            <Icon icon="fa6-solid:plus" />
-            <span>Custo</span>
+            <span>Lançamento</span>
           </button>
         </div>
         <!--* Tabela Itens -->
@@ -235,34 +233,32 @@
           <table class="table table-compact table-hover text-center">
             <thead>
               <tr class="!text-center whitespace-nowrap">
-                <th>Classe</th>
                 <th>Tipo</th>
-                <th>Valor</th>
                 <th>Observações</th>
+                <th>Valor Lançamento</th>
                 <th class="w-0">#</th>
               </tr>
             </thead>
             <tbody>
-              {#each $form.contabil ?? [] as { classe_fc, tipo_fc, valor, observacoes }, i}
+              {#each $form.contabil ?? [] as { tipo_fc, valor, observacoes }, i}
                 <tr>
-                  <td>{mapFluxoContabilClasse.get(classe_fc)}</td>
                   <td>{mapFluxoContabil.get(tipo_fc)}</td>
-                  <td>{formatMoeda(valor)}</td>
                   <td class="max-w-[50ch] overflow-ellipsis overflow-hidden">{observacoes ?? ''}</td>
+                  <td>{formatMoeda(-valor)}</td>
                   <td class="!whitespace-nowrap">
                     <button type="button" class="text-error-400 hover:text-error-600 transition-colors" on:click={() => apagarContabil(i)}><Icon icon="fa6-solid:trash" /></button>
                   </td>
                 </tr>
               {:else}
                 <tr>
-                  <td colspan="100" class="variant-glass">Nenhum custo ou receita adicionado.</td>
+                  <td colspan="100" class="variant-glass">Nenhum lançamento adicionado.</td>
                 </tr>
               {/each}
             </tbody>
             <tfoot class="!variant-soft">
               <tr class="!text-center">
                 <th colspan="2" class="text-right">Total</th>
-                <td>{formatMoeda(totalOutrosCustos)}</td>
+                <td>{formatMoeda(-totalLancamentos)}</td>
                 <td colspan="100" />
               </tr>
             </tfoot>
@@ -287,6 +283,7 @@
           <table class="table table-compact table-hover text-center">
             <thead>
               <tr class="!text-center whitespace-nowrap">
+                <th>Conta</th>
                 <th>Forma de Transação</th>
                 <th>Valor Pagamento</th>
                 <th class="w-0">#</th>
@@ -295,7 +292,8 @@
             <tbody>
               {#each $form.transacoes ?? [] as { forma_transacao_id, valor }, i}
                 <tr>
-                  <td>{mapFormas.get(forma_transacao_id)}</td>
+                  <td>{mapFormas.get(forma_transacao_id).conta}</td>
+                  <td>{mapFormas.get(forma_transacao_id).forma_completa}</td>
                   <td>{formatMoeda(valor || 0)}</td>
                   <td class="!whitespace-nowrap">
                     <button type="button" class="text-error-400 hover:text-error-600 transition-colors" on:click={() => apagarPgto(i)}><Icon icon="fa6-solid:trash" /></button>
@@ -309,8 +307,8 @@
             </tbody>
             <tfoot class="!variant-soft">
               <tr class="!text-center">
-                <th class="text-right">Total</th>
-                <td>{formatMoeda(totalPago)}</td>
+                <th colspan="2" class="text-right">Total</th>
+                <td>{formatMoeda(totalTransacoes)}</td>
                 <td />
               </tr>
             </tfoot>
@@ -325,67 +323,55 @@
         <HelperMessage error={$errors._errors} />
       </div>
 
-      <div class="col-span-6 place-self-end">
+      <div class="col-span-12 flex gap-2 justify-center items-center">
         {#if totalItens > 0}
-          <table class="text-right">
+          <table class="text-right whitespace-nowrap">
             <tr>
-              <th>Custo dos Itens</th>
-              <td class="px-2">{formatMoeda(totalCustoItens)}</td>
-              <td class="w-5 !text-center badge variant-glass-success">+</td>
+              <th>Compras</th>
+              <td class="px-2">{formatMoeda(totalValorEntrada)}</td>
+              <th>Transações</th>
+              <td class="px-2">{formatMoeda(totalTransacoes)}</td>
             </tr>
-            {#if totalOutrosCustos !== 0}
-              <tr>
-                <th>Outros Custos</th>
-                <td class="px-2">{formatMoeda(totalOutrosCustos)}</td>
-                <td class="w-5 !text-center badge variant-glass-success">+</td>
-              </tr>
-            {/if}
             <tr>
-              <th>Pagamentos Efetuados</th>
-              <td class="px-2">{formatMoeda(totalPago)}</td>
-              <td class="w-5 !text-center badge variant-glass-error">-</td>
+              <th>Lançamentos</th>
+              <td class="px-2">{formatMoeda(-totalLancamentos)}</td>
+              <th />
+              <td class="px-2" />
             </tr>
-            {#if totalOutrasReceitas !== 0}
-              <tr>
-                <th>Outras Receitas</th>
-                <td class="px-2">{formatMoeda(totalOutrasReceitas)}</td>
-                <td class="w-5 !text-center badge variant-glass-error">-</td>
-              </tr>
-            {/if}
             <tr>
               <td colspan="100">
                 <hr />
               </td>
             </tr>
             <tr>
-              <th>Total Final</th>
-              <td class="px-2">{formatMoeda(totalFinal)}</td>
-              {#if totalFinal === 0}
-                <td class="w-5 !text-center badge variant-filled-success">✓</td>
-              {:else}
-                <td class="w-5 !text-center badge variant-filled-error">✕</td>
-              {/if}
+              <th>Total a Pagar</th>
+              <td class="px-2" class:text-success-500={totalFinal === 0} class:text-error-500={totalFinal < 0}>{formatMoeda(totalAPagar)}</td>
+              <th>Total Pago</th>
+              <td class="px-2" class:text-success-500={totalFinal === 0} class:text-error-500={totalFinal > 0}>{formatMoeda(totalPago)}</td>
             </tr>
           </table>
         {/if}
+        <div class="grid gap-2">
+          <HelperMessage message={fimMsg} type={totalFinal > 0 ? 'warning' : 'success'} />
+          <form bind:this={inputForm} method="POST" use:enhance>
+            <button
+              type="submit"
+              on:click|preventDefault={abrirModalConfirmacao}
+              class="btn bg-gradient-to-br from-lime-500 to-orange-400 w-min"
+              disabled={totalFinal !== 0 || totalItens === 0 || $submitting}
+            >
+              {#if $submitting}
+                <Icon icon="line-md:loading-twotone-loop" width="24px" height="24px" />
+                <p>Enviando...</p>
+              {:else}
+                <Icon icon="mdi:package-variant-closed-check" width="24px" height="24px" />
+                <p>Finalizar</p>
+              {/if}
+            </button>
+          </form>
+        </div>
       </div>
 
-      <form bind:this={inputForm} method="POST" use:enhance class="col-span-6 self-center">
-        <button
-          type="submit"
-          on:click|preventDefault={abrirModalConfirmacao}
-          class="btn bg-gradient-to-br from-lime-500 to-orange-400 w-min"
-          disabled={totalFinal !== 0 || totalItens === 0 || $submitting}
-        >
-          {#if $submitting}
-            <Icon icon="line-md:loading-twotone-loop" width="24px" height="24px" />
-            <p>Enviando...</p>
-          {:else}
-            <Icon icon="mdi:package-variant-closed-check" width="24px" height="24px" />
-            <p>Finalizar</p>
-          {/if}
-        </button>
-      </form>
       <!-- *Debugger -->
       <!-- <div class="col-span-12">
         <SuperDebug data={{ $errors, $form }} />

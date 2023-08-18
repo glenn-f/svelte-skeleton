@@ -240,6 +240,11 @@ function getTipos(classe) {
   return tipos
 }
 
+export function getClasseContabil(tipo) {
+  const classe = Math.ceil(tipo / 1000)
+  return mapFluxoContabilClasse.get(classe)
+}
+
 export const TIPOS_RECEITA = getTipos(FCC_RECEITA)
 export const TIPOS_CUSTO = getTipos(FCC_CUSTO)
 export const TIPOS_DESPESA = getTipos(FCC_DESPESA)

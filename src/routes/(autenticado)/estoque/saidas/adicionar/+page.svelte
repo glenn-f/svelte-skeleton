@@ -42,15 +42,15 @@
   $: isVenda = [PE_VENDA_COM_BUYBACK, PE_VENDA].includes($form.tipo_pe)
   $: isPerda = $form.tipo_pe === PE_PERDA
   $: hasBuyback = $form.tipo_pe === PE_VENDA_COM_BUYBACK
-  $: totalItens = $form.estoque_saida?.reduce((acc, e) => e.qntd + acc, 0) ?? 0
+  $: totalItensSaida = $form.estoque_saida?.reduce((acc, e) => e.qntd + acc, 0) ?? 0
   $: totalItensBuyback = $form.buyback?.reduce((acc, e) => e.qntd + acc, 0) ?? 0
-  $: totalSaida = $form.estoque_saida?.reduce((acc, e) => e.valor * e.qntd + acc, 0) ?? 0
-  $: totalBuyback = hasBuyback ? $form.buyback?.reduce((acc, e) => e.custo + acc, 0) ?? 0 : 0
+  $: totalValorSaida = $form.estoque_saida?.reduce((acc, e) => e.valor * e.qntd + acc, 0) ?? 0
+  $: totalValorBuyback = hasBuyback ? $form.buyback?.reduce((acc, e) => e.custo + acc, 0) ?? 0 : 0
   $: totalTransacoes = $form.transacoes?.reduce((acc, e) => e.valor + acc, 0) ?? 0
   $: totalOutrosCustos = $form.contabil?.reduce((acc, e) => (isCusto(e.tipo_fc) ? e.valor : 0) + acc, 0) ?? 0
   $: totalOutrasReceitas = $form.contabil?.reduce((acc, e) => (isReceita(e.tipo_fc) ? e.valor : 0) + acc, 0) ?? 0
-  $: totalAReceber = totalSaida + totalOutrasReceitas
-  $: totalRecebido = totalTransacoes + totalBuyback
+  $: totalAReceber = totalValorSaida + totalOutrasReceitas
+  $: totalRecebido = totalTransacoes + totalValorBuyback
   $: totalFinal = isPerda ? 0 : totalAReceber - totalRecebido
   $: labelItem = isVenda ? 'Venda' : isPerda ? 'Perda' : 'Saída'
   $: fimMsg = totalFinal > 0 ? `Falta receber ${formatMoeda(totalFinal)} em transações ou buybacks` : totalFinal < 0 ? `Adicione ${formatMoeda(-totalFinal)} em lançamentos ou vendas` : ''
@@ -264,10 +264,10 @@
                   <th>Totais</th>
                 {/if}
                 <th colspan="6" class="text-right">Totais</th>
-                <td>{totalItens}</td>
+                <td>{totalItensSaida}</td>
                 {#if !isPerda}
                   <td />
-                  <td>{totalSaida}</td>
+                  <td>{totalValorSaida}</td>
                 {/if}
                 <td colspan="100" />
               </tr>
@@ -335,7 +335,7 @@
                   <th colspan="5" class="text-right">Totais</th>
                   <td>{totalItensBuyback}</td>
                   <td />
-                  <td>{formatMoeda(totalBuyback)}</td>
+                  <td>{formatMoeda(totalValorBuyback)}</td>
                   <td colspan="100" />
                 </tr>
               </tfoot>
@@ -459,11 +459,11 @@
       {/if}
 
       <div class="col-span-12 flex gap-2 justify-center items-center">
-        {#if totalItens > 0 && !isPerda}
+        {#if totalItensSaida > 0 && !isPerda}
           <table class="text-right whitespace-nowrap">
             <tr>
               <th>Vendas</th>
-              <td class="px-2">{formatMoeda(totalSaida)}</td>
+              <td class="px-2">{formatMoeda(totalValorSaida)}</td>
               <th>Transações</th>
               <td class="px-2">{formatMoeda(totalTransacoes)}</td>
             </tr>
@@ -471,7 +471,7 @@
               <th>Lançamentos</th>
               <td class="px-2">{formatMoeda(totalOutrasReceitas)}</td>
               <th>Buybacks</th>
-              <td class="px-2">{formatMoeda(totalBuyback)}</td>
+              <td class="px-2">{formatMoeda(totalValorBuyback)}</td>
             </tr>
             <tr>
               <td colspan="100">
@@ -493,7 +493,7 @@
               type="submit"
               on:click|preventDefault={abrirModalConfirmacao}
               class="btn bg-gradient-to-br from-lime-500 to-orange-400 w-min"
-              disabled={totalFinal !== 0 || totalItens === 0 || $submitting}
+              disabled={totalFinal !== 0 || totalItensSaida === 0 || $submitting}
             >
               {#if $submitting}
                 <Icon icon="line-md:loading-twotone-loop" width="24px" height="24px" />

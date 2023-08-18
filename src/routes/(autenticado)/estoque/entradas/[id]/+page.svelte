@@ -2,22 +2,24 @@
   import ExternalLinkIcon from '$lib/components/ExternalLinkIcon.svelte'
   import Button from '$lib/components/Forms/Button.svelte'
   import ShowBox from '$lib/components/ShowBox.svelte'
-  import { FCC_CUSTO, mapCondicao, mapFluxoContabil, mapFluxoContabilClasse, mapFluxoEstoque, mapFluxoFinanceiro, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
-  import { formatDateTime, formatMoeda } from '$lib/helpers.js'
+  import { getClasseContabil, isCusto, isReceita, mapCondicao, mapFluxoContabil, mapFluxoEstoque, mapFluxoFinanceiro, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
+  import { formatDateTime } from '$lib/helpers.js'
   import Icon from '@iconify/svelte'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import VariacaoNumero from '../../../../../lib/components/VariacaoNumero.svelte'
   export let data
 
   $: entrada = data.entrada || {}
-  $: totalVariacaoEstoque = entrada.fe?.reduce((acc, { qntd }) => acc + qntd, 0)
-  $: totalCustoEstoque = entrada.fe?.reduce((acc, { custo }) => acc + custo, 0)
-  $: totalTransacoes = entrada.ff?.reduce((acc, { valor }) => acc - valor, 0)
-  $: totalEncargos = entrada.ff?.reduce((acc, { valor_encargo }) => acc - (valor_encargo || 0), 0)
-  $: totalOutrosLancamentos = entrada.fc?.reduce((acc, { valor, classe_fc }) => acc + valor, 0)
-  $: resultadoTransacoes = totalTransacoes + totalEncargos
-  $: resultadoEstoque = totalCustoEstoque + totalEncargos + totalOutrosLancamentos
-  $: resultadoContabil = resultadoTransacoes + resultadoEstoque
+  $: totalQntdEstoque = entrada.fe?.reduce((acc, { var_qntd }) => acc + var_qntd, 0)
+  $: totalCustoEstoque = entrada.fe?.reduce((acc, { var_custo }) => acc + var_custo, 0)
+  $: totalTransacoes = entrada.ff?.reduce((acc, { valor }) => acc + valor, 0)
+  $: totalEncargos = entrada.ff?.reduce((acc, { encargo_valor }) => acc + (encargo_valor || 0), 0)
+  $: totalOutrosLancamentos = entrada.fc?.reduce((acc, { valor }) => acc + valor, 0)
+  $: totalCustos = entrada.fc?.reduce((acc, { valor, tipo_fc }) => acc + (isCusto(tipo_fc) ? valor : 0), 0)
+  $: totalReceitas = entrada.fc?.reduce((acc, { valor, tipo_fc }) => acc + (isReceita(tipo_fc) ? valor : 0), 0)
+  $: varTransacoes = totalTransacoes + totalEncargos
+  $: varPatrimonio = totalCustoEstoque + varTransacoes
+  $: resultadoContabil = totalCustos + totalReceitas
   //TODO somar custo rateado do estoque (valor lançamento = custo aquisicao, outros lançamentos = lançamentos rateados, total lancamentos = custo + outros )
 </script>
 
@@ -79,12 +81,29 @@
       </div>
       <div class="col-span-2">
         <ShowBox label="Variação Saldo Contas">
-          <VariacaoNumero value={totalTransacoes} type="currency" />
+          <VariacaoNumero value={varTransacoes} type="currency" />
         </ShowBox>
       </div>
       <div class="col-span-2">
         <ShowBox label="Variação Valor Estoque">
-          <VariacaoNumero value={resultadoEstoque} type="currency" />
+          <VariacaoNumero value={totalCustoEstoque} type="currency" />
+        </ShowBox>
+      </div>
+      <div class="col-span-2">
+        <ShowBox label="Variação Patrimonial">
+          <VariacaoNumero value={varPatrimonio} type="currency" />
+        </ShowBox>
+      </div>
+
+      <div class="col-span-6" />
+      <div class="col-span-2">
+        <ShowBox label="Custo Total">
+          <VariacaoNumero value={totalCustos} type="currency" />
+        </ShowBox>
+      </div>
+      <div class="col-span-2">
+        <ShowBox label="Receita Total">
+          <VariacaoNumero value={totalReceitas} type="currency" />
         </ShowBox>
       </div>
       <div class="col-span-2">
@@ -103,6 +122,7 @@
           text="Iniciar Estorno"
           data-tooltip="Efetuar estorno parcial ou total do processo"
           class="variant-filled-error"
+          disabled
           icon="fa-solid:undo-alt"
         />
         <Button
@@ -110,6 +130,7 @@
           text="Editar Processo"
           data-tooltip="Editar o processo, estoques, transações e lançamentos"
           class="variant-filled-tertiary"
+          disabled
           icon="fa6-solid:pen-to-square"
         />
       </div>
@@ -121,6 +142,7 @@
         <table class="table table-hover text-center whitespace-nowrap">
           <thead>
             <tr class="!text-center">
+              <th class="w-0">EID</th>
               <th class="w-0">Fluxo Estoque</th>
               <th>Responsável</th>
               <th>Origem</th>
@@ -129,19 +151,22 @@
               <th>Código</th>
               <th>Observações</th>
               <!-- <th>Fluxo Contábil</th> -->
-              <th class="w-0">Variação Estoque</th>
-              <th class="w-0" data-placement="left" data-tooltip="O Custo do Estoque é um lançamento contábil"> Valor Lançamento </th>
+              <th class="w-0">Qntd Estoque</th>
+              <th class="w-0">Valor Estoque</th>
               <th class="w-0">#</th>
             </tr>
           </thead>
           <tbody>
             {#each entrada.fe ?? [] as fluxo, i}
               <tr class="!whitespace-nowrap">
+                <td>{fluxo.estoque_id}</td>
                 <td>{mapFluxoEstoque.get(fluxo.tipo_fe)}</td>
                 <td>
                   <div class="flex gap-1 items-center justify-center">
-                    {fluxo.responsavel ?? ''}
-                    <ExternalLinkIcon href={`/estoque/pessoas/${fluxo.responsavel_id}`} data-tooltip="Abrir Detalhes do Responsável" data-placement="top" />
+                    {fluxo.responsavel ?? '-'}
+                    {#if fluxo.responsavel}
+                      <ExternalLinkIcon href={`/estoque/pessoas/${fluxo.responsavel_id}`} data-tooltip="Abrir Detalhes do Responsável" data-placement="top" />
+                    {/if}
                   </div>
                 </td>
                 <td>{mapOrigem.get(fluxo.origem)}</td>
@@ -155,8 +180,8 @@
                 <td>{fluxo.codigo ?? ''}</td>
                 <td>{fluxo.observacoes ?? ''}</td>
                 <!-- <td>{mapFluxoContabil.get(fluxo.tipo_fc) ?? ''}</td> -->
-                <td><VariacaoNumero value={fluxo.qntd} /></td>
-                <td>{formatMoeda(-fluxo.custo)}</td>
+                <td><VariacaoNumero value={fluxo.var_qntd} /></td>
+                <td><VariacaoNumero value={fluxo.var_custo} type="currency" /></td>
                 <td class="flex gap-1">
                   <ExternalLinkIcon href={`/estoque/inventario/${fluxo.estoque_id}`} data-tooltip="Abrir Detalhes do Estoque" data-placement="left" />
                 </td>
@@ -165,56 +190,16 @@
           </tbody>
           <tfoot class="!variant-soft">
             <tr class="!text-center">
-              <td colspan="6" />
+              <td colspan="7" />
               <th class="text-right">Total</th>
-              <td><VariacaoNumero value={totalVariacaoEstoque} /></td>
-              <td>{formatMoeda(totalCustoEstoque)}</td>
+              <td><VariacaoNumero value={totalQntdEstoque} /></td>
+              <td><VariacaoNumero value={totalCustoEstoque} type="currency" /></td>
               <td colspan="100" />
             </tr>
           </tfoot>
         </table>
       </div>
 
-      <div class="col-span-12 flex items-center">
-        <h3 class="h3 text-center mr-3">Outros Lançamentos</h3>
-      </div>
-
-      <div class="col-span-12 table-container border border-surface-600">
-        <table class="table table-hover text-center whitespace-nowrap">
-          <thead>
-            <tr class="!text-center">
-              <th class="w-0">Fluxo Contábil</th>
-              <th>Classe</th>
-              <th>Observações</th>
-              <th class="w-0">Valor Lançamento</th>
-              <th class="w-0">#</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each entrada?.fc ?? [] as { classe_fc, tipo_fc, valor, observacoes }, j}
-              <tr>
-                <td class="!whitespace-nowrap">{mapFluxoContabil.get(tipo_fc)}</td>
-                <td class="!whitespace-nowrap">{mapFluxoContabilClasse.get(classe_fc)}</td>
-                <td>{observacoes ?? ''}</td>
-                <td>{formatMoeda(valor * (classe_fc == FCC_CUSTO ? -1 : 1))}</td>
-                <td class="w-0" />
-              </tr>
-            {:else}
-              <tr>
-                <td colspan="100">Nenhum lançamento foi encontrado</td>
-              </tr>
-            {/each}
-          </tbody>
-          <tfoot class="!variant-soft">
-            <tr class="!text-center">
-              <td colspan="2" />
-              <th class="text-right">Total</th>
-              <td>{formatMoeda(totalOutrosLancamentos)}</td>
-              <td />
-            </tr>
-          </tfoot>
-        </table>
-      </div>
       <div class="col-span-12 flex items-center">
         <h3 class="h3 text-center mr-3">Transações</h3>
       </div>
@@ -248,9 +233,9 @@
                     <ExternalLinkIcon href={`/cadastros/contas/formas/${fluxo.conta_forma_id}`} data-tooltip="Abrir Cadastro da Forma de Transação" data-placement="top" />
                   </div>
                 </td>
-                <td>{formatMoeda(fluxo.valor)}</td>
-                <td>{formatMoeda(fluxo.valor_encargo) || '-'}</td>
-                <td>{formatMoeda(fluxo.valor + (fluxo.valor_encargo ?? 0))}</td>
+                <td><VariacaoNumero value={fluxo.valor} type="currency" /></td>
+                <td><VariacaoNumero value={fluxo.encargo_valor} type="currency" /></td>
+                <td><VariacaoNumero value={fluxo.valor + (fluxo.encargo_valor ?? 0)} type="currency" /></td>
                 <td class="flex gap-1">
                   <ExternalLinkIcon href={`/transacoes/historico/${fluxo.id}`} data-tooltip="Abrir Detalhes da Transação" data-placement="left" />
                 </td>
@@ -265,18 +250,104 @@
             <tr class="!text-center">
               <td colspan="2" />
               <th class="text-right">Total</th>
-              <td>{formatMoeda(totalTransacoes)}</td>
-              <td>{formatMoeda(totalEncargos)}</td>
-              <td>{formatMoeda(resultadoTransacoes)}</td>
+              <td><VariacaoNumero value={totalTransacoes} type="currency" /></td>
+              <td><VariacaoNumero value={totalEncargos} type="currency" /></td>
+              <td><VariacaoNumero value={varTransacoes} type="currency" /></td>
               <td />
             </tr>
           </tfoot>
         </table>
       </div>
 
-      <div class="col-span-12">
-        <SuperDebug data={entrada} />
+      <div class="col-span-12 flex items-center">
+        <h3 class="h3 text-center mr-3">Lançamentos Contábeis por Estoque</h3>
       </div>
+
+      <div class="col-span-12 table-container border border-surface-600">
+        <table class="table table-hover text-center whitespace-nowrap">
+          <thead>
+            <tr class="!text-center">
+              <th class="w-0">EID</th>
+              <th>Fluxo Contábil</th>
+              <th>Classe</th>
+              <th>Produto</th>
+              <th>Observações</th>
+              <th class="w-0">Valor Lançamento</th>
+              <th class="w-0">#</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each entrada?.fc ?? [] as { produto, estoque_id, tipo_fc, valor, observacoes }, j}
+              <tr>
+                <td class="!whitespace-nowrap">{estoque_id}</td>
+                <td class="!whitespace-nowrap">{mapFluxoContabil.get(tipo_fc)}</td>
+                <td class="!whitespace-nowrap">{getClasseContabil(tipo_fc)}</td>
+                <td class="!whitespace-nowrap">{produto}</td>
+                <td>{observacoes ?? ''}</td>
+                <td><VariacaoNumero value={valor} type="currency" /></td>
+                <td class="w-0" />
+              </tr>
+            {:else}
+              <tr>
+                <td colspan="100">Nenhum lançamento foi encontrado</td>
+              </tr>
+            {/each}
+          </tbody>
+          <tfoot class="!variant-soft">
+            <tr class="!text-center">
+              <td colspan="4" />
+              <th class="text-right">Total</th>
+              <td><VariacaoNumero value={totalOutrosLancamentos} type="currency" /></td>
+              <td colspan="100" />
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      
+      <div class="col-span-12 flex items-center">
+        <h3 class="h3 text-center mr-3">Lançamentos Contábeis do Processo</h3>
+      </div>
+
+      <div class="col-span-12 table-container border border-surface-600">
+        <table class="table table-hover text-center whitespace-nowrap">
+          <thead>
+            <tr class="!text-center">
+              <th>Fluxo Contábil</th>
+              <th>Classe</th>
+              <th>Observações</th>
+              <th class="w-0">Valor Lançamento</th>
+              <th class="w-0">#</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each entrada?.fcg ?? [] as { tipo_fc, valor, observacoes }, j}
+              <tr>
+                <td class="!whitespace-nowrap">{mapFluxoContabil.get(tipo_fc)}</td>
+                <td class="!whitespace-nowrap">{getClasseContabil(tipo_fc)}</td>
+                <td>{observacoes ?? ''}</td>
+                <td><VariacaoNumero value={valor} type="currency" /></td>
+                <td class="w-0" />
+              </tr>
+            {:else}
+              <tr>
+                <td colspan="100">Nenhum lançamento foi encontrado</td>
+              </tr>
+            {/each}
+          </tbody>
+          <tfoot class="!variant-soft">
+            <tr class="!text-center">
+              <td colspan="2" />
+              <th class="text-right">Total</th>
+              <td><VariacaoNumero value={totalOutrosLancamentos} type="currency" /></td>
+              <td colspan="100" />
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- <div class="col-span-12">
+        <SuperDebug data={entrada} />
+      </div> -->
     </div>
   </div>
 </div>

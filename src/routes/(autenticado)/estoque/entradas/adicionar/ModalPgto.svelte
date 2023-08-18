@@ -5,15 +5,14 @@
   import { formatMoeda } from '$lib/helpers'
   import { addPgtoEntradaSchema } from '$lib/zod/schemas/contaFormas'
   import { modalStore } from '@skeletonlabs/skeleton'
-  export let formas, entrada, totalFinal
-  let pagamento = {}
+  export let formas, store, totalFinal
+  let form = {}
   let errors = {}
-  let errorMessage = ''
 
   function handleAdicionar() {
-    const validation = addPgtoEntradaSchema.safeParse(pagamento)
+    const validation = addPgtoEntradaSchema.safeParse(form)
     if (validation.success) {
-      $entrada.transacoes = [...$entrada.transacoes, validation.data]
+      $store.transacoes = [...$store.transacoes, validation.data]
       modalStore.close()
     } else {
       errors = { ...validation.error?.flatten()?.fieldErrors }
@@ -22,18 +21,17 @@
 
   function onFormaChange(v) {
     if (v?.parcelamentos?.length > 0) {
-      if (!v.parcelamentos.find((v) => v.forma_transacao_id === pagamento.forma_transacao_id)) pagamento.forma_transacao_id = undefined
+      if (!v.parcelamentos.find((v) => v.forma_transacao_id === form.forma_transacao_id)) form.forma_transacao_id = undefined
     } else {
-      pagamento.forma_transacao_id = v?.forma_transacao_id
+      form.forma_transacao_id = v?.forma_transacao_id
     }
   }
   function definirPrecoRestante() {
-    pagamento.valor = totalFinal
-    setFocus()
+    form.valor = totalFinal
   }
 
-  $: formas_parcelamentos = pagamento.forma?.parcelamentos
-  $: onFormaChange(pagamento.forma)
+  $: formasParcelamentos = form.forma?.parcelamentos
+  $: onFormaChange(form.forma)
 </script>
 
 <CardModal>
@@ -51,18 +49,26 @@
       </div>
     {/if}
     <div class="col-span-12 grid grid-cols-12 gap-2">
-      <div class="col-span-5">
-        <InputMoeda label="Preço Unitário" bind:value={pagamento.valor} error={errors.valor} required />
+      <div class="col-span-4">
+        <InputMoeda label="Valor Transação" bind:value={form.valor} error={errors.valor} required />
       </div>
-      <div class={`col-span-${formas_parcelamentos?.length > 0 ? '5' : '7'}`}>
-        <InputSelect label="Forma de Transação" bind:value={pagamento.forma} options={formas} getOptionValue={(v) => v} getOptionLabel={(v) => v.nome} error={errors.forma_transacao_id} required />
+      <div class={`col-span-${formasParcelamentos?.length > 0 ? '6' : '8'}`}>
+        <InputSelect
+          label="Forma de Transação"
+          bind:value={form.forma}
+          options={formas}
+          getOptionValue={(v) => v}
+          getOptionLabel={(v) => v.conta + ': ' + v.forma}
+          error={errors.forma_transacao_id}
+          required
+        />
       </div>
-      {#if formas_parcelamentos?.length > 0}
+      {#if formasParcelamentos?.length > 0}
         <div class="col-span-2">
           <InputSelect
             label="Parcelamento"
-            bind:value={pagamento.forma_transacao_id}
-            options={formas_parcelamentos}
+            bind:value={form.forma_transacao_id}
+            options={formasParcelamentos}
             getOptionValue={(v) => v.forma_transacao_id}
             getOptionLabel={(v) => `${v.parcela}x`}
             required

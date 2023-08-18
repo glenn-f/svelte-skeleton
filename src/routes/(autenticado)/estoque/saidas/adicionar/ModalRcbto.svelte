@@ -9,7 +9,6 @@
   export let formas, store, totalFinal
   let form = {}
   let errors = {}
-  let errorMessage = ''
 
   function handleAdicionar() {
     const validation = addPgtoEntradaSchema.safeParse(form)
@@ -52,7 +51,7 @@
     {/if}
     <div class="col-span-12 grid grid-cols-12 gap-2">
       <div class="col-span-4">
-        <InputMoeda label="Preço Unitário" bind:value={form.valor} error={errors.valor} required />
+        <InputMoeda label="Valor Transação" bind:value={form.valor} error={errors.valor} required />
       </div>
       <div class={`col-span-${formas_parcelamentos?.length > 0 ? '6' : '8'}`}>
         <InputSelect

@@ -3,7 +3,7 @@
   import InputMoeda from '$lib/components/Forms/InputMoeda.svelte'
   import InputNumber from '$lib/components/Forms/InputNumber.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
-  import { FCC_CUSTO, mapCondicao, mapEstadoEstoque, mapFluxoContabil, mapFluxoContabilClasse, mapFluxoEstoque, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
+  import { FCC_CUSTO, getClasseContabil, mapCondicao, mapEstadoEstoque, mapFluxoContabil, mapFluxoContabilClasse, mapFluxoEstoque, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
   import { formatDateTime, formatMoeda } from '$lib/helpers.js'
   import { fade } from 'svelte/transition'
   import Icon from '@iconify/svelte'
@@ -13,6 +13,7 @@
   import InputGroup from '$lib/components/Forms/InputGroup.svelte'
   import IconButton from '$lib/components/IconButton.svelte'
   import Button from '$lib/components/Forms/Button.svelte'
+  import VariacaoNumero from '$lib/components/VariacaoNumero.svelte'
   export let data
 
   $: estoque = data.estoque || {}
@@ -72,7 +73,7 @@
         <ShowBox label="Quantidade">{estoque.qntd}</ShowBox>
       </div>
       <div class="col-span-3 lg:col-span-2">
-        <ShowBox label="Custo Unitário">{formatMoeda(estoque.custo / estoque.qntd)}</ShowBox>
+        <ShowBox label="Custo Unitário">{formatMoeda(estoque.custo)}</ShowBox>
       </div>
       <div class="col-span-3 lg:col-span-2">
         <ShowBox label="Preço de Venda Unitário">{formatMoeda(estoque.preco_unitario) || '-'}</ShowBox>
@@ -110,6 +111,7 @@
           text="Lançamentos"
           data-tooltip="Efetuar lançamentos de custos e receitas"
           class="variant-filled-secondary"
+          disabled
           icon="fa6-solid:plus"
         />
         <Button
@@ -118,6 +120,7 @@
           data-tooltip="Editar a descrição do item, o estado e preço de venda"
           class="variant-filled-tertiary"
           icon="fa6-solid:pen-to-square"
+          disabled
         />
       </div>
       <div class="col-span-12 flex items-center">
@@ -133,13 +136,13 @@
               <th>Processo</th>
               <th>Fluxo</th>
               <th>Observações</th>
-              <th class="w-0">Variação de Estoque</th>
-              <th class="w-0">Lançamentos</th>
+              <th class="w-0">Quantidade</th>
+              <th class="w-0">Valor Estoque</th>
               <th class="w-0">#</th>
             </tr>
           </thead>
           <tbody>
-            {#each estoque.pes ?? [] as { pe_id, tipo_pe, criacao, tipo_fe, qntd, fe_observacoes, contabil, hidden }, i}
+            {#each estoque.pes ?? [] as { pe_id, tipo_pe, criacao, tipo_fe, var_qntd, var_custo, fe_observacoes, contabil, hidden }, i}
               <tr>
                 <td>
                   <button
@@ -156,15 +159,12 @@
                 <td>{mapProcessoEstoque.get(tipo_pe)}</td>
                 <td>{mapFluxoEstoque.get(tipo_fe)}</td>
                 <td>{fe_observacoes ?? ''}</td>
-                <td class="flex gap-1 justify-center items-center" class:text-green-500={qntd > 0} class:text-red-500={qntd < 0}>
-                  {#if qntd > 0}
-                    <Icon icon="fa6-solid:plus" />
-                  {:else if qntd < 0}
-                    <Icon icon="fa6-solid:minus" />
-                  {/if}
-                  {qntd}
+                <td>
+                  <VariacaoNumero value={var_qntd} />
                 </td>
-                <td>{formatMoeda(contabil.reduce((acc, { valor, classe_fc }) => acc + valor * (classe_fc == FCC_CUSTO ? -1 : 1), 0))}</td>
+                <td>
+                  <VariacaoNumero value={var_custo} type="currency" />
+                </td>
                 <td class="flex gap-1">
                   <ExternalLinkIcon href={`/estoque/entradas/${pe_id}`} data-tooltip="Abrir" />
                 </td>
@@ -188,13 +188,15 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {#each contabil ?? [] as { classe_fc, tipo_fc, valor, fc_observacoes }, j}
+                          {#each contabil ?? [] as { tipo_fc, valor, fc_observacoes }, j}
                             <tr>
                               <td />
-                              <td>{mapFluxoContabilClasse.get(classe_fc)}</td>
+                              <td>{getClasseContabil(tipo_fc)}</td>
                               <td>{mapFluxoContabil.get(tipo_fc)}</td>
                               <td>{fc_observacoes ?? ''}</td>
-                              <td>{formatMoeda(valor * (classe_fc == FCC_CUSTO ? -1 : 1))}</td>
+                              <td>
+                                <VariacaoNumero value={valor} type="currency" />
+                              </td>
                             </tr>
                           {/each}
                         </tbody>

@@ -8,34 +8,34 @@
   import InputNumber from '$lib/components/Forms/InputNumber.svelte'
   import InputMoeda from '$lib/components/Forms/InputMoeda.svelte'
   import { addItemEntradaSchema } from '$lib/zod/schemas/estoque'
-  export let produtosAutocomplete, entrada
-  let buscar_produto, produto_selecionado, inputSearch
+  export let produtosAutocomplete, store
+  let buscarProduto, produtoSelecionado, inputSearch
   const itemInitial = { qntd: 1 }
   let item = { ...itemInitial }
   let errors = {}
   let errorMessage = ''
 
   function onSelection(event) {
-    produto_selecionado = event.detail.meta
+    produtoSelecionado = event.detail.meta
     item.produto_id = event.detail.value
-    buscar_produto = ''
+    buscarProduto = ''
   }
   function handleAdicionar() {
     const validation = addItemEntradaSchema.safeParse(item)
     if (validation.success) {
-      $entrada.estoque = [...$entrada.estoque, validation.data]
+      $store.estoque = [...$store.estoque, validation.data]
       modalStore.close()
     } else {
       errors = { ...validation.error?.flatten()?.fieldErrors }
     }
   }
   function handleResetar() {
-    produto_selecionado = undefined
+    produtoSelecionado = undefined
     item = { ...itemInitial }
     errors = {}
     errorMessage = ''
   }
-  $: if (!produto_selecionado) inputSearch?.focus()
+  $: if (!produtoSelecionado) inputSearch?.focus()
 </script>
 
 <CardModal>
@@ -44,11 +44,11 @@
   </svelte:fragment>
   <section class="grid grid-cols-12 gap-1 px-3">
     <div class="col-span-12 grid grid-cols-12 gap-2">
-      {#if produto_selecionado}
+      {#if produtoSelecionado}
         <div class="col-span-9">
           <label class="label">
             <b class="text-xs">Produto Selecionado</b>
-            <input type="text" class="input" readonly value={produto_selecionado?.nome} />
+            <input type="text" class="input" readonly value={produtoSelecionado?.nome} />
           </label>
         </div>
         <div class="col-span-3 self-end">
@@ -73,7 +73,7 @@
           <InputSelect label="Estado Inicial" bind:value={item.estado} error={errors.estado} options={mapEstadoEstoque} required />
         </div>
         <div class="col-span-7">
-          <InputText label={'Código' + (produto_selecionado.titulo_codigo ? ` (${produto_selecionado.titulo_codigo})` : '')} bind:value={item.codigo} error={errors.codigo} />
+          <InputText label={'Código' + (produtoSelecionado.titulo_codigo ? ` (${produtoSelecionado.titulo_codigo})` : '')} bind:value={item.codigo} error={errors.codigo} />
         </div>
         <div class="col-span-5">
           <InputMoeda label="Preço Unitário" bind:value={item.preco_unitario} required={item.estado === EE_DISPONIVEL} error={errors.preco_unitario} />
@@ -83,9 +83,9 @@
         </div>
       {:else}
         <div class="col-span-12">
-          <input bind:this={inputSearch} class="input" type="search" name="demo" bind:value={buscar_produto} placeholder="Buscar produto..." />
+          <input bind:this={inputSearch} class="input" type="search" name="demo" bind:value={buscarProduto} placeholder="Buscar produto..." />
           <div class="card w-full max-h-40 p-4 overflow-y-auto" tabindex="-1">
-            <Autocomplete emptyState="Nenhum item encontrado." bind:input={buscar_produto} options={produtosAutocomplete} on:selection={onSelection} />
+            <Autocomplete emptyState="Nenhum item encontrado." bind:input={buscarProduto} options={produtosAutocomplete} on:selection={onSelection} />
           </div>
         </div>
       {/if}
@@ -97,7 +97,9 @@
 
   <div class="grid place-items-center gap-2" slot="footer">
     <div class="flex gap-2">
-      <button type="button" class="btn variant-filled-primary" on:click={handleAdicionar}>Adicionar</button>
+      {#if produtoSelecionado}
+         <button type="button" class="btn variant-filled-primary" on:click={handleAdicionar}>Adicionar</button>
+      {/if}
       <button type="button" class="btn variant-filled-secondary" on:click={modalStore.close}>Cancelar</button>
     </div>
   </div>
