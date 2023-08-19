@@ -1,4 +1,4 @@
-import { mapCausasErro } from "$lib/globals";
+import { FE_VENDA } from "$lib/globals";
 import { handleAnyError } from "$lib/helpers";
 import { intToCurrency } from "$lib/types";
 import { db } from "..";
@@ -17,6 +17,28 @@ export function consultarEstoques(dados) {
   const { empresa_id } = dados
   try {
     const data = db.prepare("SELECT pe.id entrada_id,pe.criacao data_entrada,fe.tipo_fe forma_entrada,e.id,e.produto_id,e.qntd,CAST(e.custo AS REAL)/10000 custo,CAST(e.preco_unitario AS REAL)/10000 preco_unitario,e.condicao,e.origem,e.codigo,e.estado,p.nome AS p_nome FROM estoque e LEFT JOIN fe ON fe.estoque_id = e.id AND fe.tipo_fe <= 100 JOIN produto p ON e.produto_id = p.id LEFT JOIN pe ON pe.id = fe.pe_id WHERE p.empresa_id = $empresa_id AND e.qntd > 0").all({ empresa_id })
+    return { valid: true, data }
+  } catch (e) {
+    console.error(e)
+    return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+  }
+}
+
+export function consultarEstoquesDisponivel(dados) {
+  const { empresa_id } = dados
+  try {
+    const data = db.prepare(`SELECT fe.tipo_fe forma_entrada,e.id,e.produto_id,e.qntd,CAST(e.custo AS REAL)/10000 custo,CAST(e.preco_unitario AS REAL)/10000 preco_unitario,e.condicao,e.origem,e.codigo,p.nome AS produto,e.observacoes FROM estoque e LEFT JOIN fe ON fe.estoque_id = e.id AND fe.tipo_fe <= 100 JOIN produto p ON e.produto_id = p.id LEFT JOIN pe ON pe.id = fe.pe_id WHERE p.empresa_id = $empresa_id AND e.qntd > 0 AND e.estado = 1`).all({ empresa_id })
+    return { valid: true, data }
+  } catch (e) {
+    console.error(e)
+    return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+  }
+}
+
+export function consultarEstoquesVendidos(dados) {
+  const { empresa_id } = dados
+  try {
+    const data = db.prepare(`SELECT v.nome vendedor,pe.criacao data_venda,e.id,e.produto_id,-fe.var_qntd qntd_venda,-CAST(fe.var_custo AS REAL)/10000 preco_total,e.condicao,e.origem,e.codigo,p.nome AS produto,e.observacoes FROM estoque e JOIN fe ON fe.estoque_id = e.id AND fe.tipo_fe = ${FE_VENDA} JOIN produto p ON e.produto_id = p.id JOIN pe ON pe.id = fe.pe_id LEFT JOIN pessoa v ON v.id = fe.responsavel_id WHERE p.empresa_id = $empresa_id`).all({ empresa_id })
     return { valid: true, data }
   } catch (e) {
     console.error(e)
