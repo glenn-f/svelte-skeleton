@@ -1,5 +1,4 @@
 import { consultarEstoques } from '$lib/server/db/models/estoque.js'
-import { consultarProdutos } from '$lib/server/db/models/produto.js'
 import { error } from '@sveltejs/kit'
 
 export async function load({ locals }) {
