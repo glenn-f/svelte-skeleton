@@ -4,7 +4,7 @@
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   import { FCC_CUSTO, FCC_RECEITA, mapCondicao, mapEstadoEstoque, mapFluxoContabil, mapFluxoContabilClasse, mapOrigem } from '$lib/globals'
-  import { formatMoeda } from '$lib/helpers'
+  import { formatMoeda, roundBy } from '$lib/helpers'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
   import { superForm } from 'sveltekit-superforms/client'
@@ -36,14 +36,14 @@
   $: mapFormas = formasMap(formas)
   $: produtosAutocomplete = produtos?.map((p) => ({ label: p.nome, value: p.id, meta: p }))
   $: totalItens = $form.estoque?.reduce((acc, e) => e.qntd + acc, 0) ?? 0
-  $: totalValorEntrada = $form.estoque?.reduce((acc, e) => e.custo + acc, 0) ?? 0
-  $: totalTransacoes = $form.transacoes?.reduce((acc, e) => e.valor + acc, 0) ?? 0
-  $: totalLancamentos = $form.contabil?.reduce((acc, e) => e.valor + acc, 0) ?? 0
-  $: totalFinal = totalValorEntrada - totalLancamentos - totalTransacoes
+  $: totalValorEntrada = roundBy($form.estoque?.reduce((acc, e) => e.custo + acc, 0) ?? 0, 2)
+  $: totalTransacoes = roundBy($form.transacoes?.reduce((acc, e) => e.valor + acc, 0) ?? 0, 2)
+  $: totalLancamentos = roundBy($form.contabil?.reduce((acc, e) => e.valor + acc, 0) ?? 0, 2)
+  $: totalFinal = roundBy(totalValorEntrada - totalLancamentos - totalTransacoes, 2)
+  $: totalAPagar = roundBy(totalValorEntrada - totalLancamentos, 2)
+  $: totalPago = roundBy(totalTransacoes, 2)
   $: fimMsg = totalFinal > 0 ? `Falta adicionar ${formatMoeda(totalFinal)} em transações` : totalFinal < 0 ? `Adicione ${formatMoeda(-totalFinal)} compras` : ''
-  $: totalAPagar = totalValorEntrada - totalLancamentos
-  $: totalPago = totalTransacoes
-  
+
   function formasMap(formas) {
     const mapa = new Map()
     for (let i = 0; i < formas?.length; i++) {

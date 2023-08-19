@@ -20,6 +20,7 @@
   $: varTransacoes = totalTransacoes + totalEncargos
   $: varPatrimonio = totalCustoEstoque + varTransacoes
   $: resultadoContabil = totalCustos + totalReceitas
+  $: console.log({totalOutrosLancamentos,totalEncargos})
   //TODO somar custo rateado do estoque (valor lançamento = custo aquisicao, outros lançamentos = lançamentos rateados, total lancamentos = custo + outros )
 </script>
 

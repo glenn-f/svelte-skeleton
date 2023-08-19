@@ -6,7 +6,7 @@
   import InputSelectRadio from '$lib/components/Forms/InputSelectRadio.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   import { PES_SAIDA, PE_PERDA, PE_VENDA, PE_VENDA_COM_BUYBACK, isCusto, isReceita, mapCondicao, mapEstadoEstoque, mapFEPerdas, mapFluxoContabil, mapOrigem } from '$lib/globals'
-  import { formatMoeda } from '$lib/helpers'
+  import { formatMoeda, roundBy } from '$lib/helpers'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
   import { writable } from 'svelte/store'
@@ -44,14 +44,14 @@
   $: hasBuyback = $form.tipo_pe === PE_VENDA_COM_BUYBACK
   $: totalItensSaida = $form.estoque_saida?.reduce((acc, e) => e.qntd + acc, 0) ?? 0
   $: totalItensBuyback = $form.buyback?.reduce((acc, e) => e.qntd + acc, 0) ?? 0
-  $: totalValorSaida = $form.estoque_saida?.reduce((acc, e) => e.valor * e.qntd + acc, 0) ?? 0
-  $: totalValorBuyback = hasBuyback ? $form.buyback?.reduce((acc, e) => e.custo + acc, 0) ?? 0 : 0
-  $: totalTransacoes = $form.transacoes?.reduce((acc, e) => e.valor + acc, 0) ?? 0
-  $: totalOutrosCustos = $form.contabil?.reduce((acc, e) => (isCusto(e.tipo_fc) ? e.valor : 0) + acc, 0) ?? 0
-  $: totalOutrasReceitas = $form.contabil?.reduce((acc, e) => (isReceita(e.tipo_fc) ? e.valor : 0) + acc, 0) ?? 0
-  $: totalAReceber = totalValorSaida + totalOutrasReceitas
-  $: totalRecebido = totalTransacoes + totalValorBuyback
-  $: totalFinal = isPerda ? 0 : totalAReceber - totalRecebido
+  $: totalValorSaida = roundBy($form.estoque_saida?.reduce((acc, e) => e.valor * e.qntd + acc, 0) ?? 0, 2)
+  $: totalValorBuyback = roundBy(hasBuyback ? $form.buyback?.reduce((acc, e) => e.custo + acc, 0) ?? 0 : 0, 2)
+  $: totalTransacoes = roundBy($form.transacoes?.reduce((acc, e) => e.valor + acc, 0) ?? 0, 2)
+  $: totalOutrosCustos = roundBy($form.contabil?.reduce((acc, e) => (isCusto(e.tipo_fc) ? e.valor : 0) + acc, 0) ?? 0, 2)
+  $: totalOutrasReceitas = roundBy($form.contabil?.reduce((acc, e) => (isReceita(e.tipo_fc) ? e.valor : 0) + acc, 0) ?? 0, 2)
+  $: totalAReceber = roundBy(totalValorSaida + totalOutrasReceitas, 2)
+  $: totalRecebido = roundBy(totalTransacoes + totalValorBuyback, 2)
+  $: totalFinal = roundBy(isPerda ? 0 : totalAReceber - totalRecebido, 2)
   $: labelItem = isVenda ? 'Venda' : isPerda ? 'Perda' : 'Saída'
   $: fimMsg = totalFinal > 0 ? `Falta receber ${formatMoeda(totalFinal)} em transações ou buybacks` : totalFinal < 0 ? `Adicione ${formatMoeda(-totalFinal)} em lançamentos ou vendas` : ''
   function estoquesMap(prods) {
@@ -267,7 +267,7 @@
                 <td>{totalItensSaida}</td>
                 {#if !isPerda}
                   <td />
-                  <td>{totalValorSaida}</td>
+                  <td>{formatMoeda(totalValorSaida)}</td>
                 {/if}
                 <td colspan="100" />
               </tr>
@@ -509,7 +509,7 @@
 
       <!-- *Debugger -->
       <div class="col-span-12">
-        <SuperDebug data={{ $form }} />
+        <SuperDebug data={{ totalValorSaida, totalValorBuyback, totalTransacoes, totalOutrosCustos, totalOutrasReceitas, totalAReceber, totalRecebido, totalFinal }} />
       </div>
     </div>
   </div>

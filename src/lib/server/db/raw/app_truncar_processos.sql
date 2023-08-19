@@ -1,0 +1,11 @@
+DELETE FROM fc_ff;
+DELETE FROM fc_fe;
+DELETE FROM pe_fcg;
+DELETE FROM fc;
+DELETE FROM fe;
+DELETE FROM estoque;
+DELETE FROM pe_transacao;
+DELETE FROM transacao;
+DELETE FROM ff;
+DELETE FROM pe;
+DELETE FROM fcg;

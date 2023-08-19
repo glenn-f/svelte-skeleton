@@ -82,13 +82,17 @@ export function intToCurrency(intValue) {
 export function currencyToInt(currencyValue) {
   currencyValue = parseFloat(currencyValue)
   if (Number.isFinite(currencyValue)) {
-    return Math.round(currencyValue * CFD)
+    return Math.round(currencyValue * 100) * 100
   }
   return undefined
 }
 
 export function percToInt(perc) {
-  return currencyToInt(perc)
+  perc = parseFloat(perc)
+  if (Number.isFinite(perc)) {
+    return Math.round(perc * 10000)
+  }
+  return undefined
 }
 
 export function intToPerc(intValue) {

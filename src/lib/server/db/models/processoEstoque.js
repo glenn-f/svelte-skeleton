@@ -1,6 +1,6 @@
 import { EE_AVALIACAO, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FC_C_RECOMPRA_MERCADORIA, FC_R_VENDA_MERCADORIA, FE_BUYBACK, FE_COMPRA, FF_ENCARGO, FF_PAGAMENTO, FF_RECEBIMENTO, PE_COMPRA, PE_PERDA, mapCausasErro } from "$lib/globals"
 import { handleAnyError, rateioEstoque, roundBy } from "$lib/helpers"
-import { currencyToInt, intToPerc } from "$lib/types"
+import { currencyToInt, intToPerc, percToInt } from "$lib/types"
 import { begin, commit, db, dbInsert, dbSelectOne, dbUpdate, rollback } from ".."
 
 /**
@@ -95,11 +95,12 @@ export function criarEntrada(dados) {
     for (let i = 0; i < transacoes.length; i++) {
       let { forma_transacao_id, valor } = transacoes[i];
       let { conta_id, taxa_encargo } = contas.find((v) => v.id === forma_transacao_id) ?? {}
-      valor = -Math.abs(currencyToInt(valor))
+      valor = -valor
 
       //*Verificar se há encargo de transação
       let encargo_ff_id = undefined
-      let valor_encargo = (taxa_encargo * valor) || 0
+      let valor_encargo = currencyToInt((taxa_encargo * valor) || 0)
+      valor = currencyToInt(valor)
       if (valor_encargo) {
         //? Criar Fluxo Financeiro - Encargo
         const resEncargoFF = dbInsert('ff', { conta_id, tipo_ff: FF_ENCARGO, valor: valor_encargo, criador_id })
@@ -233,8 +234,8 @@ export function criarEntrada(dados) {
     const checkEstoque = db.prepare("SELECT CAST(SUM(e.custo) AS REAL)/10000 custo, CAST(SUM(fe.var_custo) AS REAL)/10000 var_custo FROM estoque e JOIN fe ON fe.estoque_id = e.id WHERE fe.pe_id = $pe_id").get({ pe_id })
     const checkTransacoes = db.prepare("SELECT CAST(SUM(ff.valor) AS REAL)/10000 pagamento FROM pe_transacao p JOIN transacao t ON p.transacao_id = t.id JOIN ff ON ff.id = t.transacao_ff_id WHERE p.pe_id = $pe_id").get({ pe_id })
 
-    if (!checkEstoque || checkEstoque.custo !== checkEstoque.var_custo) throw new Error ("(Compra) comparação de totais de estoque deu diferente")
-    if (checkEstoque.var_custo !== checkTransacoes?.pagamento || 0) throw new Error ("(Compra) comparação de totais de estoque e pagamento deu diferente")
+    if (!checkEstoque || checkEstoque.custo !== checkEstoque.var_custo) throw new Error("(Compra) comparação de totais de estoque deu diferente")
+    if (checkEstoque.var_custo !== (-checkTransacoes?.pagamento || 0)) throw new Error("(Compra) comparação de totais de estoque e pagamento deu diferente")
 
     commit.run()
     return { valid: true, data: pe_id }
@@ -270,7 +271,7 @@ export function criarSaida(dados) {
     //! Criar Buybacks
     for (let i = 0; i < buyback.length; i++) {
       let { custo, qntd, ...restBuyback } = buyback[i]
-      custo = Math.abs(currencyToInt(custo))
+      custo = currencyToInt(custo)
       const eFinal = { qntd, custo, estado: EE_AVALIACAO, ...restBuyback }
       const alteracoes_json = JSON.stringify([eFinal])
 
@@ -297,17 +298,17 @@ export function criarSaida(dados) {
     //! Criar Transações
     const encargos = []
     const forma_transacao_ids = transacoes.map((v) => v.forma_transacao_id).join(',')
-    const contas = db.prepare(`SELECT cf.conta_id,ft.id,ft.taxa_encargo FROM forma_transacao ft JOIN conta_forma cf ON cf.id = ft.conta_forma_id WHERE ft.id IN (${forma_transacao_ids})`).all()
+    const contas = db.prepare(`SELECT cf.conta_id,ft.id,ft.taxa_encargo/10000 taxa_encargo FROM forma_transacao ft JOIN conta_forma cf ON cf.id = ft.conta_forma_id WHERE ft.id IN (${forma_transacao_ids})`).all()
     for (let i = 0; i < transacoes.length; i++) {
       let { forma_transacao_id, valor } = transacoes[i];
       let { conta_id, taxa_encargo } = contas.find((v) => v.id === forma_transacao_id) ?? {}
 
       //*Verificar se há encargo de transação
       let encargo_ff_id = undefined
-      let valor_encargo = Math.abs((intToPerc(taxa_encargo) * valor) || 0)
+      let valor_encargo = -currencyToInt((taxa_encargo * valor) || 0)
+      valor = currencyToInt(valor)
       if (valor_encargo !== 0) {
         //? Criar Fluxo Financeiro - Encargo
-        valor_encargo = -currencyToInt(valor_encargo)
         const resEncargoFF = dbInsert('ff', { conta_id, tipo_ff: FF_ENCARGO, valor: valor_encargo, criador_id })
         if (resEncargoFF.changes === 0) throw new Error(`(Venda) Fluxo Financeiro - Encargo[${i}] não foi criado`)
         encargo_ff_id = resEncargoFF.lastInsertRowid
@@ -315,7 +316,6 @@ export function criarSaida(dados) {
       }
 
       //* Criar Fluxo Financeiro - Recebimento
-      valor = currencyToInt(valor)
       const resPagamentoFF = dbInsert('ff', { conta_id, tipo_ff: FF_RECEBIMENTO, valor, criador_id })
       if (resPagamentoFF.changes === 0) throw new Error(`(Venda) Fluxo Financeiro - Recebimento[${i}] não foi criado`)
       const transacao_ff_id = resPagamentoFF.lastInsertRowid
@@ -375,7 +375,7 @@ export function criarSaida(dados) {
       const eInicial = dbSelectOne('estoque', ["qntd", "custo"], { id: estoque_id })
       if (!eInicial || qntd > eInicial.qntd) throw new Error(`Estoque[${i}].qntd maior que e_inicial.qntd: ${qntd} > ${eInicial?.qntd}`)
       const var_qntd = -qntd
-      const var_custo = -Math.floor(eInicial.custo * (qntd / eInicial.qntd))
+      const var_custo = -currencyToInt((eInicial.custo / 10000) * (qntd / eInicial.qntd))
       const eFinal = { qntd: eInicial.qntd + var_qntd, custo: eInicial.custo + var_custo }
       const alteracoes_json = JSON.stringify([eFinal, eInicial])
 

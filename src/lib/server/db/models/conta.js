@@ -3,7 +3,7 @@ import { dbInsert, dbSelectAll, dbSelectOne, dbToggleSoftDelete, dbUpdate } from
 export function consultarContas(dados) {
   const { empresa_id } = dados
   try {
-    const data = dbSelectAll('conta', ['*'], { empresa_id })
+    const data = dbSelectAll('conta', ['id','nome','delecao','CAST(saldo AS REAL)/10000 saldo'], { empresa_id })
     return { valid: true, data }
   } catch (e) {
     console.error(e)
