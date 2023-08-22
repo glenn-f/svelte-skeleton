@@ -1,4 +1,4 @@
-import { EE_AVALIACAO, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FC_C_RECOMPRA_MERCADORIA, FC_R_VENDA_MERCADORIA, FE_BUYBACK, FE_COMPRA, FF_ENCARGO, FF_PAGAMENTO, FF_RECEBIMENTO, PE_COMPRA, PE_PERDA, mapCausasErro } from "$lib/globals"
+import { EE_AVALIACAO, FC_C_COMISSAO_PRODUTO, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FC_C_RECOMPRA_MERCADORIA, FC_C_TRIBUTO, FC_R_VENDA_MERCADORIA, FE_BUYBACK, FE_COMPRA, FF_ENCARGO, FF_PAGAMENTO, FF_RECEBIMENTO, PE_COMPRA, PE_PERDA, mapCausasErro } from "$lib/globals"
 import { handleAnyError, rateioEstoque, roundBy } from "$lib/helpers"
 import { currencyToInt, intToPerc, percToInt } from "$lib/types"
 import { begin, commit, db, dbInsert, dbSelectOne, dbUpdate, rollback } from ".."
@@ -21,13 +21,34 @@ LEFT JOIN estoque e ON e.id = fe.estoque_id \
 LEFT JOIN produto p ON p.id = e.produto_id \
 WHERE fe.pe_id = $id").all({ id })
     //* Transações + Encargos (Custo Encargo)
-    data.ff = db.prepare("SELECT t.id,ff.conta_id,tc.nome conta,tft.conta_forma_id,tcf.nome conta_forma,t.forma_transacao_id,tft.parcela parcela,CAST(ff.valor AS REAL)/10000 valor,ff.tipo_ff,CAST(enc_ff.valor AS REAL)/10000 encargo_valor,enc_ff.tipo_ff encargo_tipo_ff FROM ff \
+    data.ff = db.prepare("SELECT t.id,ff.conta_id,tc.nome conta,tft.conta_forma_id,tcf.nome conta_forma,t.forma_transacao_id,tft.parcela parcela,CAST(tft.taxa_encargo AS REAL)/10000 taxa_encargo,CAST(ff.valor AS REAL)/10000 valor,ff.tipo_ff,CAST(enc_ff.valor AS REAL)/10000 encargo_valor,enc_ff.tipo_ff encargo_tipo_ff FROM ff \
 JOIN transacao t ON ff.id = t.transacao_ff_id \
 JOIN pe_transacao pet ON t.id = pet.transacao_id AND pet.pe_id = $id \
 JOIN forma_transacao tft ON tft.id = t.forma_transacao_id \
 JOIN conta_forma tcf ON tcf.id = tft.conta_forma_id \
 JOIN conta tc ON tc.id = tcf.conta_id \
 LEFT JOIN ff enc_ff ON enc_ff.id = t.encargo_ff_id").all({ id })
+
+    data.comissoes = db.prepare("SELECT fe.estoque_id,v.id vendedor_id,e.produto_id,c.regra_comissao_id,p.nome produto,v.nome vendedor,r.nome regra,CAST(r.taxa_fixa AS REAL)/10000 taxa,CAST(r.bonus_fixo AS REAL)/10000 bonus,CAST(fc.valor AS REAL)/10000 valor, CAST(fe.faturamento AS REAL)/10000 faturamento FROM fc \
+JOIN comissao_contabil cc ON fc.id = cc.fc_id \
+JOIN comissao c ON c.id = cc.comissao_id \
+JOIN regra_comissao r ON r.id = c.regra_comissao_id \
+JOIN pessoa v ON v.id = c.pessoa_id \
+JOIN fc_fe ON fc_fe.fc_id = fc.id \
+JOIN fe ON fc_fe.fe_id = fe.id \
+JOIN estoque e ON fe.estoque_id = e.id \
+JOIN produto p ON e.produto_id = p.id \
+WHERE fe.pe_id = $id").all({ id })
+
+    data.tributos = db.prepare("SELECT fe.estoque_id,e.produto_id,t.regra_tributo_id,p.nome produto,r.nome regra,CAST(r.taxa_fixa AS REAL)/10000 taxa,CAST(fc.valor AS REAL)/10000 valor, CAST(fe.faturamento AS REAL)/10000 faturamento FROM fc \
+JOIN tributo_contabil tc ON fc.id = tc.fc_id \
+JOIN tributo t ON t.id = tc.tributo_id \
+JOIN regra_tributo r ON r.id = t.regra_tributo_id \
+JOIN fc_fe ON fc_fe.fc_id = fc.id \
+JOIN fe ON fc_fe.fe_id = fe.id \
+JOIN estoque e ON fe.estoque_id = e.id \
+JOIN produto p ON e.produto_id = p.id \
+WHERE fe.pe_id = $id").all({ id })
     //* Lançamentos nos Estoques
     data.fc = db.prepare("SELECT p.nome produto,fe.estoque_id,fc.fcg_id,fc.tipo_fc,CAST(fc.valor AS REAL)/10000 valor,fc.observacoes FROM fe JOIN estoque e ON e.id = fe.estoque_id JOIN produto p ON e.produto_id = p.id JOIN fc_fe ON fc_fe.fe_id = fe.id JOIN fc ON fc.id = fc_fe.fc_id \
 WHERE fe.pe_id = $id").all({ id })
@@ -91,7 +112,7 @@ export function criarEntrada(dados) {
     //! Criar Transações
     const encargos = []
     const forma_transacao_ids = transacoes.map((v) => v.forma_transacao_id).join(',')
-    const contas = db.prepare(`SELECT cf.conta_id,ft.id,ft.taxa_encargo/10000 taxa_encargo FROM forma_transacao ft JOIN conta_forma cf ON cf.id = ft.conta_forma_id WHERE ft.id IN (${forma_transacao_ids})`).all()
+    const contas = db.prepare(`SELECT cf.conta_id,ft.id,CAST(ft.taxa_encargo AS REAL)/10000 taxa_encargo FROM forma_transacao ft JOIN conta_forma cf ON cf.id = ft.conta_forma_id WHERE ft.id IN (${forma_transacao_ids})`).all()
     for (let i = 0; i < transacoes.length; i++) {
       let { forma_transacao_id, valor } = transacoes[i];
       let { conta_id, taxa_encargo } = contas.find((v) => v.id === forma_transacao_id) ?? {}
@@ -162,10 +183,10 @@ export function criarEntrada(dados) {
 
     //! Criar Entrada de Estoque
     for (let i = 0; i < estoque.length; i++) {
-      let { codigo, condicao, custo, estado, observacoes, origem, preco_unitario, produto_id, qntd, rateiosFinanceiro, rateiosContabil } = estoque[i]
+      let { codigo, condicao, custo, estado, observacoes, origem, preco_unitario, produto_id, qntd, regra_comissao_id, regra_tributo_id, rateiosFinanceiro, rateiosContabil } = estoque[i]
       custo = currencyToInt(custo) /** Valor do Fluxo de Estoque */
       preco_unitario = Number.isFinite(preco_unitario) ? currencyToInt(preco_unitario) : undefined
-      const eFinal = { produto_id, qntd, custo, preco_unitario, estado, condicao, origem, codigo, observacoes }
+      const eFinal = { produto_id, qntd, custo, preco_unitario, estado, condicao, origem, codigo, observacoes, regra_comissao_id, regra_tributo_id }
 
       //* Criar Estoque
       const resEstoque = dbInsert('estoque', eFinal)
@@ -298,7 +319,7 @@ export function criarSaida(dados) {
     //! Criar Transações
     const encargos = []
     const forma_transacao_ids = transacoes.map((v) => v.forma_transacao_id).join(',')
-    const contas = db.prepare(`SELECT cf.conta_id,ft.id,ft.taxa_encargo/10000 taxa_encargo FROM forma_transacao ft JOIN conta_forma cf ON cf.id = ft.conta_forma_id WHERE ft.id IN (${forma_transacao_ids})`).all()
+    const contas = db.prepare(`SELECT cf.conta_id,ft.id,CAST(ft.taxa_encargo AS REAL)/10000 taxa_encargo FROM forma_transacao ft JOIN conta_forma cf ON cf.id = ft.conta_forma_id WHERE ft.id IN (${forma_transacao_ids})`).all()
     for (let i = 0; i < transacoes.length; i++) {
       let { forma_transacao_id, valor } = transacoes[i];
       let { conta_id, taxa_encargo } = contas.find((v) => v.id === forma_transacao_id) ?? {}
@@ -369,26 +390,74 @@ export function criarSaida(dados) {
     //! Criar Saída de Estoque
     for (let i = 0; i < estoque_saida.length; i++) {
       let { id: estoque_id, observacoes, qntd, responsavel_id, tipo_fe, valor, rateiosFinanceiro, rateiosContabil } = estoque_saida[i]
-      valor = currencyToInt(valor)
-
+      valor = valor * qntd
       //* Verificar Estoque
-      const eInicial = dbSelectOne('estoque', ["qntd", "custo"], { id: estoque_id })
-      if (!eInicial || qntd > eInicial.qntd) throw new Error(`Estoque[${i}].qntd maior que e_inicial.qntd: ${qntd} > ${eInicial?.qntd}`)
-      const var_qntd = -qntd
-      const var_custo = -currencyToInt((eInicial.custo / 10000) * (qntd / eInicial.qntd))
-      const eFinal = { qntd: eInicial.qntd + var_qntd, custo: eInicial.custo + var_custo }
-      const alteracoes_json = JSON.stringify([eFinal, eInicial])
+      const e = db.prepare("SELECT e.qntd,e.custo,e.regra_comissao_id,e.regra_tributo_id,CAST(rc.taxa_fixa AS REAL)/10000 comissao_taxa,rc.bonus_fixo comissao_bonus,CAST(rt.taxa_fixa AS REAL)/10000 tributo_taxa FROM estoque e LEFT JOIN regra_comissao rc ON rc.id = e.regra_comissao_id \
+      LEFT JOIN regra_tributo rt ON rt.id = e.regra_tributo_id WHERE e.id = $id").get({ id: estoque_id })
+      if (!e || qntd > e.qntd) throw new Error(`Estoque[${i}].qntd maior que e_inicial.qntd: ${qntd} > ${e?.qntd}`)
 
       //* Atualizar Estoque
+      const var_qntd = -qntd
+      const var_custo = -currencyToInt((e.custo / 10000) * (qntd / e.qntd))
+      const eFinal = { qntd: e.qntd + var_qntd, custo: e.custo + var_custo }
+      const eInicial = { qntd: e.qntd, custo: e.custo }
+      const alteracoes_json = JSON.stringify([eFinal, eInicial])
       const resEstoque = dbUpdate('estoque', eFinal, { id: estoque_id })
       if (resEstoque.changes === 0) throw new Error(`(Venda) Estoque[${i}] não foi atualizado`)
 
       //* Criar Fluxo de Estoque
-      const resFE = dbInsert('fe', { estoque_id, pe_id, responsavel_id, tipo_fe, var_qntd, var_custo, observacoes, alteracoes_json })
+      const resFE = dbInsert('fe', { faturamento: currencyToInt(valor), estoque_id, pe_id, responsavel_id, tipo_fe, var_qntd, var_custo, observacoes, alteracoes_json })
       if (resFE.changes === 0) throw new Error(`(Venda) FE[${i}] não foi criado`)
       const fe_id = resFE.lastInsertRowid
 
+      //* Comissão
+      if (Number.isInteger(responsavel_id) && valor > 0 && (e.comissao_taxa || e.comissao_bonus)) {
+        const { comissao_bonus, comissao_taxa, regra_comissao_id } = e
+        const valor_taxa = currencyToInt(comissao_taxa * valor)
+        const valor_fixo = comissao_bonus || 0
+        const valor_comissao = valor_taxa + valor_fixo
+        if (valor_comissao) {
+          const resComissao = dbInsert('comissao', { regra_comissao_id, pessoa_id: responsavel_id, valor_fixo, valor_taxa })
+          if (resComissao.changes === 0) throw new Error(`(Venda) Estoque[${i}] não foi comissionado`)
+          const comissao_id = resComissao.lastInsertRowid
+
+          const resFC = dbInsert('fc', { empresa_id, criador_id, tipo_fc: FC_C_COMISSAO_PRODUTO, valor: -valor_comissao })
+          if (resFC.changes === 0) throw new Error(`(Venda) FC[${i}] comissao não foi criado`)
+          const fc_id = resFC.lastInsertRowid
+
+          const resComissaoContabil = dbInsert('comissao_contabil', { comissao_id, fc_id })
+          if (resComissaoContabil.changes === 0) throw new Error(`(Venda) comissao-FC[${i}] não foi criado`)
+
+          //* Criar Associação do Estoque com a Venda da Mercadoria
+          const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: -valor_comissao })
+          if (resFC_FE.changes === 0) throw new Error(`(Venda) FC_FE[${i}] comissao não foi criado`)
+        }
+      }
+
+      //* Tributo
+      if (valor > 0 && e.tributo_taxa) {
+        const { tributo_taxa, regra_tributo_id } = e
+        const valor_taxa = currencyToInt(tributo_taxa * valor)
+        if (valor_taxa) {
+          const resTributo = dbInsert('tributo', { regra_tributo_id, valor_taxa })
+          if (resTributo.changes === 0) throw new Error(`(Venda) Estoque[${i}] não foi tributado`)
+          const tributo_id = resTributo.lastInsertRowid
+
+          const resFC = dbInsert('fc', { empresa_id, criador_id, tipo_fc: FC_C_TRIBUTO, valor: -valor_taxa })
+          if (resFC.changes === 0) throw new Error(`(Venda) FC[${i}] tributo não foi criado`)
+          const fc_id = resFC.lastInsertRowid
+
+          const resComissaoContabil = dbInsert('tributo_contabil', { tributo_id, fc_id })
+          if (resComissaoContabil.changes === 0) throw new Error(`(Venda) tributo-FC[${i}] não foi criado`)
+
+          //* Criar Associação do Estoque com a Venda da Mercadoria
+          const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: -valor_taxa })
+          if (resFC_FE.changes === 0) throw new Error(`(Venda) FC_FE[${i}] tributo não foi criado`)
+        }
+      }
+
       //* Criar Fluxo Contábil para a Venda de Mercadoria
+      valor = currencyToInt(valor)
       if (valor !== 0) {
         const resFC = dbInsert('fc', { empresa_id, criador_id, tipo_fc: FC_R_VENDA_MERCADORIA, valor })
         if (resFC.changes === 0) throw new Error(`(Venda) FC[${i}] não foi criado`)

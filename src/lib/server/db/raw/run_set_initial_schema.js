@@ -1,4 +1,4 @@
-//vite-node src\lib\server\db\vite-sql.js
+//vite-node src\lib\server\db\raw\run_set_initial_schema.js
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'url';

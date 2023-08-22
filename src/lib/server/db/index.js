@@ -1,12 +1,8 @@
 import Database from 'better-sqlite3'
-import path from 'node:path'
-import url from 'url';
 import { sqlTabela, sqlValor, sqlValorKV, sqlValorSelect } from './escape';
 const env = await import("$env/dynamic/private").then(r => r.env).catch(e => process.env); //eslint-disable-line
-const __filename = url.fileURLToPath(import.meta.url);
 
-const __dirname = path.dirname(__filename);
-const DB_SQLITE_PATH = env.DB_SQLITE_PATH ?? path.join(__dirname, '../../../../data/sqlite.db')
+const DB_SQLITE_PATH = env?.DB_SQLITE_PATH || './data/sqlite.db'
 
 //! DB Constants (para uso geral)
 export const db = new Database(DB_SQLITE_PATH, { verbose: console.log })

@@ -38,7 +38,7 @@ export function consultarEstoquesDisponivel(dados) {
 export function consultarEstoquesVendidos(dados) {
   const { empresa_id } = dados
   try {
-    const data = db.prepare(`SELECT v.nome vendedor,pe.criacao data_venda,e.id,e.produto_id,-fe.var_qntd qntd_venda,-CAST(fe.var_custo AS REAL)/10000 preco_total,e.condicao,e.origem,e.codigo,p.nome AS produto,e.observacoes FROM estoque e JOIN fe ON fe.estoque_id = e.id AND fe.tipo_fe = ${FE_VENDA} JOIN produto p ON e.produto_id = p.id JOIN pe ON pe.id = fe.pe_id LEFT JOIN pessoa v ON v.id = fe.responsavel_id WHERE p.empresa_id = $empresa_id`).all({ empresa_id })
+    const data = db.prepare(`SELECT v.nome vendedor,pe.criacao data_venda,e.id,e.produto_id,-fe.var_qntd qntd_venda,CAST(fe.faturamento AS REAL)/10000 preco_total,e.condicao,e.origem,e.codigo,p.nome AS produto,e.observacoes FROM estoque e JOIN fe ON fe.estoque_id = e.id AND fe.tipo_fe = ${FE_VENDA} JOIN produto p ON e.produto_id = p.id JOIN pe ON pe.id = fe.pe_id LEFT JOIN pessoa v ON v.id = fe.responsavel_id WHERE p.empresa_id = $empresa_id`).all({ empresa_id })
     return { valid: true, data }
   } catch (e) {
     console.error(e)

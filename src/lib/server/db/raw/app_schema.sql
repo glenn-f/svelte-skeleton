@@ -128,23 +128,6 @@ CREATE TABLE IF NOT EXISTS produto_categoria(
   FOREIGN KEY (empresa_id) REFERENCES empresa(id),
   UNIQUE (nome)
 ) STRICT;
---! Tabela "produto"
-CREATE TABLE IF NOT EXISTS produto (
-  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  empresa_id INTEGER NOT NULL,
-  produto_categoria_id INTEGER,
-  nome TEXT NOT NULL,
-  titulo_codigo TEXT,
-  config_json TEXT,
-  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
-  alteracao INTEGER,
-  delecao INTEGER,
-  criador_id INTEGER,
-  FOREIGN KEY (criador_id) REFERENCES usuario(id),
-  FOREIGN KEY (empresa_id) REFERENCES empresa(id),
-  FOREIGN KEY (produto_categoria_id) REFERENCES produto_categoria(id),
-  UNIQUE (nome)
-) STRICT;
 --! Tabela "regra_comissao"
 CREATE TABLE IF NOT EXISTS regra_comissao (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -153,8 +136,6 @@ CREATE TABLE IF NOT EXISTS regra_comissao (
   taxa_fixa INTEGER NOT NULL,
   nome TEXT NOT NULL,
   descricao TEXT,
-  data_inicial INTEGER NOT NULL,
-  data_final INTEGER NOT NULL,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
   alteracao INTEGER,
   delecao INTEGER,
@@ -162,48 +143,63 @@ CREATE TABLE IF NOT EXISTS regra_comissao (
   FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 ) STRICT;
---! Tabela "produto_regra_comissao"
-CREATE TABLE IF NOT EXISTS produto_regra_comissao (
+--! Tabela "regra_tributo"
+CREATE TABLE IF NOT EXISTS regra_tributo (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  produto_id INTEGER NOT NULL,
-  regra_comissao_id INTEGER NOT NULL,
-  condicao TEXT NOT NULL,
-  origem TEXT NOT NULL,
-  FOREIGN KEY (produto_id) REFERENCES produto(id),
-  FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id)
-) STRICT;
---! Tabela "fechamento_comissao"
-CREATE TABLE IF NOT EXISTS fechamento_comissao (
-  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  pessoa_id INTEGER NOT NULL,
-  regra_comissao_id INTEGER NOT NULL,
-  bonus_fixo INTEGER NOT NULL,
+  empresa_id INTEGER NOT NULL,
   taxa_fixa INTEGER NOT NULL,
+  nome TEXT NOT NULL,
+  descricao TEXT,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
   alteracao INTEGER,
   delecao INTEGER,
   criador_id INTEGER,
   FOREIGN KEY (criador_id) REFERENCES usuario(id),
-  FOREIGN KEY (pessoa_id) REFERENCES pessoa(id),
-  FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id)
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id)
+) STRICT;
+--! Tabela "produto"
+CREATE TABLE IF NOT EXISTS produto (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  empresa_id INTEGER NOT NULL,
+  produto_categoria_id INTEGER,
+  regra_comissao_id INTEGER,
+  regra_tributo_id INTEGER,
+  nome TEXT NOT NULL,
+  titulo_codigo TEXT,
+  config_json TEXT,
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  criador_id INTEGER,
+  FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id),
+  FOREIGN KEY (regra_tributo_id) REFERENCES regra_tributo(id),
+  FOREIGN KEY (criador_id) REFERENCES usuario(id),
+  FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+  FOREIGN KEY (produto_categoria_id) REFERENCES produto_categoria(id),
+  UNIQUE (nome)
 ) STRICT;
 --! Tabela "comissao"
 CREATE TABLE IF NOT EXISTS comissao (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   regra_comissao_id INTEGER NOT NULL,
   pessoa_id INTEGER NOT NULL,
-  fechamento_comissao_id INTEGER,
-  tipo_comissao INTEGER NOT NULL,
   valor_fixo INTEGER NOT NULL,
   valor_taxa INTEGER NOT NULL,
   criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
   alteracao INTEGER,
   delecao INTEGER,
-  criador_id INTEGER,
-  FOREIGN KEY (criador_id) REFERENCES usuario(id),
   FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id),
-  FOREIGN KEY (fechamento_comissao_id) REFERENCES fechamento_comissao(id),
   FOREIGN KEY (pessoa_id) REFERENCES pessoa(id)
+) STRICT;
+--! Tabela "tributo"
+CREATE TABLE IF NOT EXISTS tributo (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  regra_tributo_id INTEGER NOT NULL,
+  valor_taxa INTEGER NOT NULL,
+  criacao INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  alteracao INTEGER,
+  delecao INTEGER,
+  FOREIGN KEY (regra_tributo_id) REFERENCES regra_tributo(id)
 ) STRICT;
 --! Tabela "fcg" Fluxo Contábil Grupo
 CREATE TABLE IF NOT EXISTS fcg (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT) STRICT;
@@ -232,10 +228,22 @@ CREATE TABLE IF NOT EXISTS comissao_contabil (
   UNIQUE (comissao_id),
   UNIQUE (fc_id)
 ) STRICT;
+--! Tabela "tributo_contabil"
+CREATE TABLE IF NOT EXISTS tributo_contabil (
+  tributo_id INTEGER NOT NULL,
+  fc_id INTEGER NOT NULL,
+  PRIMARY KEY (tributo_id, fc_id),
+  FOREIGN KEY (tributo_id) REFERENCES tributo(id),
+  FOREIGN KEY (fc_id) REFERENCES fc(id),
+  UNIQUE (tributo_id),
+  UNIQUE (fc_id)
+) STRICT;
 --! Tabela "estoque"
 CREATE TABLE IF NOT EXISTS estoque (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   produto_id INTEGER NOT NULL,
+  regra_comissao_id INTEGER,
+  regra_tributo_id INTEGER,
   qntd INTEGER NOT NULL,
   custo INTEGER NOT NULL,
   preco_unitario INTEGER,
@@ -245,6 +253,8 @@ CREATE TABLE IF NOT EXISTS estoque (
   codigo TEXT,
   dados_json TEXT,
   observacoes TEXT,
+  FOREIGN KEY (regra_tributo_id) REFERENCES regra_tributo(id),
+  FOREIGN KEY (regra_comissao_id) REFERENCES regra_comissao(id),
   FOREIGN KEY (produto_id) REFERENCES produto(id)
 ) STRICT;
 --! Tabela "pe" Processo Estoque
@@ -281,6 +291,7 @@ CREATE TABLE IF NOT EXISTS fe (
   tipo_fe INTEGER NOT NULL,
   var_qntd INTEGER NOT NULL,
   var_custo INTEGER NOT NULL,
+  faturamento INTEGER NOT NULL DEFAULT(0),
   observacoes TEXT,
   alteracoes_json TEXT,
   FOREIGN KEY (estoque_id) REFERENCES estoque(id),

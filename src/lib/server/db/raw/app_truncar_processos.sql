@@ -1,3 +1,7 @@
+DELETE FROM tributo_contabil;
+DELETE FROM comissao_contabil;
+DELETE FROM tributo;
+DELETE FROM comissao;
 DELETE FROM fc_ff;
 DELETE FROM fc_fe;
 DELETE FROM pe_fcg;

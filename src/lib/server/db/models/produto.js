@@ -36,8 +36,8 @@ export function criarProduto(dados) {
 /** //TODO JSDocs */
 export function editarProduto(dados) {
   try {
-    const { id, nome, produto_categoria_id, titulo_codigo } = dados
-    const rs = dbUpdate('produto', { nome, produto_categoria_id, titulo_codigo }, { id })
+    const { id, ...campos } = dados
+    const rs = dbUpdate('produto', campos, { id })
     if (rs.changes > 0) return { valid: true, data: null }
   } catch (e) {
     if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
