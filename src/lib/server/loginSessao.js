@@ -12,8 +12,9 @@ export const sessionCookieSettings = {
 }
 
 /** Tempo inicial em **milissegundos** de uma sessão de usuário na aplicação. */
-export const tempoSessaoMS = 60 * (60 * 1000)
-let proximaLimpezaSessoes = Date.now() + (tempoSessaoMS / 2)
+export const tempoSessaoMS = 8 * 60 * (60 * 1000)
+export const tempoLimpezaSessaoMS = 1 * 60 * (60 * 1000)
+let proximaLimpezaSessoes = Date.now() + tempoLimpezaSessaoMS
 const cacheSessoes = new Map()
 
 /** Função de limpeza do cache em memória das sessões de usuário e do banco de dados */
