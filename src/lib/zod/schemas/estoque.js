@@ -14,9 +14,11 @@ const estoqueEsquema = z.object({
   observacoes: zOptional(zTString),
   dados_json: zOptional(zTString),
   criador_id: zOptional(zID),
+  regra_comissao_id: zOptional(zID),
+  regra_tributo_id: zOptional(zID),
 })
 
-export const criarEntradaEstoqueSchema = estoqueEsquema.pick({ produto_id: true, custo: true, preco_unitario: true, estado: true, condicao: true, origem: true, codigo: true, observacoes: true }).extend({
+export const criarEntradaEstoqueSchema = estoqueEsquema.pick({ regra_comissao_id: true, regra_tributo_id: true, produto_id: true, custo: true, preco_unitario: true, estado: true, condicao: true, origem: true, codigo: true, observacoes: true }).extend({
   qntd: zInt.min(1),
 })
 
@@ -30,14 +32,14 @@ export const addBuybackSaidaSchema = estoqueEsquema.pick({ produto_id: true, con
   custo_unitario: zCurrency,
 }).transform(({ custo_unitario, qntd, ...dados }) => ({ custo: custo_unitario * qntd, qntd, ...dados }))
 
-export const addItemEntradaSchema = estoqueEsquema.pick({ produto_id: true, preco_unitario: true, estado: true, condicao: true, origem: true, codigo: true, observacoes: true }).extend({
+export const addItemEntradaSchema = estoqueEsquema.pick({ regra_comissao_id: true, regra_tributo_id: true, produto_id: true, preco_unitario: true, estado: true, condicao: true, origem: true, codigo: true, observacoes: true }).extend({
   qntd: zInt.min(1),
   custo_unitario: zCurrency
 }).refine(({ preco_unitario, estado }) => !(estado == EE_DISPONIVEL && !Number.isFinite(preco_unitario)), { message: "Campo obrigatório", path: ['preco_unitario'] })
   .transform(({ custo_unitario, qntd, ...dados }) => ({ custo: custo_unitario * qntd, qntd, ...dados }))
 
 export const addItemSaidaSchema = z.object({
-  tipo_fe: z.number({invalid_type_error: "Campo obrigatório"}).int("Escolha uma opção"),
+  tipo_fe: z.number({ invalid_type_error: "Campo obrigatório" }).int("Escolha uma opção"),
   estoque: z.any(),
   id: zID,
   qntd: zInt.min(1),

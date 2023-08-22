@@ -4,20 +4,21 @@
   import CelulaAcoes from './CelulaAcoes.svelte'
   import { mapCondicao, mapEstadoEstoque, mapFluxoEstoque, mapOrigem } from '$lib/globals'
   import { formatMoeda } from '$lib/helpers'
+  import ShowChip from '$lib/components/ShowChip.svelte'
   export let data
 
   $: rows = data.estoques || []
   let columns = [
     { accessorKey: 'data_entrada', header: 'Data Entrada', cell: (info) => new Date(info.getValue()).toLocaleString() },
-    { accessorKey: 'forma_entrada', header: 'Forma Entrada', cell: (info) => mapFluxoEstoque.get(info.getValue()) },
+    { accessorKey: 'forma_entrada', header: 'Forma Entrada', cell: (info) => renderComponent(ShowChip, { text: mapFluxoEstoque.get(info.getValue()), value: info.getValue() }) },
     { accessorKey: 'qntd', header: 'Qntd' },
     { accessorKey: 'p_nome', header: 'Produto' },
+    { accessorKey: 'codigo', header: 'Código' },
+    { accessorKey: 'condicao', header: 'Condição', cell: (info) => renderComponent(ShowChip, { text: mapCondicao.get(info.getValue()), value: info.getValue() }) },
+    { accessorKey: 'origem', header: 'Origem', cell: (info) => renderComponent(ShowChip, { text: mapOrigem.get(info.getValue()), value: info.getValue() }) },
+    { accessorKey: 'estado', header: 'Status', cell: (info) => renderComponent(ShowChip, { text: mapEstadoEstoque.get(info.getValue()), value: info.getValue() }) },
     { accessorKey: 'custo', header: 'Custo Unit.', cell: (info) => formatMoeda(info.getValue() / info.row.original.qntd) },
     { accessorKey: 'preco_unitario', header: 'Preço Unit.', cell: (info) => formatMoeda(info.getValue()) },
-    { accessorKey: 'condicao', header: 'Condição', cell: (info) => mapCondicao.get(info.getValue()) },
-    { accessorKey: 'origem', header: 'Origem', cell: (info) => mapOrigem.get(info.getValue()) },
-    { accessorKey: 'codigo', header: 'Código' },
-    { accessorKey: 'estado', header: 'Status', cell: (info) => mapEstadoEstoque.get(info.getValue()) },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { data: info.row.original }), enableSorting: false }
   ]
   const pageSizes = [10, 25, 50]

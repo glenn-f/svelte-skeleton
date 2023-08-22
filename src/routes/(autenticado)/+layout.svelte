@@ -83,6 +83,12 @@
               {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_cadastrar_pessoa}
                 <MenuItem href="/cadastros/pessoas" titulo="Pessoas" icon="mdi:account-group" />
               {/if}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_cadastrar_conta}
+                <MenuItem href="/cadastros/tributos" titulo="Tributos" icon="heroicons-solid:receipt-tax" />
+              {/if}
+              {#if data.sessao?.perm == USUARIO_ADMINISTRADOR || data.sessao.gpe?.pode_cadastrar_conta}
+                <MenuItem href="/cadastros/comissao" titulo="Comissão" icon="heroicons-outline:receipt-tax" />
+              {/if}
             </Menu>
           {/if}
         {:else if data?.sessao?.perm > 0}

@@ -3,6 +3,8 @@ import { consultarContaFormasEntrada } from '$lib/server/db/models/contaForma'
 import { consultarPessoas } from '$lib/server/db/models/pessoa'
 import { criarEntrada } from '$lib/server/db/models/processoEstoque'
 import { consultarProdutos } from '$lib/server/db/models/produto'
+import { consultarRegrasComissao } from '$lib/server/db/models/regra_comissao.js'
+import { consultarRegrasTributo } from '$lib/server/db/models/regra_tributo.js'
 import { setDBErrors } from '$lib/zod/index.js'
 import { criarEntradaSchema } from '$lib/zod/schemas/processoEstoque'
 import { error } from '@sveltejs/kit'
@@ -19,8 +21,10 @@ export async function load({ locals }) {
   const resFormas = consultarContaFormasEntrada({ empresa_id })
   if (!resFormas.valid) throw error(500, 'Erro no servidor')
   const form = await superValidate(criarEntradaSchema);
+  const regrasComissao = consultarRegrasComissao({ empresa_id }).data
+  const regrasTributo = consultarRegrasTributo({ empresa_id }).data
 
-  return { form, produtos: resProdutos.data, colaboradores, fornecedores, formas: resFormas.data }
+  return { form, produtos: resProdutos.data, colaboradores, fornecedores, formas: resFormas.data, regrasComissao, regrasTributo }
 };
 
 export const actions = {

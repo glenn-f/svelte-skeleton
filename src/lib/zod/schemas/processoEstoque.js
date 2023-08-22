@@ -30,7 +30,7 @@ export const criarSaidaSchema = z.object({
   observacoes: zOptional(zTString),
 }).refine(({ tipo_pe, estoque_saida, transacoes, contabil, buyback }) => {
   if (tipo_pe === PE_PERDA) return true
-  const totalVendas = roundBy(estoque_saida.reduce((acc, { valor }) => acc + valor, 0), 2)
+  const totalVendas = roundBy(estoque_saida.reduce((acc, { valor, qntd }) => acc + (valor * qntd), 0), 2)
   const totalLancamentos = roundBy(contabil.reduce((acc, { valor, tipo_fc }) => acc + (isReceita(tipo_fc) ? valor : 0), 0), 2)
   const totalTransacoes = roundBy(transacoes.reduce((acc, { valor }) => acc + valor, 0), 2)
   const totalBuyback = tipo_pe === PE_VENDA_COM_BUYBACK ? roundBy(buyback.reduce((acc, { custo }) => acc + custo, 0), 2) : 0

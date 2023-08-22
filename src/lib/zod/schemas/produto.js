@@ -7,8 +7,10 @@ export const produtoSchema = z.object({
   nome: z.string().trim().min(4),
   titulo_codigo: zOptional(zTString),
   config_json: zOptional(zTString),
+  regra_comissao_id: zOptional(zID),
+  regra_tributo_id: zOptional(zID),
 })
 
-export const criarProdutoSchema = produtoSchema.pick({ produto_categoria_id: true, nome: true, titulo_codigo: true })
+export const criarProdutoSchema = produtoSchema.pick({ produto_categoria_id: true, nome: true, titulo_codigo: true, regra_comissao_id: true, regra_tributo_id: true })
 
-export const editarProdutoSchema = produtoSchema.pick({ id: true, produto_categoria_id: true, nome: true, titulo_codigo: true })
+export const editarProdutoSchema = produtoSchema.pick({ id: true, produto_categoria_id: true, nome: true, titulo_codigo: true, regra_comissao_id: true, regra_tributo_id: true })

@@ -1,12 +1,15 @@
 <script>
+  import TabelaComissoes from './TabelaComissoes.svelte'
+
   import ExternalLinkIcon from '$lib/components/ExternalLinkIcon.svelte'
   import Button from '$lib/components/Forms/Button.svelte'
   import ShowBox from '$lib/components/ShowBox.svelte'
   import { PE_PERDA, getClasseContabil, isCusto, isReceita, mapCondicao, mapFluxoContabil, mapFluxoEstoque, mapFluxoFinanceiro, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
-  import { formatDateTime } from '$lib/helpers.js'
+  import { formatDateTime, formatTaxa } from '$lib/helpers.js'
   import Icon from '@iconify/svelte'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import VariacaoNumero from '../../../../../lib/components/VariacaoNumero.svelte'
+  import TabelaTributos from './TabelaTributos.svelte'
   export let data
 
   $: entrada = data.entrada || {}
@@ -20,7 +23,7 @@
   $: varTransacoes = totalTransacoes + totalEncargos
   $: varPatrimonio = totalCustoEstoque + varTransacoes
   $: resultadoContabil = totalCustos + totalReceitas
-  $: console.log({totalOutrosLancamentos,totalEncargos})
+  $: console.log({ totalOutrosLancamentos, totalEncargos })
   //TODO somar custo rateado do estoque (valor lançamento = custo aquisicao, outros lançamentos = lançamentos rateados, total lancamentos = custo + outros )
 </script>
 
@@ -230,6 +233,7 @@
               <th class="w-0">Fluxo Financeiro</th>
               <th>Conta</th>
               <th>Forma Transação</th>
+              <th class="w-0">Taxa Encargo</th>
               <th class="w-0">Valor</th>
               <th class="w-0" data-tooltip="O Valor do Encargo é um lançamento contábil" data-placement="left"> Valor Encargo </th>
               <th class="w-0">Balanço Conta</th>
@@ -252,6 +256,7 @@
                     <ExternalLinkIcon href={`/cadastros/contas/formas/${fluxo.conta_forma_id}`} data-tooltip="Abrir Cadastro da Forma de Transação" data-placement="top" />
                   </div>
                 </td>
+                <td>{formatTaxa(fluxo.taxa_encargo)}%</td>
                 <td><VariacaoNumero value={fluxo.valor} type="currency" /></td>
                 <td><VariacaoNumero value={fluxo.encargo_valor} type="currency" /></td>
                 <td><VariacaoNumero value={fluxo.valor + (fluxo.encargo_valor ?? 0)} type="currency" /></td>
@@ -267,7 +272,7 @@
           </tbody>
           <tfoot class="!variant-soft">
             <tr class="!text-center">
-              <td colspan="2" />
+              <td colspan="3" />
               <th class="text-right">Total</th>
               <td><VariacaoNumero value={totalTransacoes} type="currency" /></td>
               <td><VariacaoNumero value={totalEncargos} type="currency" /></td>
@@ -277,6 +282,10 @@
           </tfoot>
         </table>
       </div>
+
+      <TabelaTributos {data} />
+      
+      <TabelaComissoes {data} />
 
       <div class="col-span-12 flex items-center">
         <h3 class="h3 text-center mr-3">Lançamentos Contábeis por Estoque</h3>
@@ -364,9 +373,9 @@
         </table>
       </div>
 
-      <div class="col-span-12">
+      <!-- <div class="col-span-12">
         <SuperDebug data={entrada} />
-      </div>
+      </div> -->
     </div>
   </div>
 </div>

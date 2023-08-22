@@ -1,7 +1,9 @@
 <script>
+  import ShowChip from '$lib/components/ShowChip.svelte'
   import { Table } from '$lib/components/Table'
   import { mapCondicao, mapOrigem } from '$lib/globals'
   import { formatMoeda } from '$lib/helpers'
+  import { renderComponent } from '@tanstack/svelte-table'
   export let data
 
   $: rows = data.estoques || []
@@ -9,8 +11,8 @@
     { accessorKey: 'data_venda', header: 'Data Venda', cell: (info) => new Date(info.getValue()).toLocaleString() },
     { accessorKey: 'vendedor', header: 'Vendedor' },
     { accessorKey: 'produto', header: 'Produto' },
-    { accessorKey: 'condicao', header: 'Condição', cell: (info) => mapCondicao.get(info.getValue()) },
-    { accessorKey: 'origem', header: 'Origem', cell: (info) => mapOrigem.get(info.getValue()) },
+    { accessorKey: 'condicao', header: 'Condição', cell: (info) => renderComponent(ShowChip, { text: mapCondicao.get(info.getValue()), value: info.getValue() }) },
+    { accessorKey: 'origem', header: 'Origem', cell: (info) => renderComponent(ShowChip, { text: mapOrigem.get(info.getValue()), value: info.getValue() }) },
     { accessorKey: 'qntd_venda', header: 'Qntd' },
     { accessorKey: 'preco_unit', header: 'Preço Unit.', cell: (info) => formatMoeda(info.row.original.preco_total / info.row.original.qntd_venda) },
     { accessorKey: 'preco_total', header: 'Preço Total', cell: (info) => formatMoeda(info.getValue()) },

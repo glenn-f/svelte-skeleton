@@ -4,13 +4,14 @@
   import CelulaAcoes from './CelulaAcoes.svelte'
   import Icon from '@iconify/svelte'
   import { mapProcessoEstoque } from '$lib/globals'
+  import ShowChip from '$lib/components/ShowChip.svelte'
   export let data
 
   $: rows = data.entradas || []
   let columns = [
     { accessorKey: 'id', header: 'ID' },
     { accessorKey: 'criacao', header: 'Data Saída', cell: (info) => new Date(info.getValue()).toLocaleString() },
-    { accessorKey: 'tipo_pe', header: 'Processo de Estoque', cell: (info) => mapProcessoEstoque.get(info.getValue()) },
+    { accessorKey: 'tipo_pe', header: 'Processo de Estoque', cell: (info) => renderComponent(ShowChip, { text: mapProcessoEstoque.get(info.getValue()), value: info.getValue() }) },
     { accessorKey: 'responsavel', header: 'Responsável' },
     { accessorKey: 'participante', header: 'Cliente' },
     { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { data: info.row.original }), enableSorting: false }

@@ -56,10 +56,11 @@
     }
     return mapa
   }
+  $: ({ regrasTributo, regrasComissao } = data)
   function abrirModalItem() {
     modalStore.trigger({
       type: 'component',
-      component: { ref: ModalItem, props: { modo: 'adicionar', store: form, produtosAutocomplete } }
+      component: { ref: ModalItem, props: { modo: 'adicionar', store: form, produtosAutocomplete, regrasTributo, regrasComissao } }
     })
   }
   function abrirModalContabil() {

@@ -508,9 +508,9 @@
       </div>
 
       <!-- *Debugger -->
-      <div class="col-span-12">
+      <!-- <div class="col-span-12">
         <SuperDebug data={{ totalValorSaida, totalValorBuyback, totalTransacoes, totalOutrosCustos, totalOutrasReceitas, totalAReceber, totalRecebido, totalFinal }} />
-      </div>
+      </div> -->
     </div>
   </div>
 </div>
