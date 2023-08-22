@@ -46,7 +46,7 @@
   export let getDisabled = (option, index) => undefined
   export let readonly = undefined
   const _options = objectToArray(options)
-  
+
   const formStore = getContext('formStore')
 
   if (isSvelteStore(formStore)) {
@@ -59,7 +59,6 @@
     }
   }
   $: updateContext(value)
-  
 </script>
 
 <Label {label} {error} {warning} {success} {errorSpacing} {labelClass} {required}>
@@ -79,7 +78,10 @@
       <option value={undefined} disabled={!placeholderEnabled} selected>{placeholder}</option>
     {/if}
     {#each _options as [index, option]}
-      <option class="text-token" disabled={getDisabled(option, index)} value={getOptionValue(option, index)}>{getOptionLabel(option, index)}</option>
+      {@const disabled = typeof getDisabled == 'function' ? getDisabled(option, index) : option[getDisabled]}
+      {@const value = typeof getOptionValue == 'function' ? getOptionValue(option, index) : option[getOptionValue]}
+      {@const label = typeof getOptionLabel == 'function' ? getOptionLabel(option, index) : option[getOptionLabel]}
+      <option class="text-token" {disabled} {value}>{label}</option>
     {/each}
   </select>
 </Label>
