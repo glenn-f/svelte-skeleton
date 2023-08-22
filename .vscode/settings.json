@@ -100,12 +100,5 @@
     "track",
     "width",
     "zIndex"
-  ],
-  "workbench.colorCustomizations": {
-    "tab.activeBorder": "#1DFEDA",
-    "titleBar.activeBackground": "#1DFEDA",
-    "titleBar.activeForeground": "#ffffff",
-    "statusBar.background": "#1DFEDA",
-    "statusBar.foreground": "#ffffff"
-  }
+  ]
 }
