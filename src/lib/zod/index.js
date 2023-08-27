@@ -29,7 +29,7 @@ export const zNumericEnum = (list, errorMsg = "Escolha uma opção") => z.custom
 export const zEnum = (list, errorMsg = "Escolha uma opção") => z.custom((v) => list.includes(v), errorMsg)
 export const zOptional = (zSchema) => z.literal('').nullish().transform(() => undefined).or(zSchema)
 export const zTString = z.string().trim().min(1)
-export const zDate = z.union([z.coerce.number(), z.string().trim().min(1), z.date()], { invalid_type_error: 'Data inválida' }).pipe(z.coerce.date())
+export const zDate = z.union([z.number(), z.string().trim().min(1), z.date()], { invalid_type_error: 'Data inválida' }).pipe(z.coerce.date())
 export const zCEP = z.string().trim().regex(/^\d{8}$/, "CEP inválido")
 export const zCPF = z.string().trim().regex(/^\d{11}$/, "CPF inválido")
 export const zCNPJ = z.string().trim().regex(/^\d{14}$/, 'CNPJ inválido')

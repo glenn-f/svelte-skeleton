@@ -1,6 +1,6 @@
 import { PE_PERDA, PE_VENDA, PE_VENDA_COM_BUYBACK, isReceita } from "$lib/globals"
 import { roundBy } from "$lib/helpers"
-import { z, zID, zOptional, zTString } from "$lib/zod"
+import { z, zDate, zID, zOptional, zTString } from "$lib/zod"
 import { criarEntradaTransacoesSchema, criarSaidaTransacoesSchema } from "./contaFormas"
 import { criarContabilSchema } from "./contabil"
 import { criarEntradaEstoqueSchema, criarSaidaBuybackSchema, criarSaidaEstoqueSchema } from "./estoque"
@@ -20,6 +20,7 @@ export const criarEntradaSchema = z.object({
 }, { message: 'O total a pagar deve ser igual ao total pago' })
 
 export const criarSaidaSchema = z.object({
+  criacao: zOptional(zDate),
   tipo_pe: zID.default(PE_VENDA),
   estoque_saida: z.array(criarSaidaEstoqueSchema).min(1).default([]),
   buyback: z.array(criarSaidaBuybackSchema).default([]),

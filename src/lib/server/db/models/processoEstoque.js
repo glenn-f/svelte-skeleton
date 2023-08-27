@@ -271,7 +271,7 @@ export function criarEntrada(dados) {
  * @param {DadosCriarSaida} dados 
  * @returns {DBRun<{}>} */ //TODO
 export function criarSaida(dados) {
-  let { criador_id, empresa_id, participante_id, responsavel_id, tipo_pe, observacoes, buyback, contabil, estoque_saida, transacoes } = dados
+  let { criacao, criador_id, empresa_id, participante_id, responsavel_id, tipo_pe, observacoes, buyback, contabil, estoque_saida, transacoes } = dados
 
   //! Preparar rateio
   const totalVendas = roundBy(estoque_saida.reduce((acc, { valor }) => acc + valor, 0), 2)
@@ -285,7 +285,7 @@ export function criarSaida(dados) {
   try {
     begin.run()
     //! Criar Saída (Processo Estoque)
-    const resPE = dbInsert('pe', { tipo_pe, criador_id, empresa_id, participante_id, responsavel_id, observacoes })
+    const resPE = dbInsert('pe', { criacao, tipo_pe, criador_id, empresa_id, participante_id, responsavel_id, observacoes })
     if (resPE.changes === 0) throw new Error("(Saída) Processo de Estoque não foi criado")
     const pe_id = resPE.lastInsertRowid
 

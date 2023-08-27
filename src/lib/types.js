@@ -37,6 +37,15 @@ export function millisToHTMLdate(UTCmillis) {
   return undefined
 }
 
+export function localMillis() {
+  const now = new Date()
+  const dia = now.getDate().toString().padStart(2, '0')
+  const mes = (now.getMonth() + 1).toString().padStart(2, '0')
+  const ano = now.getFullYear().toString().padStart(4, '0')
+  const date = new Date(`${ano}-${mes}-${dia}` + 'T00:00Z')
+  return date.getTime()
+}
+
 export function HTMLdateToMillis(HTMLdate) {
   if (typeof HTMLdate == 'string' && HTMLdate.length == 10) {
     const date = new Date(HTMLdate + 'T00:00Z')

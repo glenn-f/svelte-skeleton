@@ -1,21 +1,24 @@
 <script>
+  import { browser } from '$app/environment'
   import { goto } from '$app/navigation'
   import { triggerMessage } from '$lib/client'
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
+  import InputDate from '$lib/components/Forms/InputDate.svelte'
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputSelectRadio from '$lib/components/Forms/InputSelectRadio.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   import { PES_SAIDA, PE_PERDA, PE_VENDA, PE_VENDA_COM_BUYBACK, isCusto, isReceita, mapCondicao, mapEstadoEstoque, mapFEPerdas, mapFluxoContabil, mapOrigem } from '$lib/globals'
   import { formatMoeda, roundBy } from '$lib/helpers'
+  import { localMillis } from '$lib/types'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
   import { writable } from 'svelte/store'
   import { superForm } from 'sveltekit-superforms/client'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import ModalContabil from './ModalContabil.svelte'
   import ModalItemBuyback from './ModalItemBuyback.svelte'
   import ModalItemSaida from './ModalItemSaida.svelte'
   import ModalPgto from './ModalRcbto.svelte'
+  import InputDateTime from '$lib/components/Forms/InputDateTime.svelte'
   export let data
   let inputForm
   const { form, errors, enhance, submitting } = superForm(data.form, {
@@ -30,6 +33,9 @@
       }
     }
   })
+  if (browser) {
+    $form.criacao = Date.now()
+  }
 
   const produtos = writable(data.produtos)
   $: produtosEntrada = data.produtosEntrada || []
@@ -154,8 +160,11 @@
     </div>
     <div class="grid grid-cols-12 gap-2">
       <!-- Campos Gerais -->
-      <div class="col-span-12 grid place-content-center">
+      <div class="col-span-9 grid place-content-center">
         <InputSelectRadio label="Forma de Saída" bind:value={$form.tipo_pe} options={PES_SAIDA} error={$errors.tipo_pe} required />
+      </div>
+      <div class="col-span-3">
+        <InputDateTime label="Data da Venda" bind:value={$form.criacao} error={$errors.criacao} required />
       </div>
       <div class="xl:col-span-8 col-span-12">
         <InputText placeholder="Digite aqui observações sobre esta saída..." error={$errors.observacoes} label="Observações e Anotações" bind:value={$form.observacoes} />
@@ -509,7 +518,7 @@
 
       <!-- *Debugger -->
       <!-- <div class="col-span-12">
-        <SuperDebug data={{ totalValorSaida, totalValorBuyback, totalTransacoes, totalOutrosCustos, totalOutrasReceitas, totalAReceber, totalRecebido, totalFinal }} />
+        <SuperDebug data={{ $form }} />
       </div> -->
     </div>
   </div>
