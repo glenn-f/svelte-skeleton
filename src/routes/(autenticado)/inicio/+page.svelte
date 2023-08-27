@@ -1,64 +1,31 @@
 <script>
-  import Chart from 'chart.js/auto'
+  import { page } from '$app/stores'
+  import GrafFat30 from './GrafFat30.svelte'
+  import GrafPesFat30 from './GrafPesFat30.svelte'
 
-  let ctx
-  let chartObject
-  let data = [12, 19, 3, 5, 2, 3, 10, 20, 3, 9, 200, 9, 1, 2]
-
-  $: {
-    if (ctx != undefined) {
-      if (chartObject != undefined) {
-        chartObject.destroy()
-      }
-
-      chartObject = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange', 'Purple2', 'Val2', 'Graph2', 'Dap', 'Dap'],
-          datasets: [
-            {
-              backgroundColor: 'rgb(80,248,120,0.4)',
-              borderColor: 'rgb(80,248,120,1)',
-              borderRadius: '50px',
-              tension: 0.5,
-              label: 'Receita',
-              data: data,
-              borderWidth: 2
-            },
-          ]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-            }
-          },
-          plugins: {
-            title: {
-              display: true,
-              text: 'Vendas nos Últimos 30 dias',
-              font: { weight: 'bold', size: 20, family: 'Quicksand' }
-            }, 
-            legend: {
-              labels: {
-                font: {
-                  family: "Quicksand"
-                }
-              }
-            }
-          }
-        },
-      })
-    }
-  }
+  export let data
 </script>
 
 <div class="flex justify-center">
   <div class="container rounded-container-token">
-    <h1 class="h1 my-2"> </h1>
     <div class="grid grid-cols-12 gap-2 w-full">
-      <div class="col-span-6 card bg-white dark:bg-white">
-        <canvas class="chart" bind:this={ctx} />
+      <div class="col-span-12 text-center">
+        <h1 class="h1">
+          <span class="bg-gradient-to-br from-green-700 to-lime-300 bg-clip-text text-transparent box-decoration-clone">
+            {$page?.data?.sessao?.empresa?.nome_fantasia}
+          </span>
+        </h1>
+        <h4 class="h4">
+          <span class="bg-gradient-to-br from-red-400 to-yellow-300 bg-clip-text text-transparent box-decoration-clone">
+            Dashboard
+          </span>
+        </h4>
+      </div>
+      <div class="col-span-12 lg:col-span-6 card bg-white dark:bg-white">
+        <GrafFat30 {data} />
+      </div>
+      <div class="col-span-12 lg:col-span-6 card bg-white dark:bg-white">
+        <GrafPesFat30 {data} />
       </div>
     </div>
   </div>
