@@ -19,6 +19,8 @@ export const pessoaSchema = z.object({
   dn: zOptional(zDate),
 })
 
+export const criarClienteSchema = pessoaSchema.omit({ id: true, empresa_id: true, criador_id: true, rep: true })
+
 export const criarPessoaSchema = pessoaSchema.omit({ id: true, empresa_id: true, criador_id: true })
 
 export const editarPessoaSchema = pessoaSchema.omit({ empresa_id: true, criador_id: true })

@@ -1,3 +1,4 @@
+import { handleAnyError } from "$lib/helpers"
 import { dbInsert, dbSelectAll, dbSelectOne, dbToggleSoftDelete, dbUpdate } from ".."
 
 /**
@@ -25,17 +26,8 @@ export function criarPessoa(dados) {
       return { valid: false, message: "Pessoa não foi criada", code: "DB_UNKNOWN" }
     }
   } catch (e) {
-    if (Object.getPrototypeOf(e)?.name === 'SqliteError') {
-      if (e.code == 'SQLITE_CONSTRAINT_UNIQUE') {
-        return { valid: false, message: 'Houve problemas em alguns campos', fieldMessage: { email: ['Este e-mail já está em uso.'] } }
-      } else {
-        console.log({ ErroSqlite: { code: e.code, message: e.message } })
-      }
-    } else {
-      console.log({ ErroDesconhecido: Object.getPrototypeOf(e)?.name ?? e })
-    }
-    console.error(e)
-    return { valid: false, message: 'Erro no servidor', code: "DB_UNKNOWN" }
+    const { errorType, cause, fieldErrors, message } = handleAnyError(e)
+    return { valid: false, fieldErrors, message, errorType, code: cause }
   }
 }
 

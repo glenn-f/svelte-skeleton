@@ -1,7 +1,7 @@
-import { FE_VENDA } from "$lib/globals";
+import { EE_DISPONIVEL, FE_VENDA } from "$lib/globals";
 import { handleAnyError } from "$lib/helpers";
 import { intToCurrency } from "$lib/types";
-import { db } from "..";
+import { db, dbSelectOne } from "..";
 
 function transformToCurrencyFields(array, fields) {
   for (let i = 0; i < array.length; i++) {
@@ -56,6 +56,9 @@ function produtosSaidaMap(produtos, estoques) {
   return map
 }
 
+export function consultarEstoqueSimples(eid) {
+  return db.prepare("SELECT *, CAST(preco_unitario AS REAL)/10000 preco_unitario, CAST(custo AS REAL)/10000 custo FROM estoque WHERE id = :eid AND qntd > 0 AND estado = :estado").get({ eid, estado: EE_DISPONIVEL })
+}
 
 export function consultarEstoqueSaida(dados) {
   const { empresa_id } = dados
@@ -66,6 +69,23 @@ JOIN estoque e ON e.produto_id = p.id AND e.qntd > 0 WHERE p.empresa_id = $empre
       "SELECT 0 qntd_carrinho, e.id, e.produto_id, e.qntd, CAST(e.custo AS REAL)/10000 custo, CAST(e.preco_unitario AS REAL)/10000 preco_unitario, e.condicao, e.origem, e.codigo, e.estado, e.observacoes FROM estoque e \
 JOIN produto p ON e.produto_id = p.id AND p.empresa_id = $empresa_id WHERE e.qntd > 0 \
 ORDER BY e.preco_unitario DESC, e.qntd ASC").all({ empresa_id })
+    const data = produtosSaidaMap(produtos, estoques)
+    return { valid: true, data }
+  } catch (e) {
+    console.error(e)
+    return { valid: false, message: "Erro desconhecido", code: 'DB_UNKNOWN' }
+  }
+}
+
+export function consultarEstoqueDisponivelVenda(dados) {
+  const { empresa_id } = dados
+  try {
+    const produtos = db.prepare("SELECT 0 qntd_carrinho, p.id, p.nome, SUM(e.qntd) qntd, AVG(CAST(e.preco_unitario AS REAL))/10000 preco_medio, pc.id categoria_id, pc.nome categoria FROM produto p LEFT JOIN produto_categoria pc ON pc.id = p.produto_categoria_id \
+JOIN estoque e ON e.produto_id = p.id AND e.qntd > 0 WHERE p.empresa_id = $empresa_id GROUP BY p.id ").all({ empresa_id })
+    const estoques = db.prepare(
+      "SELECT 0 qntd_carrinho, e.id, e.produto_id, e.qntd, CAST(e.custo AS REAL)/10000 custo, CAST(e.preco_unitario AS REAL)/10000 preco_unitario, e.condicao, e.origem, e.codigo, e.estado, e.observacoes FROM estoque e \
+JOIN produto p ON e.produto_id = p.id AND p.empresa_id = $empresa_id WHERE e.qntd > 0 AND e.estado = :estado \
+ORDER BY e.preco_unitario DESC, e.qntd ASC").all({ empresa_id, estado: EE_DISPONIVEL })
     const data = produtosSaidaMap(produtos, estoques)
     return { valid: true, data }
   } catch (e) {
