@@ -85,7 +85,7 @@
               font: { size: 14, family: 'Quicksand' }
             },
             legend: {
-              display: false,
+              display: true,
               labels: {
                 font: {
                   family: 'Quicksand'

@@ -1,7 +1,7 @@
-import { EE_DISPONIVEL, FE_VENDA } from "$lib/globals";
+import { EE_DISPONIVEL, ERRO_CAMPOS, FE_VENDA } from "$lib/globals";
 import { handleAnyError } from "$lib/helpers";
-import { intToCurrency } from "$lib/types";
-import { db, dbSelectOne } from "..";
+import { currencyToInt, intToCurrency } from "$lib/types";
+import { db, dbSelectOne, dbUpdate } from "..";
 
 function transformToCurrencyFields(array, fields) {
   for (let i = 0; i < array.length; i++) {
@@ -114,7 +114,8 @@ export function detalharEstoque(dados) {
   try {
     const data = db.prepare("SELECT e.*, CAST(e.custo AS REAL)/10000 custo, CAST(e.preco_unitario AS REAL)/10000 preco_unitario, p.nome produto_nome, p.titulo_codigo, pc.nome categoria, pc.id categoria_id FROM estoque e \
 LEFT JOIN produto p ON p.id = e.produto_id LEFT JOIN produto_categoria pc ON pc.id = p.produto_categoria_id \
-WHERE e.id = $id").get({ id })
+WHERE e.id = $id AND p.empresa_id = $empresa_id").get({ id, empresa_id })
+    if (!data) return { valid: false, message: "Estoque não encontrado", code: ERRO_CAMPOS }
     const pes = db.prepare("SELECT pe.id pe_id,pe.tipo_pe,pe.criacao,fe.tipo_fe,fe.var_qntd,CAST(fe.var_custo AS REAL)/10000 var_custo,fe.observacoes fe_observacoes, CAST(fc_fe.valor_inicial AS REAL)/10000 valor,fc.tipo_fc,fc.observacoes fc_observacoes FROM pe LEFT JOIN fe ON pe.id = pe_id LEFT JOIN fc_fe ON fc_fe.fe_id = fe.id LEFT JOIN fc ON fc.id = fc_fe.fc_id WHERE fe.estoque_id = $id").all({ id })
     data.pes = custosToMap(pes)
     return { valid: true, data }
@@ -125,8 +126,23 @@ WHERE e.id = $id").get({ id })
   }
 }
 
-export function editarEstoque(dados) {
 
+/**
+ * @param {DadosEditarItemInventario} dados 
+ */
+export function editarItemInventario(dados) {
+  let { id, criador_id, observacoes, empresa_id, estado, preco_unitario, regra_comissao_id, regra_tributo_id } = dados
+  preco_unitario = currencyToInt(preco_unitario)
+  try {
+    const estoque = db.prepare("SELECT 1 FROM estoque e JOIN produto p ON p.id = e.produto_id WHERE e.id = $id AND p.empresa_id = $empresa_id").get({ id, empresa_id })
+    if (!estoque) return { valid: true, message: "Estoque inválido" }
+    const res = dbUpdate("estoque", { observacoes, estado, preco_unitario, regra_comissao_id, regra_tributo_id }, { id })
+    if (res.changes == 0) return { valid: true, message: "Nenhuma alteração foi efetivada" }
+    return { valid: true, message: 'Inventário atualizado com sucesso' }
+  } catch (e) {
+    const { errorType, cause, fieldErrors, message } = handleAnyError(e)
+    return { valid: false, fieldErrors, message, errorType, code: cause }
+  }
 }
 
 export function alternarStatusEstoque(dados) {
@@ -152,3 +168,9 @@ export function alternarStatusEstoque(dados) {
   * @template T
   * @typedef {import('..').DBAll<T>} DBAll<T>
 */
+
+/**
+ * @typedef {EditarItemInventario & {id, criador_id, empresa_id}} DadosEditarItemInventario
+ */
+
+/** @typedef {import('$lib/zod/schemas/estoque').EditarItemInventario} EditarItemInventario */

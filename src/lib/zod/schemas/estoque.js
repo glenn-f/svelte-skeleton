@@ -57,3 +57,14 @@ export const criarSaidaEstoqueSchema = z.object({
   observacoes: zOptional(zTString),
   responsavel_id: zOptional(zID),
 })
+
+export const editarInventarioSchema = estoqueEsquema.pick({ observacoes: true, regra_comissao_id: true, regra_tributo_id: true, preco_unitario: true, estado: true })
+  .refine(({ preco_unitario, estado }) => !(estado == EE_DISPONIVEL && !Number.isFinite(preco_unitario)), { message: "Campo obrigatório", path: ['preco_unitario'] })
+  .transform(({ observacoes, regra_comissao_id, regra_tributo_id, estado, preco_unitario }) => {
+    regra_comissao_id = regra_comissao_id ?? null
+    regra_tributo_id = regra_tributo_id ?? null
+    observacoes = observacoes ?? null
+    return { observacoes, regra_comissao_id, regra_tributo_id, estado, preco_unitario }
+  })
+
+/** @typedef {typeof editarInventarioSchema._type} EditarItemInventario */

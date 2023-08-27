@@ -1,22 +1,31 @@
 <script>
-  import InputDateTime from '$lib/components/Forms/InputDateTime.svelte'
-  import InputMoeda from '$lib/components/Forms/InputMoeda.svelte'
-  import InputNumber from '$lib/components/Forms/InputNumber.svelte'
-  import InputText from '$lib/components/Forms/InputText.svelte'
-  import { FCC_CUSTO, getClasseContabil, mapCondicao, mapEstadoEstoque, mapFluxoContabil, mapFluxoContabilClasse, mapFluxoEstoque, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
-  import { formatDateTime, formatMoeda } from '$lib/helpers.js'
-  import { fade } from 'svelte/transition'
-  import Icon from '@iconify/svelte'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
-  import ShowBox from '$lib/components/ShowBox.svelte'
   import ExternalLinkIcon from '$lib/components/ExternalLinkIcon.svelte'
-  import InputGroup from '$lib/components/Forms/InputGroup.svelte'
-  import IconButton from '$lib/components/IconButton.svelte'
   import Button from '$lib/components/Forms/Button.svelte'
+  import ShowBox from '$lib/components/ShowBox.svelte'
   import VariacaoNumero from '$lib/components/VariacaoNumero.svelte'
+  import { getClasseContabil, mapCondicao, mapEstadoEstoque, mapFluxoContabil, mapFluxoEstoque, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
+  import { formatDateTime, formatMoeda, formatTaxa } from '$lib/helpers.js'
+  import Icon from '@iconify/svelte'
+  import { modalStore } from '@skeletonlabs/skeleton'
+  import ModalEditarItem from './ModalEditarItem.svelte'
+  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   export let data
 
+  function abrirEditarItem() {
+    modalStore.trigger({
+      type: 'component',
+      component: {
+        ref: ModalEditarItem,
+        props: { data, formData: data.formEditarItem }
+      }
+    })
+  }
+
   $: estoque = data.estoque || {}
+  $: regraComissao = data?.regrasComissao?.find((v) => v.id == data?.estoque?.regra_comissao_id)
+  $: regraTributacao = data?.regrasTributo?.find((v) => v.id == data?.estoque?.regra_tributo_id)
+  $: rc_text = regraComissao ? `${regraComissao.nome}: ${regraComissao.descricao} (Taxa: ${formatTaxa(regraComissao.taxa_fixa)}% + Bônus: ${formatMoeda(regraComissao.bonus_fixo)})` : '-'
+  $: rt_text = regraTributacao ? `${regraTributacao.nome}: ${regraTributacao.descricao} (Taxa: ${formatTaxa(regraTributacao.taxa_fixa)}%)` : '-'
 </script>
 
 <div class="grid place-items-center">
@@ -84,11 +93,15 @@
       <div class="col-span-6 lg:col-span-2">
         <ShowBox label="Data de Deleção">{formatDateTime(estoque.delecao) || '-'}</ShowBox>
       </div>
-      {#if estoque.observacoes}
+      <div class="col-span-6 lg:col-span-6">
+        <ShowBox label="Regra de Tributação">{rt_text}</ShowBox>
+      </div>
+      <div class="col-span-6 lg:col-span-6">
+        <ShowBox label="Regra de Comissão">{rc_text}</ShowBox>
+      </div>
         <div class="col-span-12">
-          <ShowBox label="Observações">{estoque.observacoes}</ShowBox>
+          <ShowBox label="Observações">{estoque.observacoes ?? '-'}</ShowBox>
         </div>
-      {/if}
       <div class="col-span-12 flex items-center justify-center flex-wrap gap-2">
         <Button
           href={`/loja/vender?eid=${estoque.id}`}
@@ -115,12 +128,12 @@
           icon="fa6-solid:plus"
         />
         <Button
-          on:click={() => alert('TODO: modal para edição de dados do item \n(código, origem, condicao, estado, preço, observacoes)')}
+          on:click={abrirEditarItem}
+          disabled={estoque.qntd === 0}
           text="Editar Item"
           data-tooltip="Editar a descrição do item, o estado e preço de venda"
           class="variant-filled-tertiary"
           icon="fa6-solid:pen-to-square"
-          disabled
         />
       </div>
       <div class="col-span-12 flex items-center">
@@ -210,7 +223,7 @@
         </table>
       </div>
       <!-- <div class="col-span-12">
-        <SuperDebug data={estoque} />
+        <SuperDebug data={{ estoque, regrasTributacao: data?.regrasTributo }} />
       </div> -->
     </div>
   </div>
