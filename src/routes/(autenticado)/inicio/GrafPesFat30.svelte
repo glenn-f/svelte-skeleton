@@ -37,8 +37,6 @@
   let ctx
   let chartObject
 
-  console.log(JSON.stringify(dadosPorNome, null, 1))
-
   $: {
     if (ctx != undefined) {
       if (chartObject != undefined) {
@@ -76,7 +74,7 @@
           plugins: {
             title: {
               display: true,
-              text: 'Faturamento Acumlado por Vendedor',
+              text: 'Faturamento Acumulado por Vendedor',
               font: { weight: 'bold', size: 20, family: 'Quicksand' }
             },
             subtitle: {
