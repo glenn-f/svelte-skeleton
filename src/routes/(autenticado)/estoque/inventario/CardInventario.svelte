@@ -1,12 +1,13 @@
 <script>
   import { formatInteger, formatMoeda } from '$lib/helpers'
   import Icon from '@iconify/svelte'
+  import { onMount } from 'svelte'
 
   export let icon, title, value, color
   let { qntd, custo, preco } = value
 </script>
 
-<div class={`col-span-1 card p-2 card-hover !bg-${color}-500 border-2 border-${color}-700`}>
+<div class="col-span-1 card p-2 card-hover border-2" style={`background-color: ${color};`}>
   <span class="flex flex-col items-center gap-3">
     <span class="flex justify-center items-center gap-2">
       {#if icon}

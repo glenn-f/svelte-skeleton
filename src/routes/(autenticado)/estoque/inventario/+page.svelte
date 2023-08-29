@@ -47,7 +47,7 @@
   </div>
   <div class="grid grid-cols-5 gap-2">
     <CardInventario color="green" value={inventarioDividido?.[EE_DISPONIVEL]} title={mapEstadoEstoque.get(EE_DISPONIVEL)} icon="fa6-solid:check-double" />
-    <CardInventario color="yellow" value={inventarioDividido?.[EE_AVALIACAO]} title={mapEstadoEstoque.get(EE_AVALIACAO)} icon="mdi:tag-arrow-up" />
+    <CardInventario color="purple" value={inventarioDividido?.[EE_AVALIACAO]} title={mapEstadoEstoque.get(EE_AVALIACAO)} icon="mdi:tag-arrow-up" />
     <CardInventario color="orange" value={inventarioDividido?.[EE_AUDITORIA]} title={mapEstadoEstoque.get(EE_AUDITORIA)} icon="fluent-mdl2:compliance-audit" />
     <CardInventario color="blue" value={inventarioDividido?.[EE_MANUTENCAO]} title={mapEstadoEstoque.get(EE_MANUTENCAO)} icon="mdi:wrench-clock" />
     <CardInventario color="gray" value={inventarioDividido?.[EE_USOINTERNO]} title={mapEstadoEstoque.get(EE_USOINTERNO)} icon="mdi:account-lock" />
