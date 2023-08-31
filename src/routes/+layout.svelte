@@ -15,7 +15,7 @@
 </svelte:head>
 
 <Toast position="t" />
-<Modal position="absolute top-20 !h-min" buttonTextCancel="Cancelar" buttonTextConfirm="Confirmar" buttonTextSubmit="Enviar" />
+<Modal position="" buttonTextCancel="Cancelar" buttonTextConfirm="Confirmar" buttonTextSubmit="Enviar" />
 <Drawer />
 
 <slot />

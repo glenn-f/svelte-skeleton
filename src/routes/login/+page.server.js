@@ -5,7 +5,7 @@ import { message, setError, superValidate } from 'sveltekit-superforms/server'
 
 export async function load() {
   const form = await superValidate(loginSchema)
-  return { form }
+  return { form, title: "Autenticação" }
 }
 
 export const actions = {

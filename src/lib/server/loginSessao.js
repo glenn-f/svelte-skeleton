@@ -1,4 +1,5 @@
 import { dev } from '$app/environment'
+import { USUARIO_ADMINISTRADOR, USUARIO_MEMBRO } from '$lib/globals'
 import { apagarSessao, apagarSessoesExpiradas, detalharSessao, criarSessao, apagarSessoesUsuario } from './db/models/sessao'
 import { verificarCredenciaisUsuario } from './db/models/usuario'
 import { gerarRandomHex } from './encript'
@@ -119,6 +120,64 @@ export function apagarSessaoUsuario(sid) {
     cacheSessoes.delete(sid)
     apagarSessao(sid)
   }
+}
+
+export function podeAcessar(rota, sessao) {
+  const admin = sessao.perm == USUARIO_ADMINISTRADOR
+  if (admin) return true
+  const perms = { ...sessao.gpe, membro: sessao.perm == USUARIO_MEMBRO }
+  rota = rota.slice(15).split("/")
+  let pag = paginas
+  for (let i = 0; i < rota.length; i++) {
+    const r = rota[i];
+    if (!(r in pag)) return true
+    pag = pag[r]
+    if (pag.$gpe === true || perms[pag.$gpe]) {
+      pag = pag.$pages
+      if (!pag) return true
+      continue
+    }
+    return false
+  }
+  return true
+}
+
+const paginas = {
+  loja: {
+    $gpe: "menu_loja", $pages: {
+      disponivel: { $gpe: "pode_ver_estoque_disponivel", $pages: { $all: true } },
+      historico: { $gpe: "pode_ver_historico_vendas", $pages: { $all: true } },
+      vender: { $gpe: "pode_iniciar_venda", $pages: { $all: true } },
+    }
+  },
+  estoque: {
+    $gpe: "menu_estoque", $pages: {
+      inventario: { $gpe: "pode_ver_estoque", $pages: { ["[id]"]: { $gpe: "pode_entrada_estoque" } } },
+      entradas: { $gpe: "pode_entrada_estoque", $pages: { $all: true } },
+      saidas: { $gpe: "pode_saida_estoque", $pages: { $all: true } },
+    }
+  },
+  transacoes: {
+    $gpe: "menu_transacoes", $pages: {
+      saldo: { $gpe: "pode_ver_saldo", $pages: { $all: true } },
+      historico: { $gpe: "pode_transacao_despesa", $pages: { $all: true } },
+    }
+  },
+  cadastros: {
+    $gpe: "menu_cadastros", $pages: {
+      usuarios: { $gpe: "pode_cadastrar_usuario", $pages: { $all: true } },
+      contas: { $gpe: "pode_cadastrar_conta", $pages: { $all: true } },
+      produtos: { $gpe: "pode_cadastrar_produto", $pages: { $all: true } },
+      pessoas: { $gpe: "pode_cadastrar_pessoa", $pages: { $all: true } },
+      tributos: { $gpe: "pode_cadastrar_conta", $pages: { $all: true } },
+      comissao: { $gpe: "pode_cadastrar_conta", $pages: { $all: true } },
+    }
+  },
+  perfil: {
+    $gpe: true, $pages: {
+      empresas: { $gpe: "membro", $pages: { $all: true } },
+    }
+  },
 }
 
 //* Definição de Tipos JSDoc

@@ -12,7 +12,7 @@
     nome: initialData.nome,
     email: initialData.email,
     gpe_id: initialData.gpe_id,
-    tipo_usuario: initialData.tipo_usuario,
+    tipo_usuario: initialData.tipo_usuario
   }
 
   function handleEditar() {
@@ -33,6 +33,6 @@
 
 <div class="flex flex-nowrap gap-3">
   <!-- <IconButton href="usuarios/1" icon="fa6-solid:arrow-up-right-from-square">Abrir Detalhes</IconButton> -->
-  <IconButton on:click={handleEditar} icon="fa6-solid:pen-to-square">Editar</IconButton>
-  <IconButton {disabled} on:click={handleSenha} icon="fa6-solid:lock">Alterar Senha</IconButton>
+  <IconButton on:click={handleEditar} icon="fa6-solid:pen-to-square" data-tooltip="Editar" data-placement="left" />
+  <IconButton {disabled} on:click={handleSenha} icon="fa6-solid:lock" data-tooltip="Alterar Senha" data-placement="left" />
 </div>

@@ -4,7 +4,7 @@
   import { modalStore } from '@skeletonlabs/skeleton'
   import ModalFormUsuario from './ModalFormUsuario.svelte'
   export let formData, initialData, permOptions
-  
+
   $: propsEditar = {
     modo: 'editar',
     formData,
@@ -29,6 +29,6 @@
 </script>
 
 <div class="flex flex-nowrap gap-3">
-  <IconButton disabled icon="fa6-solid:arrow-up-right-from-square">Abrir Detalhes</IconButton>
-  <IconButton on:click={handleEditar} icon="fa6-solid:pen-to-square" {disabled}>Editar</IconButton>
+  <IconButton disabled icon="fa6-solid:arrow-up-right-from-square" data-tooltip="Abrir Detalhes" data-placement="left" />
+  <IconButton on:click={handleEditar} icon="fa6-solid:pen-to-square" {disabled} data-tooltip="Editar" data-placement="left" />
 </div>

@@ -18,6 +18,7 @@
   export let loadingText = 'Carregando...'
   export let href = undefined
   export let type = 'button'
+  export let target = undefined
   $: classes = `btn variant-filled ${$$restProps.class ?? ''}`
   $: href = disabled ? undefined : href
   $: text = text ? text.toUpperCase() : ''
@@ -29,7 +30,7 @@
     <ButtonInner {icon} {iconRight} {iconClass} {iconRightClass} {loading} {loadingText} {text} {textClass} />
   </button>
 {:else}
-  <a {...$$restProps} {href} class={classes}>
+  <a {...$$restProps} {href} {target} class={classes}>
     <ButtonInner {icon} {iconRight} {iconClass} {iconRightClass} {loading} {loadingText} {text} {textClass} />
   </a>
 {/if}

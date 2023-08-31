@@ -19,13 +19,15 @@
           label: item.nome,
           data: [],
           borderColor: getRandomColor(), // Função para gerar cores aleatórias
-          fill: false
+          fill: false,
+          tension: 0.1,
+          pointStyle: false
         }
       }
       const valorAcumulado = dadosPorNome[item.nome].data.length > 0 ? dadosPorNome[item.nome].data[dadosPorNome[item.nome].data.length - 1].y + item.faturamento : item.faturamento
 
       dadosPorNome[item.nome].data.push({
-        x: item.dia.substring(0,5),
+        x: item.dia.substring(0, 5),
         y: valorAcumulado
       })
     })
@@ -49,10 +51,19 @@
           datasets: Object.values(dadosPorNome)
         },
         options: {
+          animations: {
+            tension: {
+              duration: 500,
+              easing: 'linear',
+              from: 0.5,
+              to: 0,
+              loop: true
+            }
+          },
           scales: {
             x: {
               ticks: {
-                font: {family: "Quicksand"}
+                font: { family: 'Quicksand' }
               },
               title: {
                 display: true,
@@ -62,7 +73,7 @@
             },
             y: {
               ticks: {
-                font: {family: "Quicksand"}
+                font: { family: 'Quicksand' }
               },
               title: {
                 display: true,
@@ -85,6 +96,11 @@
             legend: {
               display: true,
               labels: {
+                boxWidth: 10,
+                boxHeight: 10,
+
+                useBorderRadius: true,
+                borderRadius: 5,
                 font: {
                   family: 'Quicksand'
                 }

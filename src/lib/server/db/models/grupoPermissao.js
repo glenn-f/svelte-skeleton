@@ -102,12 +102,28 @@ export function alternarStatusGPE(dados) {
   }
 }
 
+export function gpeSessao(gpe) {
+  const { id, empresa_id, nome, delecao, pode_iniciar_venda, pode_ver_estoque_disponivel, pode_ver_historico_vendas, pode_ver_estoque, pode_entrada_estoque, pode_saida_estoque, pode_ver_saldo, pode_transacao_despesa, pode_transacao_receita, pode_cadastrar_conta, pode_cadastrar_pessoa, pode_cadastrar_produto, pode_cadastrar_usuario, } = gpe
+  const menu_loja = pode_iniciar_venda | pode_ver_estoque_disponivel | pode_ver_historico_vendas
+  const menu_estoque = pode_ver_estoque | pode_entrada_estoque | pode_saida_estoque
+  const menu_transacoes = pode_ver_saldo | pode_transacao_despesa | pode_transacao_receita
+  const menu_cadastros = pode_cadastrar_conta | pode_cadastrar_pessoa | pode_cadastrar_produto | pode_cadastrar_usuario
+  return {
+    id, empresa_id, nome, delecao,
+    pode_iniciar_venda, pode_ver_estoque_disponivel, pode_ver_historico_vendas,
+    pode_ver_estoque, pode_entrada_estoque, pode_saida_estoque,
+    pode_ver_saldo, pode_transacao_despesa, pode_transacao_receita,
+    pode_cadastrar_conta, pode_cadastrar_pessoa, pode_cadastrar_produto, pode_cadastrar_usuario,
+    menu_loja, menu_estoque, menu_transacoes, menu_cadastros
+  }
+}
+
 export function detalharGPE(dados) {
   const { id } = dados
   try {
     const query = db.prepare("SELECT * FROM grupo_permissao_empresa WHERE id = $id AND delecao IS NULL")
     const rs = query.get({ id })
-    return rs ? rs : undefined
+    return rs ? gpeSessao(rs) : undefined
   } catch (e) {
     console.error(e)
     return undefined

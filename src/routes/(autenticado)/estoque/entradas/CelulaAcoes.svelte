@@ -4,5 +4,5 @@
 </script>
 
 <div class="flex flex-nowrap gap-3">
-  <IconButton href={`/estoque/entradas/${data.id}`} icon="fa6-solid:eye">Ver Detalhes</IconButton>
+  <IconButton href={`/estoque/entradas/${data.id}`} icon="fa6-solid:eye" data-tooltip="Ver Detalhes" data-placement="left" />
 </div>

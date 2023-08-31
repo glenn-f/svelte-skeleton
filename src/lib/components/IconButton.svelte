@@ -8,7 +8,7 @@
   $: classNames = (iconClass ?? '') + ' hover:text-primary-500-400-token transition-all'
 </script>
 
-{#if href}
+{#if href && !$$restProps.disabled}
   <a {...$$restProps} {href} on:click>
     <Icon {width} {height} {icon} class={classNames} />
   </a>

@@ -13,5 +13,5 @@
 </script>
 
 <div class="flex flex-nowrap gap-3">
-  <IconButton on:click={handleEditar} icon="fa6-solid:pen-to-square">Editar</IconButton>
+  <IconButton on:click={handleEditar} icon="fa6-solid:pen-to-square" data-tooltip="Editar" data-placement="left" />
 </div>

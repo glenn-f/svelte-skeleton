@@ -1,4 +1,4 @@
-import { buscarSessaoUsuario } from '$lib/server/loginSessao'
+import { buscarSessaoUsuario, podeAcessar } from '$lib/server/loginSessao'
 import { Logger } from '$lib/logger'
 import { dev } from '$app/environment'
 import { sequence } from '@sveltejs/kit/hooks'
@@ -33,9 +33,15 @@ async function lerCookies({ event, resolve }) {
 }
 
 async function verificarAutenticacao({ event, resolve }) {
-  if (event.route.id?.startsWith('/(autenticado)') && !event.locals.sessao) {
-    event.locals.log.auth("Rota não autorizada para este usuário")
-    throw redirect(307, "/login")
+  if (event.route.id?.startsWith('/(autenticado)')) {
+    if (!event.locals.sessao) {
+      event.locals.log.auth("Rota não autorizada para este usuário")
+      throw redirect(307, "/login")
+    }
+    if (!podeAcessar(event.route.id, event.locals.sessao)) {
+      event.locals.log.auth("Rota não permitida para este usuário")
+      throw redirect(307, "/inicio")
+    }
   }
 
   return resolve(event)

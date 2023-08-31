@@ -16,30 +16,36 @@
         rounded="rounded-t-md"
         class="!-0 bg-surface-200-700-token w-full rounded-container-token shadow-md"
       >
-        <TabAnchor href="/estoque/inventario" selected={$page.url.pathname.startsWith('/estoque/inventario')}>
-          <svelte:fragment slot="lead">
-            <div class="grid place-items-center">
-              <Icon icon="fluent-mdl2:product-list" width="32px" height="32px" />
-            </div>
-          </svelte:fragment>
-          <span>Inventário</span>
-        </TabAnchor>
-        <TabAnchor href="/estoque/entradas" selected={$page.url.pathname.startsWith('/estoque/entradas')}>
-          <svelte:fragment slot="lead">
-            <div class="grid place-items-center">
-              <Icon icon="ri:inbox-archive-fill" width="32px" height="32px" />
-            </div>
-          </svelte:fragment>
-          <span>Entradas</span>
-        </TabAnchor>
-        <TabAnchor href="/estoque/saidas" selected={$page.url.pathname.startsWith('/estoque/saidas')}>
-          <svelte:fragment slot="lead">
-            <div class="grid place-items-center">
-              <Icon icon="ri:inbox-unarchive-fill" width="32px" height="32px" />
-            </div>
-          </svelte:fragment>
-          <span>Saídas</span>
-        </TabAnchor>
+        {#if $page.data.sessao?.gpe?.pode_ver_estoque}
+          <TabAnchor href="/estoque/inventario" selected={$page.url.pathname.startsWith('/estoque/inventario')}>
+            <svelte:fragment slot="lead">
+              <div class="grid place-items-center">
+                <Icon icon="fluent-mdl2:product-list" width="32px" height="32px" />
+              </div>
+            </svelte:fragment>
+            <span>Inventário</span>
+          </TabAnchor>
+        {/if}
+        {#if $page.data.sessao?.gpe?.pode_entrada_estoque}
+          <TabAnchor href="/estoque/entradas" selected={$page.url.pathname.startsWith('/estoque/entradas')}>
+            <svelte:fragment slot="lead">
+              <div class="grid place-items-center">
+                <Icon icon="ri:inbox-archive-fill" width="32px" height="32px" />
+              </div>
+            </svelte:fragment>
+            <span>Entradas</span>
+          </TabAnchor>
+        {/if}
+        {#if $page.data.sessao?.gpe?.pode_saida_estoque}
+          <TabAnchor href="/estoque/saidas" selected={$page.url.pathname.startsWith('/estoque/saidas')}>
+            <svelte:fragment slot="lead">
+              <div class="grid place-items-center">
+                <Icon icon="ri:inbox-unarchive-fill" width="32px" height="32px" />
+              </div>
+            </svelte:fragment>
+            <span>Saídas</span>
+          </TabAnchor>
+        {/if}
         <div class="bg-surface-100-800-token p-2 rounded-b-md" slot="panel">
           <slot />
         </div>
