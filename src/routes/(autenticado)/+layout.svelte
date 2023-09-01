@@ -29,7 +29,7 @@
     <AppBar gridColumns="grid-cols-3" padding="p-1" slotDefault="place-self-center" slotTrail="place-content-end" background="bg-surface-300 dark:bg-surface-800 shadow-lg">
       <svelte:fragment slot="lead">
         {#if data?.sessao?.empresa?.nome_fantasia}
-          <a href class="btn btn-sm variant-soft-surface hover:variant-soft-primary grid place-items-center">
+          <a href="/inicio" class="btn btn-sm variant-soft-surface hover:variant-soft-primary grid place-items-center">
             <h5 class="h5 text-center flex gap-1 items-center">
               <Icon icon="fa6-solid:building" />
               {data.sessao.empresa.nome_fantasia}
