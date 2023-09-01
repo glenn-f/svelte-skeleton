@@ -19,14 +19,14 @@
     <div class="grid grid-cols-12 gap-2 w-full">
       {#if haEmpresa}
         <div class="col-span-12 text-center">
-          <h1 class="h1">
+          <!-- <h1 class="h1">
             <span class="bg-gradient-to-br from-green-700 to-lime-300 bg-clip-text text-transparent box-decoration-clone">
               {data.sessao?.empresa.nome_fantasia}
             </span>
-          </h1>
-          <h4 class="h4">
+          </h1> -->
+          <h2 class="h2">
             <span class="bg-gradient-to-br from-red-400 to-yellow-300 bg-clip-text text-transparent box-decoration-clone"> Dashboard </span>
-          </h4>
+          </h2>
         </div>
         <!-- <div class="col-span-12">
           <Button href="/pdf" target="_blank" icon="fa6-solid:file-pdf" text="PDF" />

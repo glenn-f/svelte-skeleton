@@ -29,11 +29,12 @@
     <AppBar gridColumns="grid-cols-3" padding="p-1" slotDefault="place-self-center" slotTrail="place-content-end" background="bg-surface-300 dark:bg-surface-800 shadow-lg">
       <svelte:fragment slot="lead">
         {#if data?.sessao?.empresa?.nome_fantasia}
-          <a href="/inicio" class="btn btn-sm variant-soft-surface hover:variant-soft-primary grid place-items-center">
-            <h5 class="h5 text-center flex gap-1 items-center">
-              <Icon icon="fa6-solid:building" />
-              {data.sessao.empresa.nome_fantasia}
-            </h5>
+          <a href="/inicio" class="grid place-items-center hover:bg-surface-600 bg-surface-900 rounded-lg transition-all">
+            <div>
+              <img class="h-14 rounded-lg" src="/brand.png" alt="" />
+            </div>
+            <!-- <Icon icon="fa6-solid:building" />
+              {data.sessao.empresa.nome_fantasia} -->
             <!-- <div class="flex items-center gap-1 italic text-xs text-secondary-500-400-token">
                <Icon icon="fa6-solid:rotate" />
                <span>Trocar Empresa</span>
