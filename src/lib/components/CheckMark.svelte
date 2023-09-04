@@ -7,7 +7,7 @@
   $: percent_text = Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(percent * 100)
 </script>
 
-<div class="flex gap-1">
+<div class="inline-flex gap-1 whitespace-nowrap">
   {#if percent >= 1}
     <Icon icon="mdi:checkbox-marked" {width} {height} color="rgb(var(--color-primary-600))" />
   {:else if percent > 0}
