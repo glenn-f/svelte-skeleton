@@ -5,7 +5,7 @@
   import IconButton from '$lib/components/IconButton.svelte'
   import ShowChip from '$lib/components/ShowChip.svelte'
   import { EE_AUDITORIA, EE_AVALIACAO, EE_DISPONIVEL, EE_MANUTENCAO, EE_USOINTERNO, mapCondicao, mapEstadoEstoque, mapFluxoEstoque, mapOrigem } from '$lib/globals'
-  import { formatMoeda } from '$lib/helpers'
+  import { diferencaEmHoras, formatMoeda } from '$lib/helpers'
   import { DataHandler } from '@vincjo/datatables'
   import BtnLimparFiltro from '$lib/components/DataTable/BtnLimparFiltro.svelte'
   export let data
@@ -75,7 +75,8 @@
       </thead>
       <tbody>
         {#each $rows as row}
-          <tr>
+          {@const diffHoras = diferencaEmHoras(row.data_entrada)}
+          <tr class:saida-12h={diffHoras < 12} class:saida-24h={diffHoras < 24} class:saida-36h={diffHoras < 36}>
             <td class="!whitespace-nowrap">{new Date(row.data_entrada).toLocaleString()}</td>
             <td><ShowChip text={mapFluxoEstoque.get(row.forma_entrada)} value={row.forma_entrada} /></td>
             <td>{row.qntd}</td>
@@ -118,3 +119,15 @@
     </table>
   </DataTable>
 </div>
+
+<style>
+  .saida-36h {
+    background-color: rgba(235, 226, 103, 0.4) !important;
+  }
+  .saida-24h {
+    background-color: rgba(105, 247, 226, 0.4) !important;
+  }
+  .saida-12h {
+    background-color: rgba(23, 253, 115, 0.5) !important;
+  }
+</style>

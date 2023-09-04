@@ -16,6 +16,19 @@ export function objectToArray(obj) {
   return obj
 }
 
+/**
+ * 
+ * @param {number} dataMillis Data em milissegundos unix timestamp
+ * @returns {number} Horas em valor absoluto (>= 0)
+ */
+export function diferencaEmHoras(dataMillis) {
+  const dataAntiga = DateTime.fromMillis(dataMillis)
+  const dataAtual = DateTime.now()
+  const diferencaEmHoras = dataAntiga.diff(dataAtual, 'hours').hours
+
+  return Math.abs(diferencaEmHoras)
+}
+
 export function isSvelteStore(obj) {
   return (typeof obj == 'object' && obj !== null && typeof obj.subscribe === 'function')
 }

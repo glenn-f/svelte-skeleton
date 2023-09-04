@@ -2,7 +2,7 @@
   import { DataTable, TH, THF } from '$lib/components/DataTable'
   import ShowChip from '$lib/components/ShowChip.svelte'
   import { mapCondicao, mapOrigem } from '$lib/globals'
-  import { formatMoeda } from '$lib/helpers'
+  import { diferencaEmHoras, formatMoeda } from '$lib/helpers'
   import { DataHandler } from '@vincjo/datatables'
   export let data
 
@@ -44,8 +44,9 @@
         </tr>
       </thead>
       <tbody>
-        {#each $rows as row}
-          <tr>
+        {#each $rows as row, i}
+          {@const diffHoras = diferencaEmHoras(row.data_venda)}
+          <tr class:saida-12h={diffHoras < 12} class:saida-24h={diffHoras < 24} class:saida-36h={diffHoras < 36}>
             <td class="!whitespace-nowrap">{new Date(row.data_venda).toLocaleString()}</td>
             <td>{row.vendedor}</td>
             <td class="!whitespace-nowrap">{row.produto}</td>
@@ -62,3 +63,15 @@
     </table>
   </DataTable>
 </div>
+
+<style>
+  .saida-36h {
+    background-color: rgba(235, 226, 103, 0.4) !important;
+  }
+  .saida-24h {
+    background-color: rgba(105, 247, 226, 0.4) !important;
+  }
+  .saida-12h {
+    background-color: rgba(23, 253, 115, 0.5) !important;
+  }
+</style>

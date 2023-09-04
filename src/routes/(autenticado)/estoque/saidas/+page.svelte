@@ -3,6 +3,7 @@
   import BtnLimparFiltro from '$lib/components/DataTable/BtnLimparFiltro.svelte'
   import IconButton from '$lib/components/IconButton.svelte'
   import { mapProcessoEstoque } from '$lib/globals'
+  import { diferencaEmHoras } from '$lib/helpers.js'
   import Icon from '@iconify/svelte'
   import { DataHandler } from '@vincjo/datatables'
   export let data
@@ -40,7 +41,8 @@
       </thead>
       <tbody>
         {#each $rows as row}
-          <tr>
+          {@const diffHoras = diferencaEmHoras(row.criacao)}
+          <tr class:saida-12h={diffHoras < 12} class:saida-24h={diffHoras < 24} class:saida-36h={diffHoras < 36}>
             <td class="!whitespace-nowrap">{new Date(row.criacao).toLocaleString()}</td>
             <td>{mapProcessoEstoque.get(row.tipo_pe)}</td>
             <td class="!whitespace-nowrap">{row.responsavel ?? ''}</td>
@@ -61,3 +63,15 @@
     </table>
   </DataTable>
 </div>
+
+<style>
+  .saida-36h {
+    background-color: rgba(235, 226, 103, 0.4) !important;
+  }
+  .saida-24h {
+    background-color: rgba(105, 247, 226, 0.4) !important;
+  }
+  .saida-12h {
+    background-color: rgba(23, 253, 115, 0.5) !important;
+  }
+</style>
