@@ -5,6 +5,7 @@
   export let handler = getContext(`dt_handler`)
   /** @type {import("@vincjo/datatables").Field} */
   export let filterBy = null
+  handler.on('clearFilters', () => (value = ''))
   let value = ''
 </script>
 

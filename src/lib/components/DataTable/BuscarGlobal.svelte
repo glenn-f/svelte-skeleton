@@ -1,6 +1,7 @@
 <script>
   /** @type {import("@vincjo/datatables").DataHandler} */
   export let handler
+  handler.on('clearSearch', () => (value = ''))
   let value = ''
 </script>
 
