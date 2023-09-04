@@ -2,13 +2,11 @@
   import { invalidateAll } from '$app/navigation'
   import CardModal from '$lib/components/CardModal.svelte'
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
-  import InputMoeda from '$lib/components/Forms/InputMoeda.svelte'
   import InputPercent from '$lib/components/Forms/InputPercent.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   import { modalStore, toastStore } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
 
   /** Modo em que o modal será aberto
    * @type {'adicionar' | 'editar'} */
@@ -62,10 +60,10 @@
     </svelte:fragment>
     <section class="grid grid-cols-12 gap-1 px-3">
       <div class="col-span-8">
-        <InputText label="Nome da Regra de Comissão" placeholder="Ex: ICMS, Simples" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
+        <InputText label="Nome da Regra de Tributação" placeholder="Ex: ICMS, Simples" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
       </div>
       <div class="col-span-4">
-        <InputPercent casasDecimais={2} error={$errors.taxa_fixa} name="taxa_fixa" label="Taxa da Comissão" bind:value={$form.taxa_fixa} required />
+        <InputPercent casasDecimais={2} error={$errors.taxa_fixa} name="taxa_fixa" label="Taxa da Tributação" bind:value={$form.taxa_fixa} required />
       </div>
       <div class="col-span-12">
         <InputText label="Descrição" placeholder="Dê detalhes sobre este tributo e sua aplicação" name="descricao" bind:value={$form.descricao} error={$errors.descricao} errorSpacing required />

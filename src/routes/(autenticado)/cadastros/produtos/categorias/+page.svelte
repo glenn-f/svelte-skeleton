@@ -1,31 +1,32 @@
 <script>
-  import { Table } from '$lib/components/Table'
+  import { DataTable, TH, THF } from '$lib/components/DataTable'
+  import BtnLimparFiltro from '$lib/components/DataTable/BtnLimparFiltro.svelte'
+  import IconButton from '$lib/components/IconButton.svelte'
+  import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
+  import { DataHandler } from '@vincjo/datatables'
+  import { onMount } from 'svelte'
   import ModalFormCategoria from './ModalFormCategoria.svelte'
-  import { renderComponent } from '@tanstack/svelte-table'
-  import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
-  import CelulaAcoes from './CelulaAcoes.svelte'
-
   export let data
-  const pageSizes = [10, 25, 50]
 
-  let columns = [
-    // { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'nome', header: 'Nome da Categoria' },
-    { header: 'Status', cell: (info) => renderComponent(RowStatusToggle, { id: info.row.original?.id, checked: !info.row.original?.delecao }), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false }
-  ]
+  const handler = new DataHandler([], { rowsPerPage: 10 })
+  $: handler.setRows(data.categorias || [])
+  const rows = handler.getRows()
 
   function handleAdicionar() {
     modalStore.trigger({
       type: 'component',
-      component: {
-        ref: ModalFormCategoria,
-        props: { modo: 'adicionar', formData: data.formAdicionar }
-      }
+      component: { ref: ModalFormCategoria, props: { modo: 'adicionar', formData: data.formAdicionar } }
     })
   }
+  function handleEditar(row) {
+    modalStore.trigger({
+      type: 'component',
+      component: { ref: ModalFormCategoria, props: { modo: 'editar', initialData: { ...row }, formData: data.formEditar } }
+    })
+  }
+  onMount(() => handler.sortAsc('nome'))
 </script>
 
 <div class="grid gap-3">
@@ -36,9 +37,39 @@
       <span>Adicionar</span>
     </button>
   </div>
-  <div class="grid gap-2">
-    {#key data}
-      <Table rows={data.categorias} {columns} {pageSizes} />
-    {/key}
-  </div>
+
+  <DataTable {handler}>
+    <table class="table table-compact table-hover text-center">
+      <thead class="!bg-surface-300-600-token whitespace-nowrap">
+        <tr class="!text-center">
+          <TH orderBy="nome">Nome da Categoria</TH>
+          <TH orderBy={(row) => !row.delecao}>Status</TH>
+          <th>Ações</th>
+        </tr>
+        <tr>
+          <THF filterBy="nome" />
+          <td class="w-0" />
+          <td class="w-0" />
+        </tr>
+      </thead>
+      <tbody>
+        {#each $rows as row}
+          <tr>
+            <td>{row.nome ?? ''}</td>
+            <td><RowStatusToggle id={row.id} checked={!row.delecao} /></td>
+            <td class="flex flex-nowrap justify-center gap-1">
+              <IconButton on:click={() => handleEditar(row)} icon="fa6-solid:pen-to-square" data-tooltip="Editar" data-placement="left" />
+            </td>
+          </tr>
+        {:else}
+          <tr>
+            <td colspan="100">
+              Nenhum registro encontrado
+              <BtnLimparFiltro />
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </DataTable>
 </div>

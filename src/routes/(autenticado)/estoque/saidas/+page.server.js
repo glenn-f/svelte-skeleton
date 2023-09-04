@@ -6,6 +6,6 @@ export async function load({ locals }) {
   const res = consultarSaidas({ empresa_id })
   if (!res.valid) throw error(500, "Erro no servidor")
 
-  const entradas = res.data
-  return { entradas }
+  const saidas = res.data
+  return { saidas }
 }

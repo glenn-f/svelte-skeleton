@@ -1,16 +1,15 @@
 <script>
-  import { Table } from '$lib/components/Table'
+  import { DataTable, TH, THF } from '$lib/components/DataTable'
+  import BtnLimparFiltro from '$lib/components/DataTable/BtnLimparFiltro.svelte'
+  import IconButton from '$lib/components/IconButton.svelte'
+  import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
+  import { formatMoeda, formatTaxa } from '$lib/helpers'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
+  import { DataHandler } from '@vincjo/datatables'
+  import { onMount } from 'svelte'
   import ModalFormProduto from './ModalFormProduto.svelte'
-  import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
-  import CelulaAcoes from './CelulaAcoes.svelte'
-  import { renderComponent } from '@tanstack/svelte-table'
-  import { formatMoeda, formatTaxa } from '$lib/helpers'
-
   export let data
-  const pageSizes = [10, 25, 50]
-
   const getComissao = (id) => {
     const r = data.regrasComissao.find((v) => v.id == id)
     if (!r) return '-'
@@ -24,26 +23,24 @@
     return `${nome}: ${formatTaxa(taxa_fixa)}%`
   }
 
-  let columns = [
-    // { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'nome', header: 'Nome do Produto' },
-    { accessorKey: 'produto_categoria_id', header: 'Categoria', cell: (info) => data.categorias.find((c) => c.id == info.getValue())?.nome },
-    { accessorKey: 'titulo_codigo', header: 'Identificação Única' },
-    { accessorKey: 'regra_tributo_id', header: 'Tributação', cell: ({ getValue: v }) => getTributo(v()) },
-    { accessorKey: 'regra_comissao_id', header: 'Comissão', cell: ({ getValue: v }) => getComissao(v()) },
-    { header: 'Status', cell: (info) => renderComponent(RowStatusToggle, { id: info.row.original?.id, checked: !info.row.original?.delecao }), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { initialData: info.row.original, data }), enableSorting: false }
-  ]
+  const handler = new DataHandler([], { rowsPerPage: 10 })
+  $: handler.setRows(data.produtos || [])
+  const rows = handler.getRows()
+  $: categorias = data.categorias || []
 
   function handleAdicionar() {
     modalStore.trigger({
       type: 'component',
-      component: {
-        ref: ModalFormProduto,
-        props: { modo: 'adicionar', formData: data.formAdicionar, data }
-      }
+      component: { ref: ModalFormProduto, props: { modo: 'adicionar', formData: data.formAdicionar, data } }
     })
   }
+  function handleEditar(row) {
+    modalStore.trigger({
+      type: 'component',
+      component: { ref: ModalFormProduto, props: { modo: 'editar', formData: data.formEditar, data, initialData: { ...row } } }
+    })
+  }
+  onMount(() => handler.sortAsc('nome'))
 </script>
 
 <div class="grid gap-3">
@@ -54,9 +51,51 @@
       <span>Adicionar</span>
     </button>
   </div>
-  <div class="grid gap-2">
-    {#key data}
-      <Table rows={data.produtos} {columns} {pageSizes} />
-    {/key}
-  </div>
+
+  <DataTable {handler}>
+    <table class="table table-compact table-hover text-center">
+      <thead class="!bg-surface-300-600-token whitespace-nowrap">
+        <tr class="!text-center">
+          <TH orderBy="nome">Nome do Produto</TH>
+          <TH orderBy={(row) => categorias.find((c) => c.id == row.produto_categoria_id)?.nome}>Categoria</TH>
+          <TH orderBy="titulo_codigo">Identificação Única</TH>
+          <TH orderBy={(row) => getTributo(row.regra_tributo_id)}>Tributação</TH>
+          <TH orderBy={(row) => getComissao(row.regra_comissao_id)}>Comissão</TH>
+          <TH orderBy={(row) => !row.delecao}>Status</TH>
+          <th>Ações</th>
+        </tr>
+        <tr>
+          <THF filterBy="nome" />
+          <THF filterBy={(row) => categorias.find((c) => c.id == row.produto_categoria_id)?.nome} />
+          <THF filterBy="titulo_codigo" />
+          <THF filterBy={(row) => getTributo(row.regra_tributo_id)} />
+          <THF filterBy={(row) => getComissao(row.regra_comissao_id)} />
+          <td class="w-0" />
+          <td class="w-0" />
+        </tr>
+      </thead>
+      <tbody>
+        {#each $rows as row}
+          <tr>
+            <td>{row.nome ?? ''}</td>
+            <td>{categorias.find((c) => c.id == row.produto_categoria_id)?.nome ?? ''}</td>
+            <td>{row.titulo_codigo ?? ''}</td>
+            <td>{getTributo(row.regra_tributo_id) ?? ''}</td>
+            <td>{getComissao(row.regra_comissao_id) ?? ''}</td>
+            <td><RowStatusToggle id={row.id} checked={!row.delecao} /></td>
+            <td class="flex flex-nowrap justify-center gap-1">
+              <IconButton on:click={() => handleEditar(row)} icon="fa6-solid:pen-to-square" data-tooltip="Editar" data-placement="left" />
+            </td>
+          </tr>
+        {:else}
+          <tr>
+            <td colspan="100">
+              Nenhum registro encontrado
+              <BtnLimparFiltro />
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </DataTable>
 </div>

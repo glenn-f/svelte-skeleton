@@ -1,22 +1,15 @@
 <script>
-  import { Table } from '$lib/components/Table'
-  import { renderComponent } from '@tanstack/svelte-table'
-  import CelulaAcoes from './CelulaAcoes.svelte'
-  import Icon from '@iconify/svelte'
+  import { DataTable, TH, THF } from '$lib/components/DataTable'
+  import BtnLimparFiltro from '$lib/components/DataTable/BtnLimparFiltro.svelte'
+  import IconButton from '$lib/components/IconButton.svelte'
   import { mapProcessoEstoque } from '$lib/globals'
-  import ShowChip from '$lib/components/ShowChip.svelte'
+  import Icon from '@iconify/svelte'
+  import { DataHandler } from '@vincjo/datatables'
   export let data
 
-  $: rows = data.entradas || []
-  let columns = [
-    { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'criacao', header: 'Data Entrada', cell: (info) => new Date(info.getValue()).toLocaleString() },
-    { accessorKey: 'tipo_pe', header: 'Processo de Estoque', cell: (info) => renderComponent(ShowChip, { text: mapProcessoEstoque.get(info.getValue()), value: info.getValue() }) },
-    { accessorKey: 'responsavel', header: 'Responsável' },
-    { accessorKey: 'participante', header: 'Fornecedor' },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { data: info.row.original }), enableSorting: false }
-  ]
-  const pageSizes = [10, 25, 50]
+  const handler = new DataHandler(data.entradas || [], { rowsPerPage: 10 })
+  const rows = handler.getRows()
+  handler.sortDesc('criacao')
 </script>
 
 <div class="grid gap-3">
@@ -27,9 +20,44 @@
       <span>Adicionar</span>
     </a>
   </div>
-  <div class="grid gap-2">
-    {#key data}
-      <Table {rows} {columns} {pageSizes} />
-    {/key}
-  </div>
+
+  <DataTable {handler}>
+    <table class="table table-compact table-hover text-center">
+      <thead class="!bg-surface-300-600-token whitespace-nowrap">
+        <tr class="!text-center">
+          <TH class="w-0" orderBy="criacao">Data Entrada</TH>
+          <TH class="w-0" orderBy={(row) => mapProcessoEstoque.get(row.tipo_pe)}>Processo de Estoque</TH>
+          <TH orderBy="responsavel">Responsável</TH>
+          <TH orderBy="participante">Fornecedor</TH>
+          <th rowspan="2">Ações</th>
+        </tr>
+        <tr>
+          <THF filterBy={(row) => new Date(row.criacao).toLocaleString()} />
+          <THF filterBy={(row) => mapProcessoEstoque.get(row.tipo_pe)} />
+          <THF filterBy="responsavel" />
+          <THF filterBy="participante" />
+        </tr>
+      </thead>
+      <tbody>
+        {#each $rows as row}
+          <tr>
+            <td class="!whitespace-nowrap">{new Date(row.criacao).toLocaleString()}</td>
+            <td>{mapProcessoEstoque.get(row.tipo_pe)}</td>
+            <td class="!whitespace-nowrap">{row.responsavel ?? ''}</td>
+            <td class="!whitespace-nowrap">{row.participante ?? ''}</td>
+            <td class="flex flex-nowrap justify-center">
+              <IconButton href={`/estoque/entradas/${row.id}`} icon="fa6-solid:eye" data-tooltip="Ver Detalhes" data-placement="left" />
+            </td>
+          </tr>
+        {:else}
+          <tr>
+            <td colspan="100">
+              Nenhum registro encontrado
+              <BtnLimparFiltro />
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </DataTable>
 </div>

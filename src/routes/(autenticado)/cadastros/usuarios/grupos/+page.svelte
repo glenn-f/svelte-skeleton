@@ -1,35 +1,33 @@
 <script>
   import CheckMark from '$lib/components/CheckMark.svelte'
-  import { Table } from '$lib/components/Table'
+  import { DataTable, TH, THF } from '$lib/components/DataTable'
+  import BtnLimparFiltro from '$lib/components/DataTable/BtnLimparFiltro.svelte'
+  import IconButton from '$lib/components/IconButton.svelte'
   import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
-  import { renderComponent } from '@tanstack/svelte-table'
-  import CelulaAcoes from './CelulaAcoes.svelte'
+  import { DataHandler } from '@vincjo/datatables'
+  import { onMount } from 'svelte'
   import ModalFormGrupos from './ModalFormGrupos.svelte'
   export let data
 
-  $: rows = data.rows || []
-  let columns = [
-    { accessorKey: 'nome', header: 'Nome do Grupo' },
-    { accessorKey: 'menu_loja', header: 'Permissão Loja', cell: (info) => renderComponent(CheckMark, { percent: info.getValue(), showPercentLabel: true }), enableSorting: false },
-    { accessorKey: 'menu_estoque', header: 'Permissão Estoque', cell: (info) => renderComponent(CheckMark, { percent: info.getValue(), showPercentLabel: true }), enableSorting: false },
-    { accessorKey: 'menu_transacoes', header: 'Permissão Transações', cell: (info) => renderComponent(CheckMark, { percent: info.getValue(), showPercentLabel: true }), enableSorting: false },
-    { accessorKey: 'menu_cadastros', header: 'Permissão Cadastros', cell: (info) => renderComponent(CheckMark, { percent: info.getValue(), showPercentLabel: true }), enableSorting: false },
-    { header: 'Status', cell: (info) => renderComponent(RowStatusToggle, { id: (info.row.original?.id), checked: (!info.row.original?.delecao) }), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.form, initialData: info.row.original }), enableSorting: false }
-  ]
-  const pageSizes = [10, 25, 50]
+  const handler = new DataHandler([], { rowsPerPage: 10 })
+  $: handler.setRows(data.rows || [])
+  const rows = handler.getRows()
 
   function handleAdicionar() {
     modalStore.trigger({
       type: 'component',
-      component: {
-        ref: ModalFormGrupos,
-        props: { modo: 'adicionar', formData: data.formAdicionar }
-      }
+      component: { ref: ModalFormGrupos, props: { modo: 'adicionar', formData: data.formAdicionar } }
     })
   }
+  function handleEditar(row) {
+    modalStore.trigger({
+      type: 'component',
+      component: { ref: ModalFormGrupos, props: { modo: 'editar', initialData: { ...row }, formData: data.formEditar } }
+    })
+  }
+  onMount(() => handler.sortAsc('nome'))
 </script>
 
 <div class="grid gap-3">
@@ -40,9 +38,51 @@
       <span>Adicionar</span>
     </button>
   </div>
-  <div class="grid gap-2">
-    {#key data}
-      <Table {rows} {columns} {pageSizes} />
-    {/key}
-  </div>
+
+  <DataTable {handler}>
+    <table class="table table-compact table-hover text-center">
+      <thead class="!bg-surface-300-600-token whitespace-nowrap">
+        <tr class="!text-center">
+          <TH orderBy="nome">Nome do Grupo</TH>
+          <TH orderBy="menu_loja">Permissão Loja</TH>
+          <TH orderBy="menu_estoque">Permissão Estoque</TH>
+          <TH orderBy="menu_transacoes">Permissão Transações</TH>
+          <TH orderBy="menu_cadastros">Permissão Cadastros</TH>
+          <TH orderBy={(row) => !row.delecao}>Status</TH>
+          <th>Ações</th>
+        </tr>
+        <tr>
+          <THF filterBy="nome" />
+          <THF filterBy="menu_loja" />
+          <THF filterBy="menu_estoque" />
+          <THF filterBy="menu_transacoes" />
+          <THF filterBy="menu_cadastros" />
+          <td />
+          <td />
+        </tr>
+      </thead>
+      <tbody>
+        {#each $rows as row}
+          <tr>
+            <td>{row.nome ?? ''}</td>
+            <td><CheckMark percent={row.menu_loja} showPercentLabel={true} /></td>
+            <td><CheckMark percent={row.menu_estoque} showPercentLabel={true} /></td>
+            <td><CheckMark percent={row.menu_transacoes} showPercentLabel={true} /></td>
+            <td><CheckMark percent={row.menu_cadastros} showPercentLabel={true} /></td>
+            <td><RowStatusToggle id={row.id} checked={!row.delecao} /></td>
+            <td class="flex flex-nowrap justify-center gap-1">
+              <IconButton on:click={() => handleEditar(row)} icon="fa6-solid:pen-to-square" data-tooltip="Editar" data-placement="left" />
+            </td>
+          </tr>
+        {:else}
+          <tr>
+            <td colspan="100">
+              Nenhum registro encontrado
+              <BtnLimparFiltro />
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </DataTable>
 </div>

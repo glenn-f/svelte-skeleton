@@ -1,50 +1,83 @@
 <script>
-  import { Table } from '$lib/components/Table'
+  import { DataTable, TH, THF } from '$lib/components/DataTable'
+  import BtnLimparFiltro from '$lib/components/DataTable/BtnLimparFiltro.svelte'
+  import IconButton from '$lib/components/IconButton.svelte'
   import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
   import { PESSOA_FISICA, mapTipoPessoa } from '$lib/globals'
+  import { formatCNPJ, formatCPF } from '$lib/helpers'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
-  import { renderComponent } from '@tanstack/svelte-table'
-  import CelulaAcoes from '../CelulaAcoes.svelte'
+  import { DataHandler } from '@vincjo/datatables'
+  import { onMount } from 'svelte'
   import ModalFormPessoa from '../ModalFormPessoa.svelte'
-  import { formatCNPJ, formatCPF } from '$lib/helpers'
   export let data
 
-  $: rows = data.pessoas || []
-  let columns = [
-    // { accessorKey: 'id', header: 'ID' },
-    // { accessorKey: 'criacao', header: 'Criação', cell: (info) => new Date(info.getValue()).toLocaleString() },
-    // { accessorKey: 'desativacao', header: 'Desativação', cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleString() : '') },
-    { accessorKey: 'tipo_pessoa', header: 'Tipo Pessoa', cell: (info) => mapTipoPessoa.get(info.getValue()) },
-    { accessorKey: 'nome', header: 'Nome Completo/Nome Fantasia' },
-    { header: 'CPF/CNPJ', cell: (info) => (info.row.original.tipo_pessoa == PESSOA_FISICA ? formatCPF(info.row.original.cpf) : formatCNPJ(info.row.original.cnpj)) },
-    { header: 'Status', cell: (info) => renderComponent(RowStatusToggle, { id: info.row.original?.id, checked: !info.row.original?.delecao }), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original }), enableSorting: false }
-  ]
-  const pageSizes = [10, 25, 50]
+  const handler = new DataHandler([], { rowsPerPage: 10 })
+  $: handler.setRows(data.pessoas || [])
+  const rows = handler.getRows()
 
   function handleAdicionar() {
     modalStore.trigger({
       type: 'component',
-      component: {
-        ref: ModalFormPessoa,
-        props: { modo: 'cliente', formData: data.formAdicionar, permOptions: data.permOptions }
-      }
+      component: { ref: ModalFormPessoa, props: { modo: 'cliente', formData: data.formAdicionar } }
     })
   }
+  function handleEditar(row) {
+    modalStore.trigger({
+      type: 'component',
+      component: { ref: ModalFormPessoa, props: { modo: 'editar', initialData: { ...row }, formData: data.formEditar } }
+    })
+  }
+  onMount(() => handler.sortAsc('nome'))
 </script>
 
 <div class="grid gap-3">
   <div class="flex items-center">
-    <h1 class="h1 text-center mr-3">Clientes</h1>
+    <h1 class="h1 text-center mr-3">Cliente</h1>
     <button class="btn variant-filled-primary h-min" on:click={handleAdicionar}>
       <Icon icon="fa6-solid:plus" />
       <span>Adicionar</span>
     </button>
   </div>
-  <div class="grid gap-2">
-    {#key data}
-      <Table {rows} {columns} {pageSizes} />
-    {/key}
-  </div>
+
+  <DataTable {handler}>
+    <table class="table table-compact table-hover text-center">
+      <thead class="!bg-surface-300-600-token whitespace-nowrap">
+        <tr class="!text-center">
+          <TH orderBy={(row) => mapTipoPessoa.get(row.tipo_pessoa)}>Tipo Pessoa</TH>
+          <TH orderBy="nome">Nome Completo/Nome Fantasia</TH>
+          <TH orderBy={(row) => (row.tipo_pessoa == PESSOA_FISICA ? formatCPF(row.cpf) : formatCNPJ(row.cnpj))}>CPF/CNPJ</TH>
+          <TH orderBy={(row) => !row.delecao}>Status</TH>
+          <th>Ações</th>
+        </tr>
+        <tr>
+          <THF filterBy={(row) => mapTipoPessoa.get(row.tipo_pessoa)} />
+          <THF filterBy="nome" />
+          <THF filterBy={(row) => (row.tipo_pessoa == PESSOA_FISICA ? formatCPF(row.cpf) : formatCNPJ(row.cnpj))} />
+          <td class="w-0" />
+          <td class="w-0" />
+        </tr>
+      </thead>
+      <tbody>
+        {#each $rows as row}
+          <tr>
+            <td>{mapTipoPessoa.get(row.tipo_pessoa) ?? ''}</td>
+            <td>{row.nome ?? ''}</td>
+            <td>{row.tipo_pessoa == PESSOA_FISICA ? formatCPF(row.cpf) : formatCNPJ(row.cnpj) ?? ''}</td>
+            <td><RowStatusToggle id={row.id} checked={!row.delecao} /></td>
+            <td class="flex flex-nowrap justify-center gap-1">
+              <IconButton on:click={() => handleEditar(row)} icon="fa6-solid:pen-to-square" data-tooltip="Editar" data-placement="left" />
+            </td>
+          </tr>
+        {:else}
+          <tr>
+            <td colspan="100">
+              Nenhum registro encontrado
+              <BtnLimparFiltro />
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </DataTable>
 </div>

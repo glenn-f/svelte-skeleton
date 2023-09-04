@@ -1,17 +1,18 @@
 <script>
-  import { Table } from '$lib/components/Table'
+  import CheckMark from '$lib/components/CheckMark.svelte'
+  import { DataTable, TH, THF } from '$lib/components/DataTable'
+  import BtnLimparFiltro from '$lib/components/DataTable/BtnLimparFiltro.svelte'
+  import IconButton from '$lib/components/IconButton.svelte'
   import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
+  import { formatTaxa } from '$lib/helpers'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
-  import { renderComponent } from '@tanstack/svelte-table'
-  import CelulaAcoes from './CelulaAcoes.svelte'
+  import { DataHandler } from '@vincjo/datatables'
+  import { onMount } from 'svelte'
   import ModalFormForma from './ModalFormForma.svelte'
-  import { formatMoeda, formatTaxa } from '$lib/helpers'
-  import CheckMark from '$lib/components/CheckMark.svelte'
   export let data
-
-  $: rows =
-    data.formas?.map((v) => {
+  function formasRearrange(formas) {
+    return formas.map((v) => {
       let var_taxa,
         min_taxa = undefined,
         max_taxa = undefined
@@ -23,33 +24,30 @@
           min_taxa = min_taxa == undefined || p.taxa_encargo < min_taxa ? p.taxa_encargo : min_taxa
           max_taxa = max_taxa == undefined || p.taxa_encargo > max_taxa ? p.taxa_encargo : max_taxa
         }
-
         var_taxa = min_taxa != max_taxa ? `${formatTaxa(min_taxa)} ~ ${formatTaxa(max_taxa)}%` : formatTaxa(max_taxa) + '%'
       }
       return { ...v, var_taxa }
-    }) || []
+    })
+  }
+
+  const handler = new DataHandler([], { rowsPerPage: 10 })
+  $: handler.setRows(formasRearrange(data.formas || []))
+  const rows = handler.getRows()
   $: contas = data.contas || []
-  let columns = [
-    { accessorKey: 'conta_id', header: 'Conta', cell: (info) => contas.find((v) => v.id === info.getValue())?.nome },
-    { accessorKey: 'nome', header: 'Forma de Transação' },
-    { accessorKey: 'var_taxa', header: 'Taxa de Encargo' },
-    { accessorKey: 'pode_receber', header: 'Receber', cell: (info) => renderComponent(CheckMark, { percent: info.getValue() }), enableSorting: false },
-    { accessorKey: 'pode_pagar', header: 'Pagar', cell: (info) => renderComponent(CheckMark, { percent: info.getValue() }), enableSorting: false },
-    { accessorKey: 'pode_parcelar', header: 'Parcelável', cell: (info) => renderComponent(CheckMark, { percent: info.getValue() }), enableSorting: false },
-    { header: 'Status', cell: (info) => renderComponent(RowStatusToggle, { id: info.row.original?.id, checked: !info.row.original?.delecao }), enableSorting: false },
-    { header: 'Ações', cell: (info) => renderComponent(CelulaAcoes, { formData: data.formEditar, initialData: info.row.original, contas }), enableSorting: false }
-  ]
-  const pageSizes = [10, 25, 50]
 
   function handleAdicionar() {
     modalStore.trigger({
       type: 'component',
-      component: {
-        ref: ModalFormForma,
-        props: { modo: 'adicionar', formData: data.form, contas }
-      }
+      component: { ref: ModalFormForma, props: { modo: 'adicionar', formData: data.formAdicionar, contas } }
     })
   }
+  function handleEditar(row) {
+    modalStore.trigger({
+      type: 'component',
+      component: { ref: ModalFormForma, props: { modo: 'editar', initialData: { ...row }, formData: data.formEditar, contas } }
+    })
+  }
+  onMount(() => handler.sortAsc('nome'))
 </script>
 
 <div class="grid gap-3">
@@ -60,9 +58,54 @@
       <span>Adicionar</span>
     </button>
   </div>
-  <div class="grid gap-2">
-    {#key data}
-      <Table {rows} {columns} {pageSizes} />
-    {/key}
-  </div>
+
+  <DataTable {handler}>
+    <table class="table table-compact table-hover text-center">
+      <thead class="!bg-surface-300-600-token whitespace-nowrap">
+        <tr class="!text-center">
+          <TH orderBy={(row) => contas.find((v) => v.id === row.conta_id)?.nome}>Conta</TH>
+          <TH orderBy="nome">Forma de Transação</TH>
+          <TH orderBy="var_taxa">Taxa de Encargo</TH>
+          <TH orderBy="pode_receber">Receber</TH>
+          <TH orderBy="pode_pagar">Pagar</TH>
+          <TH orderBy="pode_parcelar">Parcelável</TH>
+          <TH orderBy={(row) => !row.delecao}>Status</TH>
+          <th>Ações</th>
+        </tr>
+        <tr>
+          <THF filterBy={(row) => contas.find((v) => v.id === row.conta_id)?.nome} />
+          <THF filterBy="nome" />
+          <th class="w-0" />
+          <th class="w-0" />
+          <th class="w-0" />
+          <th class="w-0" />
+          <td class="w-0" />
+          <td class="w-0" />
+        </tr>
+      </thead>
+      <tbody>
+        {#each $rows as row}
+          <tr>
+            <td>{contas.find((v) => v.id === row.conta_id)?.nome ?? ''}</td>
+            <td>{row.nome ?? ''}</td>
+            <td>{row.var_taxa ?? ''}</td>
+            <td><CheckMark percent={row.pode_receber} /></td>
+            <td><CheckMark percent={row.pode_pagar} /></td>
+            <td><CheckMark percent={row.pode_parcelar} /></td>
+            <td><RowStatusToggle id={row.id} checked={!row.delecao} /></td>
+            <td class="flex flex-nowrap justify-center gap-1">
+              <IconButton on:click={() => handleEditar(row)} icon="fa6-solid:pen-to-square" data-tooltip="Editar" data-placement="left" />
+            </td>
+          </tr>
+        {:else}
+          <tr>
+            <td colspan="100">
+              Nenhum registro encontrado
+              <BtnLimparFiltro />
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </DataTable>
 </div>
