@@ -1,27 +1,28 @@
 <script>
   import { goto } from '$app/navigation'
+  import { triggerMessage } from '$lib/client'
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
-  import { FCC_CUSTO, FCC_RECEITA, mapCondicao, mapEstadoEstoque, mapFluxoContabil, mapFluxoContabilClasse, mapOrigem } from '$lib/globals'
+  import { mapCondicao, mapEstadoEstoque, mapFluxoContabil, mapOrigem } from '$lib/globals'
   import { formatMoeda, roundBy } from '$lib/helpers'
   import Icon from '@iconify/svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   import { superForm } from 'sveltekit-superforms/client'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
+  import ModalContabil from './ModalContabil.svelte'
   import ModalItem from './ModalItem.svelte'
   import ModalPgto from './ModalPgto.svelte'
-  import { triggerMessage } from '$lib/client'
-  import ModalContabil from './ModalContabil.svelte'
   export let data
   let inputForm
 
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
   const { form, errors, enhance, submitting } = superForm(data.form, {
     dataType: 'json',
     taintedMessage: false,
     resetForm: true,
     onResult: async (event) => {
-      triggerMessage(event)
+      triggerMessage(event, toastStore)
       if (event.result.type == 'success') {
         const id = event.result.data.form.data
         await goto(`/estoque/entradas/${id}`, { invalidateAll: true })

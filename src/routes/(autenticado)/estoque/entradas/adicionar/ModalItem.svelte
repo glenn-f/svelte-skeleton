@@ -2,7 +2,7 @@
   import CardModal from '$lib/components/CardModal.svelte'
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
-  import { Autocomplete, modalStore } from '@skeletonlabs/skeleton'
+  import { Autocomplete, getModalStore } from '@skeletonlabs/skeleton'
   import { mapOrigem, mapCondicao, mapEstadoEstoque, EE_DISPONIVEL } from '$lib/globals'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import InputNumber from '$lib/components/Forms/InputNumber.svelte'
@@ -15,7 +15,7 @@
   let item = { ...itemInitial }
   let errors = {}
   let errorMessage = ''
-
+  const modalStore = getModalStore()
   function onSelection(event) {
     produtoSelecionado = event.detail.meta
     item.produto_id = event.detail.value

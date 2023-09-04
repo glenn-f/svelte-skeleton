@@ -1,6 +1,7 @@
 <script>
   import { enhance } from '$app/forms'
-  import { SlideToggle, toastStore } from '@skeletonlabs/skeleton'
+  import { SlideToggle, getToastStore } from '@skeletonlabs/skeleton'
+  const toastStore = getToastStore()
   export let checked,
     id,
     disabled = undefined

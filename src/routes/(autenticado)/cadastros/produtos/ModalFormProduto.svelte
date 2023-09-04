@@ -3,7 +3,7 @@
   import CardModal from '$lib/components/CardModal.svelte'
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore(); const toastStore = getToastStore();
   import { superForm } from 'sveltekit-superforms/client'
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
   import { onMount } from 'svelte'

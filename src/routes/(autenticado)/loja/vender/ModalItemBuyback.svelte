@@ -6,7 +6,7 @@
   import InputText from '$lib/components/Forms/InputText.svelte'
   import { CONDICAO_SEMINOVO, EE_AVALIACAO, mapCondicao, mapOrigem } from '$lib/globals'
   import { addBuybackSaidaSchema } from '$lib/zod/schemas/estoque'
-  import { Autocomplete, modalStore } from '@skeletonlabs/skeleton'
+  import { Autocomplete, getModalStore } from '@skeletonlabs/skeleton'
   export let buybackAutocomplete, store
   let buscar_produto, produto_selecionado, inputSearch
   const itemInitial = { condicao: CONDICAO_SEMINOVO, qntd: 1, estado: EE_AVALIACAO }
@@ -14,6 +14,7 @@
   let errors = {}
   let errorMessage = ''
 
+  const modalStore = getModalStore()
   function onSelection(event) {
     produto_selecionado = event.detail.meta
     item.produto_id = event.detail.value

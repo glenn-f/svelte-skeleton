@@ -1,6 +1,4 @@
-import { toastStore } from "@skeletonlabs/skeleton"
-
-export async function triggerMessage({ result }) {
+export async function triggerMessage({ result }, toastStore) {
   const message = result.data?.form?.message
   if (result.type == 'success') {
     if (message) {

@@ -10,10 +10,12 @@
   import InputText from '$lib/components/Forms/InputText.svelte'
   import Label from '$lib/components/Forms/Label.svelte'
   import { PESSOA_FISICA, PESSOA_JURIDICA, REP_CLIENTE, REP_COLABORADOR, REP_FORNECEDOR } from '$lib/globals'
-  import { RadioGroup, RadioItem, modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { RadioGroup, RadioItem, getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
 
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
   /** Modo em que o modal será aberto
    * @type {'adicionar' | 'editar'} */
   export let modo = 'adicionar'

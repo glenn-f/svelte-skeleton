@@ -5,7 +5,7 @@
   import RowStatusToggle from '$lib/components/RowStatusToggle.svelte'
   import { USUARIO_ADMINISTRADOR } from '$lib/globals'
   import Icon from '@iconify/svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore } from '@skeletonlabs/skeleton'
   import { DataHandler } from '@vincjo/datatables'
   import { onMount } from 'svelte'
   import ModalFormUsuario from './ModalFormUsuario.svelte'
@@ -15,6 +15,7 @@
   const handler = new DataHandler([], { rowsPerPage: 10 })
   $: handler.setRows(data.usuarios || [])
   const rows = handler.getRows()
+  const modalStore = getModalStore()
 
   function handleAdicionar() {
     modalStore.trigger({

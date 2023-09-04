@@ -5,7 +5,7 @@
   import InputText from '$lib/components/Forms/InputText.svelte'
   import { EE_DISPONIVEL, mapEstadoEstoque } from '$lib/globals'
   import { formatMoeda, formatTaxa } from '$lib/helpers'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore(); const toastStore = getToastStore();
   import { superForm } from 'sveltekit-superforms/client'
   export let data, formData
   $: regrasTributo = data.regrasTributo

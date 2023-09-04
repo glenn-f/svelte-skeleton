@@ -5,10 +5,11 @@
   import ShowBox from '$lib/components/ShowBox.svelte'
   import { formatMoeda } from '$lib/helpers'
   import { addPgtoEntradaSchema } from '$lib/zod/schemas/contaFormas'
-  import { modalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore } from '@skeletonlabs/skeleton'
   export let formas, store, totalFinal
   let form = {}
   let errors = {}
+  const modalStore = getModalStore()
 
   function handleAdicionar() {
     const validation = addPgtoEntradaSchema.safeParse(form)

@@ -1,12 +1,15 @@
 <script>
   import Icon from '@iconify/svelte'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   import { superForm } from 'sveltekit-superforms/client'
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   import ModalFormSenha from './ModalFormSenha.svelte'
   import { invalidateAll } from '$app/navigation'
   export let data
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
+
   $: ({
     form: usuario,
     errors,

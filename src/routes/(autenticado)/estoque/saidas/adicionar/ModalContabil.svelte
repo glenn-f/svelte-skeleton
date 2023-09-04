@@ -6,9 +6,10 @@
   import ShowBox from '$lib/components/ShowBox.svelte'
   import { FCC_RECEITA, mapSaidaFC } from '$lib/globals'
   import { criarContabilSchema } from '$lib/zod/schemas/contabil'
-  import { modalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore } from '@skeletonlabs/skeleton'
   /** @type {import('svelte/store').Writable} */
   export let store
+  const modalStore = getModalStore()
   let form = {}
   let errors = {}
   let globalError = ''
@@ -51,7 +52,7 @@
       <!-- ! Receitas -->
       <div class="col-span-12">
         <h5 class="h5 inline">Acréscimos e Serviços</h5>
-         - Aumentam o valor final
+        - Aumentam o valor final
       </div>
       <div class="col-span-12 flex flex-wrap gap-1">
         {#each mapSaidaFC.receitas as r, i}
@@ -61,7 +62,7 @@
       <!-- ! Descontos -->
       <div class="col-span-12">
         <h5 class="h5 inline">Descontos sobre a Venda</h5>
-         - Diminuem o valor final
+        - Diminuem o valor final
       </div>
       <div class="col-span-12 flex flex-wrap gap-1">
         {#each mapSaidaFC.descontos as d, i}
@@ -71,7 +72,7 @@
       <!-- ! Custos Internos -->
       <div class="col-span-12">
         <h5 class="h5 inline">Custos Internos</h5>
-         - Não alteram o valor final
+        - Não alteram o valor final
       </div>
       <div class="col-span-12 flex flex-wrap gap-1 mb-2">
         {#each mapSaidaFC.custos as c, i}

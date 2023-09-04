@@ -5,7 +5,8 @@
   import RowStatusToggle from '$lib/components/RowStatusToggle.svelte'
   import { USUARIO_ADICIONAL } from '$lib/globals'
   import Icon from '@iconify/svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore } from '@skeletonlabs/skeleton'
+  const modalStore = getModalStore()
   import { DataHandler } from '@vincjo/datatables'
   import { onMount } from 'svelte'
   import ModalFormUsuario from './ModalFormUsuario.svelte'

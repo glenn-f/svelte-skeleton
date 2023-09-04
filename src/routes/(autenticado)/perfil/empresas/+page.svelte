@@ -1,11 +1,13 @@
 <script>
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
   import Icon from '@iconify/svelte'
-  import { toastStore } from '@skeletonlabs/skeleton'
+  import { getToastStore } from '@skeletonlabs/skeleton'
   import { superForm } from 'sveltekit-superforms/client'
   import InputMask from '$lib/components/Forms/InputMask.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   export let data
+
+  const toastStore = getToastStore()
   const { formId, form, errors, enhance, message, reset } = superForm(data.form, {
     invalidateAll: true,
     taintedMessage: false,

@@ -6,7 +6,7 @@
   import InputGroup from '$lib/components/Forms/InputGroup.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   import Icon from '@iconify/svelte'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore(); const toastStore = getToastStore();
   import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
   /** Modo em que o modal será aberto

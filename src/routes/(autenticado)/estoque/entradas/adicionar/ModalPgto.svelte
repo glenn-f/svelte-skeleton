@@ -4,7 +4,7 @@
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import { formatMoeda } from '$lib/helpers'
   import { addPgtoEntradaSchema } from '$lib/zod/schemas/contaFormas'
-  import { modalStore } from '@skeletonlabs/skeleton'
+import { getModalStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore();
   export let formas, store, totalFinal
   let form = {}
   let errors = {}

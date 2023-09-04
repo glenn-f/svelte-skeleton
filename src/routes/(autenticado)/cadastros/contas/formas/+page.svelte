@@ -6,7 +6,7 @@
   import RowStatusToggle from '$lib/components/RowStatusToggle.svelte'
   import { formatTaxa } from '$lib/helpers'
   import Icon from '@iconify/svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
+import { getModalStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore();
   import { DataHandler } from '@vincjo/datatables'
   import { onMount } from 'svelte'
   import ModalFormForma from './ModalFormForma.svelte'

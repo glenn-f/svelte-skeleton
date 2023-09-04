@@ -2,16 +2,12 @@
   import { invalidateAll } from '$app/navigation'
   import CardModal from '$lib/components/CardModal.svelte'
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
-  import InputDate from '$lib/components/Forms/InputDate.svelte'
-  import InputEmail from '$lib/components/Forms/InputEmail.svelte'
-  import InputMask from '$lib/components/Forms/InputMask.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
-  import Label from '$lib/components/Forms/Label.svelte'
-  import { PESSOA_FISICA, PESSOA_JURIDICA, REP_CLIENTE, REP_COLABORADOR, REP_FORNECEDOR } from '$lib/globals'
-  import { RadioGroup, RadioItem, modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
-
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
   /** Modo em que o modal será aberto
    * @type {'adicionar' | 'editar'} */
   export let modo = 'adicionar'
@@ -65,16 +61,7 @@
     </svelte:fragment>
     <section class="grid grid-cols-12 gap-1 px-3">
       <div class="col-span-12">
-        <InputText
-          bind:input
-          label="Nome da Conta"
-          placeholder="Ex: Bradesco Empresas, Cielo"
-          name="nome"
-          bind:value={$form.nome}
-          error={$errors.nome}
-          errorSpacing
-          required
-        />
+        <InputText bind:input label="Nome da Conta" placeholder="Ex: Bradesco Empresas, Cielo" name="nome" bind:value={$form.nome} error={$errors.nome} errorSpacing required />
       </div>
     </section>
 

@@ -7,7 +7,7 @@
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   import { USUARIO_ADICIONAL } from '$lib/globals'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { getToastStore, getModalStore } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
   /** Modo em que o modal será aberto
@@ -20,6 +20,8 @@
   export let permOptions
   /** Preenchimento inicial do formulário. Varia de acordo com o `modo` deste componente*/
   export let initialData = { senha: '', senha_repetir: '', nome: '', email: '', tipo_usuario: USUARIO_ADICIONAL}
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
 
   const { form, errors, enhance, message } = superForm(formData, {
     resetForm: true,

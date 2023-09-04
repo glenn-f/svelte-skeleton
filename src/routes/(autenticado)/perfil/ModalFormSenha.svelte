@@ -1,6 +1,6 @@
 <script>
   import CardModal from '$lib/components/CardModal.svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
+import { getModalStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore();
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
   import InputPassword from '$lib/components/Forms/InputPassword.svelte'
 

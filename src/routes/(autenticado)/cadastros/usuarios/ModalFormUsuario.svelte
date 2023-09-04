@@ -6,7 +6,9 @@
   import InputSelect from '$lib/components/Forms/InputSelect.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
   import { USUARIO_ADICIONAL } from '$lib/globals'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
   import { superForm } from 'sveltekit-superforms/client'
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
   import { onMount } from 'svelte'
@@ -81,12 +83,12 @@
         </div>
       {/if}
       {#if modo == 'senha'}
-      <div class="col-span-6">
-        <InputText label="Nome Completo" value={initialData.nome} readonly />
-      </div>
-      <div class="col-span-6">
-        <InputText label="E-mail" value={initialData.email} readonly />
-      </div>
+        <div class="col-span-6">
+          <InputText label="Nome Completo" value={initialData.nome} readonly />
+        </div>
+        <div class="col-span-6">
+          <InputText label="E-mail" value={initialData.email} readonly />
+        </div>
       {/if}
       {#if modo == 'adicionar' || modo == 'senha'}
         <div class="col-span-6">

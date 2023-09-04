@@ -3,7 +3,7 @@
   import CardModal from '$lib/components/CardModal.svelte'
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore(); const toastStore = getToastStore();
   import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
   /** Modo em que o modal será aberto

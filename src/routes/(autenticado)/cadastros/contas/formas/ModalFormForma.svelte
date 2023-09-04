@@ -10,10 +10,12 @@
   import InputText from '$lib/components/Forms/InputText.svelte'
   import { formatMoeda } from '$lib/helpers'
   import Icon from '@iconify/svelte'
-  import { SlideToggle, modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { SlideToggle, getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
 
   /** Modo em que o modal será aberto
    * @type {'adicionar' | 'editar'} */

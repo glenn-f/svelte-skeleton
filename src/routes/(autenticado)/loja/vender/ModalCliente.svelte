@@ -1,5 +1,4 @@
 <script>
-  import { invalidateAll } from '$app/navigation'
   import CardModal from '$lib/components/CardModal.svelte'
   import Button from '$lib/components/Forms/Button.svelte'
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
@@ -11,17 +10,16 @@
   import Label from '$lib/components/Forms/Label.svelte'
   import ShowBox from '$lib/components/ShowBox.svelte'
   import { PESSOA_FISICA, PESSOA_JURIDICA, mapSexo } from '$lib/globals'
-  import { Autocomplete, RadioGroup, RadioItem, modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { Autocomplete, RadioGroup, RadioItem, getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
-  import { get } from 'svelte/store'
   import { superForm } from 'sveltekit-superforms/client'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   export let store, formData, clientes
   let buscarCliente,
     clienteSelecionado,
     formCriar,
     criarCliente = false
-
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
   //ler cliente selecionado (se hoouver)
   //mostrar cliente selecionado e listagem para troca de cliente e botão para criar novo cliente
   //na listagem deve ser clicavel para escolher o cliente e ter filtro por nome e outros dados

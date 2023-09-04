@@ -10,11 +10,12 @@
   import { FE_VENDA, PE_PERDA, PE_VENDA, PE_VENDA_COM_BUYBACK, mapCondicao, mapEstadoEstoque, mapFEPerdas, mapFluxoEstoque, mapOrigem } from '$lib/globals'
   import { formatInteger, formatMoeda } from '$lib/helpers'
   import { addItemSaidaSchema } from '$lib/zod/schemas/estoque'
-  import { Autocomplete, modalStore } from '@skeletonlabs/skeleton'
+  import { Autocomplete, getModalStore } from '@skeletonlabs/skeleton'
   import { Searcher } from 'fast-fuzzy'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   export let produtos, store, colaboradores, labelTitle
 
+  const modalStore = getModalStore()
   let buscarProduto, produtoSelecionado, inputSearch, filtroCondicao, filtroOrigem, filtroEstado, filtroGeral, estoqueSelecionado
   const itemInitial = { tipo_fe: undefined, qntd: 1, valor: undefined, responsavel_id: $store.responsavel_id, observacoes: undefined }
 

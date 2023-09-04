@@ -8,7 +8,7 @@
   import { PES_SAIDA, PE_PERDA, PE_VENDA, PE_VENDA_COM_BUYBACK, isCusto, isReceita, mapCondicao, mapEstadoEstoque, mapFEPerdas, mapFluxoContabil, mapOrigem } from '$lib/globals'
   import { formatMoeda, roundBy } from '$lib/helpers'
   import Icon from '@iconify/svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   import { writable } from 'svelte/store'
   import { superForm } from 'sveltekit-superforms/client'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
@@ -22,12 +22,14 @@
   import { onMount } from 'svelte'
   export let data
   let inputForm
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
   const { form, errors, enhance, submitting } = superForm(data.form, {
     dataType: 'json',
     taintedMessage: false,
     resetForm: true,
     onResult: async (event) => {
-      triggerMessage(event)
+      triggerMessage(event, toastStore)
       if (event.result.type == 'success') {
         const id = event.result.data.form.data
         await goto(`/estoque/saidas/${id}`, { invalidateAll: true })

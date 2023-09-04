@@ -6,7 +6,8 @@
   import ShowBox from '$lib/components/ShowBox.svelte'
   import { mapEntradaFC } from '$lib/globals'
   import { criarContabilSchema } from '$lib/zod/schemas/contabil'
-  import { modalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore } from '@skeletonlabs/skeleton'
+  const modalStore = getModalStore()
   /** @type {import('svelte/store').Writable} */
   export let store
   let form = {}

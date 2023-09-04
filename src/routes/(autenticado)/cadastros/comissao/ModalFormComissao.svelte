@@ -5,11 +5,12 @@
   import InputMoeda from '$lib/components/Forms/InputMoeda.svelte'
   import InputPercent from '$lib/components/Forms/InputPercent.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
-
+  
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
   /** Modo em que o modal será aberto
    * @type {'adicionar' | 'editar'} */
   export let modo = 'adicionar'

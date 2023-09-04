@@ -4,7 +4,7 @@
   import IconButton from '$lib/components/IconButton.svelte'
   import RowStatusToggle from '$lib/components/RowStatusToggle.svelte'
   import Icon from '@iconify/svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
+import { getModalStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore();
   import { DataHandler } from '@vincjo/datatables'
   import { onMount } from 'svelte'
   import ModalFormCategoria from './ModalFormCategoria.svelte'

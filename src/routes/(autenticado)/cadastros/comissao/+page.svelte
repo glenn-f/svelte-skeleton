@@ -5,12 +5,12 @@
   import RowStatusToggle from '$lib/components/RowStatusToggle.svelte'
   import { formatMoeda, formatTaxa } from '$lib/helpers'
   import Icon from '@iconify/svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore } from '@skeletonlabs/skeleton'
   import { DataHandler } from '@vincjo/datatables'
   import { onMount } from 'svelte'
   import ModalFormComissao from './ModalFormComissao.svelte'
   export let data
-
+  const modalStore = getModalStore()
   const handler = new DataHandler([], { rowsPerPage: 10 })
   $: handler.setRows(data.contas || [])
   const rows = handler.getRows()

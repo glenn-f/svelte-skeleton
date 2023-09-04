@@ -6,7 +6,7 @@
   import { getClasseContabil, mapCondicao, mapEstadoEstoque, mapFluxoContabil, mapFluxoEstoque, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
   import { formatDateTime, formatMoeda, formatTaxa } from '$lib/helpers.js'
   import Icon from '@iconify/svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
+import { getModalStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore();
   import ModalEditarItem from './ModalEditarItem.svelte'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   export let data

@@ -11,7 +11,7 @@
   import { formatMoeda, roundBy } from '$lib/helpers'
   import { localMillis } from '$lib/types'
   import Icon from '@iconify/svelte'
-  import { modalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   import { writable } from 'svelte/store'
   import { superForm } from 'sveltekit-superforms/client'
   import ModalContabil from './ModalContabil.svelte'
@@ -21,12 +21,14 @@
   import InputDateTime from '$lib/components/Forms/InputDateTime.svelte'
   export let data
   let inputForm
+  const modalStore = getModalStore()
+  const toastStore = getToastStore()
   const { form, errors, enhance, submitting } = superForm(data.form, {
     dataType: 'json',
     taintedMessage: false,
     resetForm: true,
     onResult: async (event) => {
-      triggerMessage(event)
+      triggerMessage(event, toastStore)
       if (event.result.type == 'success') {
         const id = event.result.data.form.data
         await goto(`/estoque/saidas/${id}`, { invalidateAll: true })

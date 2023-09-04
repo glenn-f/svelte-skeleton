@@ -4,7 +4,7 @@
   import HelperMessage from '$lib/components/Forms/HelperMessage.svelte'
   import InputPercent from '$lib/components/Forms/InputPercent.svelte'
   import InputText from '$lib/components/Forms/InputText.svelte'
-  import { modalStore, toastStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore(); const toastStore = getToastStore();
   import { onMount } from 'svelte'
   import { superForm } from 'sveltekit-superforms/client'
 
