@@ -9,6 +9,6 @@
   let value = ''
 </script>
 
-<td>
+<td class={$$props.class}>
   <input class="input !variant-glass" type="search" placeholder="Filtrar" bind:value on:input={() => handler.filter(value, filterBy)} />
 </td>
