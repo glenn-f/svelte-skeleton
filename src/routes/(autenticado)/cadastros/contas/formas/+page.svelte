@@ -3,7 +3,7 @@
   import { DataTable, TH, THF } from '$lib/components/DataTable'
   import BtnLimparFiltro from '$lib/components/DataTable/BtnLimparFiltro.svelte'
   import IconButton from '$lib/components/IconButton.svelte'
-  import RowStatusToggle from '$lib/components/Table/RowStatusToggle.svelte'
+  import RowStatusToggle from '$lib/components/RowStatusToggle.svelte'
   import { formatTaxa } from '$lib/helpers'
   import Icon from '@iconify/svelte'
   import { modalStore } from '@skeletonlabs/skeleton'
