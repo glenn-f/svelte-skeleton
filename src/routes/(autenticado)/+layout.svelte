@@ -1,10 +1,12 @@
 <script>
-  import Icon from '@iconify/svelte'
   import { invalidateAll } from '$app/navigation'
+  import { page } from '$app/stores'
   import { DevAccordion, Menu, MenuItem } from '$lib/components'
+  import { USUARIO_ADMINISTRADOR, USUARIO_MEMBRO } from '$lib/globals'
+  import Icon from '@iconify/svelte'
   import { AppBar, AppShell, LightSwitch } from '@skeletonlabs/skeleton'
   import { onMount } from 'svelte'
-  import { USUARIO_ADMINISTRADOR, USUARIO_MEMBRO } from '$lib/globals'
+  import { fade } from 'svelte/transition'
 
   export let data
   onMount(() => {
@@ -147,10 +149,11 @@
       </svelte:fragment>
     </AppBar>
   </svelte:fragment>
-
-  <main class="p-2 h-full overflow-x-auto bg-surface-50-900-token">
-    <slot />
-  </main>
+  {#key $page.route.id}
+    <main class="p-2 h-full overflow-x-auto bg-surface-50-900-token" in:fade={{ duration: 150 }}>
+      <slot />
+    </main>
+  {/key}
 
   <svelte:fragment slot="pageFooter">
     <DevAccordion />
