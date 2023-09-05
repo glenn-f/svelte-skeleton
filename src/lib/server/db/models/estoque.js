@@ -116,7 +116,7 @@ export function detalharEstoque(dados) {
 LEFT JOIN produto p ON p.id = e.produto_id LEFT JOIN produto_categoria pc ON pc.id = p.produto_categoria_id \
 WHERE e.id = $id AND p.empresa_id = $empresa_id").get({ id, empresa_id })
     if (!data) return { valid: false, message: "Estoque não encontrado", code: ERRO_CAMPOS }
-    const pes = db.prepare("SELECT pe.id pe_id,pe.tipo_pe,pe.criacao,fe.tipo_fe,fe.var_qntd,CAST(fe.var_custo AS REAL)/10000 var_custo,fe.observacoes fe_observacoes, CAST(fc_fe.valor_inicial AS REAL)/10000 valor,fc.tipo_fc,fc.observacoes fc_observacoes FROM pe LEFT JOIN fe ON pe.id = pe_id LEFT JOIN fc_fe ON fc_fe.fe_id = fe.id LEFT JOIN fc ON fc.id = fc_fe.fc_id WHERE fe.estoque_id = $id").all({ id })
+    const pes = db.prepare("SELECT pe.id pe_id,pe.observacoes,pe.tipo_pe,pe.criacao,fe.tipo_fe,fe.var_qntd,CAST(fe.var_custo AS REAL)/10000 var_custo,fe.observacoes fe_observacoes, CAST(fc_fe.valor_inicial AS REAL)/10000 valor,fc.tipo_fc,fc.observacoes fc_observacoes FROM pe LEFT JOIN fe ON pe.id = pe_id LEFT JOIN fc_fe ON fc_fe.fe_id = fe.id LEFT JOIN fc ON fc.id = fc_fe.fc_id WHERE fe.estoque_id = $id").all({ id })
     data.pes = custosToMap(pes)
     return { valid: true, data }
 

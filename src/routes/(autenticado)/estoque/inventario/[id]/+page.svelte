@@ -6,18 +6,17 @@
   import { getClasseContabil, mapCondicao, mapEstadoEstoque, mapFluxoContabil, mapFluxoEstoque, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
   import { formatDateTime, formatMoeda, formatTaxa } from '$lib/helpers.js'
   import Icon from '@iconify/svelte'
-import { getModalStore } from '@skeletonlabs/skeleton'; const modalStore = getModalStore();
+  import { getModalStore } from '@skeletonlabs/skeleton'
   import ModalEditarItem from './ModalEditarItem.svelte'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
+  import ModalLancamento from '../../lancamento/[id]/ModalLancamento.svelte'
   export let data
+  const modalStore = getModalStore()
 
   function abrirEditarItem() {
     modalStore.trigger({
       type: 'component',
-      component: {
-        ref: ModalEditarItem,
-        props: { data, formData: data.formEditarItem }
-      }
+      component: { ref: ModalEditarItem, props: { data, formData: data.formEditarItem } }
     })
   }
 
@@ -99,42 +98,22 @@ import { getModalStore } from '@skeletonlabs/skeleton'; const modalStore = getMo
       <div class="col-span-6 lg:col-span-6">
         <ShowBox label="Regra de Comissão">{rc_text}</ShowBox>
       </div>
-        <div class="col-span-12">
-          <ShowBox label="Observações">{estoque.observacoes ?? '-'}</ShowBox>
-        </div>
+      <div class="col-span-12">
+        <ShowBox label="Observações">{estoque.observacoes ?? '-'}</ShowBox>
+      </div>
       <div class="col-span-12 flex items-center justify-center flex-wrap gap-2">
-        <Button
-          href={`/loja/vender?eid=${estoque.id}`}
-          text="Iniciar Venda"
-          data-tooltip="Iniciar a venda deste item (saída de estoque)"
-          class="variant-filled-primary"
-          icon="mdi:point-of-sale"
-          disabled
-        />
-        <Button
-          href={`/estoque/saidas/adicionar?eid=${estoque.id}`}
-          text="Iniciar Saída"
-          data-tooltip="Iniciar saída de estoque deste item (venda ou perda)"
-          class="variant-filled"
-          icon="ri:inbox-unarchive-fill"
-          disabled
-        />
-        <Button
-          on:click={() => alert('TODO: modal para lançamentos')}
-          text="Lançamentos"
-          data-tooltip="Efetuar lançamentos de custos e receitas"
-          class="variant-filled-secondary"
-          disabled
-          icon="fa6-solid:plus"
-        />
-        <Button
-          on:click={abrirEditarItem}
-          disabled={estoque.qntd === 0}
-          text="Editar Item"
-          data-tooltip="Editar a descrição do item, o estado e preço de venda"
-          class="variant-filled-tertiary"
-          icon="fa6-solid:pen-to-square"
-        />
+        {#if estoque.qntd > 0}
+          <Button href={`/loja/vender?eid=${estoque.id}`} text="Iniciar Venda" data-tooltip="Iniciar a venda deste item (saída de estoque)" class="variant-filled-primary" icon="mdi:point-of-sale" />
+          <Button href={`/estoque/lancamento/${estoque.id}`} text="Lançamentos" data-tooltip="Efetuar lançamentos de custos e receitas" class="variant-filled-secondary" icon="fa6-solid:plus" />
+          <Button
+            on:click={abrirEditarItem}
+            disabled={estoque.qntd === 0}
+            text="Editar Item"
+            data-tooltip="Editar a descrição do item, o estado e preço de venda"
+            class="variant-filled-tertiary"
+            icon="fa6-solid:pen-to-square"
+          />
+        {/if}
       </div>
       <div class="col-span-12 flex items-center">
         <h3 class="h3 text-center mr-3">Processos de Estoque</h3>
