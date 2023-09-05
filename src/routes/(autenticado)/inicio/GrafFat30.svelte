@@ -1,8 +1,9 @@
 <script>
   import Chart from 'chart.js/auto'
+  import { DateTime } from 'luxon'
   export let data
 
-  let labelsFat30 = data?.grafFat30?.map((v) => new Date(v.dia).toLocaleDateString())
+  let labelsFat30 = data?.grafFat30?.map((v) => DateTime.fromSQL(v.dia).toFormat("dd/MM/yyyy"))
   let dataFat30 = data?.grafFat30?.map((v) => v.faturamento)
   let rangeFat30 = `${labelsFat30?.at(0)} ~ ${labelsFat30?.at(-1)}`
   let ctx
