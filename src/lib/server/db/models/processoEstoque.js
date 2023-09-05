@@ -1,6 +1,6 @@
-import { EE_AVALIACAO, FC_C_COMISSAO_PRODUTO, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FC_C_RECOMPRA_MERCADORIA, FC_C_TRIBUTO, FC_R_VENDA_MERCADORIA, FE_BUYBACK, FE_COMPRA, FF_ENCARGO, FF_PAGAMENTO, FF_RECEBIMENTO, PE_COMPRA, PE_PERDA, mapCausasErro } from "$lib/globals"
+import { EE_AVALIACAO, FC_C_COMISSAO_PRODUTO, FC_C_COMPRA_MERCADORIA, FC_C_ENCARGO_TRANSACAO, FC_C_RECOMPRA_MERCADORIA, FC_C_TRIBUTO, FC_R_VENDA_MERCADORIA, FE_BUYBACK, FE_COMPRA, FE_MELHORIA, FF_ENCARGO, FF_PAGAMENTO, FF_RECEBIMENTO, PE_COMPRA, PE_LANCAMENTO, mapCausasErro } from "$lib/globals"
 import { handleAnyError, rateioEstoque, roundBy } from "$lib/helpers"
-import { currencyToInt, intToPerc, percToInt } from "$lib/types"
+import { currencyToInt } from "$lib/types"
 import { begin, commit, db, dbInsert, dbSelectOne, dbUpdate, rollback } from ".."
 
 /**
@@ -78,6 +78,129 @@ export function consultarEntradas(dados) {
   } catch (e) {
     const { cause, errorType, fieldErrors } = handleAnyError(e)
     return { valid: false, message: mapCausasErro.get(cause), errorType, fieldErrors, code: cause }
+  }
+}
+
+export function criarLancamentoInventario(dados) {
+  try {
+    const { id, empresa_id, criador_id, contabil, transacoes, responsavel_id, observacoes } = dados
+    const totalLancamentos = contabil.reduce((acc, { valor }) => acc + valor, 0)
+    const totalTransacoes = transacoes.reduce((acc, { valor }) => acc + valor, 0)
+    const totalFinal = roundBy(totalLancamentos, 2) + roundBy(totalTransacoes, 2)
+    if (totalFinal !== 0) throw new Error("(Lançamento Inventário) Totais são divergentes")
+    let variacaoCusto = 0
+    begin.run()
+    //! Criar Entrada
+    const resPE = dbInsert('pe', { tipo_pe: PE_LANCAMENTO, criador_id, empresa_id, responsavel_id, observacoes })
+    if (resPE.changes === 0) throw new Error("(Lançamento Inventário) Processo de Estoque não foi criado")
+    const pe_id = resPE.lastInsertRowid
+
+    //! Criar Transações
+    const encargos = []
+    const forma_transacao_ids = transacoes.map((v) => v.forma_transacao_id).join(',')
+    const contas = db.prepare(`SELECT cf.conta_id,ft.id,CAST(ft.taxa_encargo AS REAL)/10000 taxa_encargo FROM forma_transacao ft JOIN conta_forma cf ON cf.id = ft.conta_forma_id WHERE ft.id IN (${forma_transacao_ids})`).all()
+    for (let i = 0; i < transacoes.length; i++) {
+      let { forma_transacao_id, valor } = transacoes[i];
+      let { conta_id, taxa_encargo } = contas.find((v) => v.id === forma_transacao_id) ?? {}
+      valor = -valor
+
+      //*Verificar se há encargo de transação 
+      let encargo_ff_id = undefined
+      let valor_encargo = currencyToInt((taxa_encargo * valor) || 0)
+      valor = currencyToInt(valor)
+      if (valor_encargo) {
+        //? Criar Fluxo Financeiro - Encargo
+        const resEncargoFF = dbInsert('ff', { conta_id, tipo_ff: FF_ENCARGO, valor: valor_encargo, criador_id })
+        if (resEncargoFF.changes === 0) throw new Error(`(Lançamento Inventário) Fluxo Financeiro - Encargo[${i}] não foi criado`)
+        encargo_ff_id = resEncargoFF.lastInsertRowid
+        encargos.push({ ff_id: encargo_ff_id, valor: valor_encargo })
+      }
+
+      //* Criar Fluxo Financeiro - Pagamento
+      const resPagamentoFF = dbInsert('ff', { conta_id, tipo_ff: FF_PAGAMENTO, valor, criador_id })
+      if (resPagamentoFF.changes === 0) throw new Error(`(Lançamento Inventário) Fluxo Financeiro - Pagamento[${i}] não foi criado`)
+      const transacao_ff_id = resPagamentoFF.lastInsertRowid
+
+      //* Criar Transação
+      const resTransacao = dbInsert('transacao', { transacao_ff_id, encargo_ff_id, forma_transacao_id })
+      if (resTransacao.changes === 0) throw new Error(`(Lançamento Inventário) Transação[${i}] não foi criada`)
+      const transacao_id = resTransacao.lastInsertRowid
+
+      //* Criar Associação Processo Estoque - Transação
+      const resPETransacao = dbInsert('pe_transacao', { pe_id, transacao_id })
+      if (resPETransacao.changes === 0) throw new Error(`(Lançamento Inventário) Associação Processo Estoque - Transação[${i}] não foi criada`)
+
+      //* Atualizar saldo da conta
+      valor = valor + valor_encargo
+      if (valor === 0) continue
+      const resUpdateConta = db.prepare("UPDATE conta SET saldo = saldo + $valor WHERE id = $conta_id").run({ valor, conta_id })
+      if (resUpdateConta.changes === 0) throw new Error(`(Lançamento Inventário) Atualização do saldo da conta ${conta_id} - transação [${i}] falhou`)
+    }
+
+    //! Criar Lançamentos
+    const estoque_id = id
+
+    //* Criar Fluxo de Estoque
+    const resFE = dbInsert('fe', { estoque_id, pe_id, responsavel_id, tipo_fe: FE_MELHORIA, var_qntd: 0, var_custo: 0, observacoes })
+    if (resFE.changes === 0) throw new Error(`(Lançamento Inventário) FE não foi criado`)
+    const fe_id = resFE.lastInsertRowid
+
+    //* Criar Custos de Transação Rateado para o Estoque
+    for (let i = 0; i < encargos.length; i++) {
+      const { ff_id } = encargos[i];
+      const tipo_fc = FC_C_ENCARGO_TRANSACAO
+      const valor = currencyToInt(encargos[i].valor)
+
+      //? Criar Fluxo Contábil para Custo Financeiro
+      const resFC = dbInsert('fc', { empresa_id, criador_id, tipo_fc, valor })
+      if (resFC.changes === 0) throw new Error(`(Lançamento Inventário) FC Financeiro[${i}] não foi criado`)
+      const fc_id = resFC.lastInsertRowid
+
+      //? Criar Associação do Estoque com Custo Financeiro
+      const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: valor })
+      if (resFC_FE.changes === 0) throw new Error(`(Lançamento Inventário) FC_FE Financeiro[${i}] não foi criado`)
+
+      //? Criar Associação do Fluxo Contábil com o Fluxo Financeiro
+      const resFC_FF = dbInsert('fc_ff', { fc_id, ff_id })
+      if (resFC_FF.changes === 0) throw new Error(`(Lançamento Inventário) FC_FF[${i}] não foi criado`)
+
+      //? Atualizar custo do estoque (subtrair, pq contábil é inverso do valor patrimonial)
+      variacaoCusto -= valor
+    }
+
+    //* Criar Custos Contábeis Rateado para o Estoque
+    for (let i = 0; i < contabil.length; i++) {
+      let { tipo_fc, valor, observacoes } = contabil[i];
+      valor = currencyToInt(valor)
+
+      //? Criar Fluxo Contábil
+      const resFC = dbInsert('fc', { empresa_id, criador_id, tipo_fc, valor, observacoes })
+      if (resFC.changes === 0) throw new Error(`(Lançamento Inventário) FC[${i}] não foi criado`)
+      const fc_id = resFC.lastInsertRowid
+
+      //? Criar Associação de Fluxo Contábil ao Fluxo de Estoque
+      const resFC_FE = dbInsert('fc_fe', { fc_id, fe_id, valor_inicial: valor })
+      if (resFC_FE.changes === 0) throw new Error(`(Lançamento Inventário) FC_FE[${i}] não foi criado`)
+
+      //? Atualizar custo do estoque (subtrair, pq contábil é inverso do valor patrimonial)
+      variacaoCusto -= valor
+    }
+    //* Atualizar Fluxo de Estoque e Estoque
+    const eInicial = dbSelectOne('estoque', ['custo'], { id: estoque_id })
+    const eFinal = { custo: eInicial.custo + variacaoCusto }
+    const resUpdateEstoque = db.prepare("UPDATE estoque SET custo = $valor WHERE id = $estoque_id").run({ valor: eFinal.custo, estoque_id })
+    if (resUpdateEstoque.changes === 0) throw new Error(`(Lançamento Inventário) Atualização do estoque ${estoque_id} falhou`)
+
+    const alteracoes_json = JSON.stringify([eFinal, eInicial])
+    const resUpdateFE = db.prepare("UPDATE fe SET var_custo = $valor , alteracoes_json = $alteracoes_json WHERE id = $fe_id").run({ valor: variacaoCusto, fe_id, alteracoes_json })
+    if (resUpdateFE.changes === 0) throw new Error(`(Lançamento Inventário) Atualização do fluxo de estoque ${estoque_id} falhou`)
+
+    commit.run()
+    return { valid: true, data: pe_id }
+  } catch (e) {
+    if (db.inTransaction) rollback.run()
+    const { errorType, cause, fieldErrors, message } = handleAnyError(e)
+    return { valid: false, fieldErrors, message, errorType, code: cause }
   }
 }
 

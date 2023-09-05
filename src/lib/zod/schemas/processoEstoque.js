@@ -19,6 +19,17 @@ export const criarEntradaSchema = z.object({
   return roundBy(totalEstoque - totalContabil, 2) === roundBy(totalTransacoes, 2)
 }, { message: 'O total a pagar deve ser igual ao total pago' })
 
+export const criarLancamentoSchema = z.object({
+  contabil: z.array(criarContabilSchema).min(1).default([]),
+  transacoes: z.array(criarEntradaTransacoesSchema).default([]),
+  observacoes: zOptional(zTString),
+  responsavel_id: zOptional(zID),
+}).refine(({ transacoes, contabil }) => {
+  const totalContabil = roundBy(contabil.reduce((acc, { valor }) => acc + valor, 0), 2)
+  const totalTransacoes = roundBy(transacoes.reduce((acc, { valor }) => acc + valor, 0), 2)
+  return -roundBy(totalContabil, 2) === roundBy(totalTransacoes, 2)
+}, { message: 'O total das transações deve ser igual ao total dos lançamentos' })
+
 export const criarSaidaSchema = z.object({
   criacao: zOptional(zDate),
   tipo_pe: zID.default(PE_VENDA),
