@@ -51,6 +51,7 @@ export const PE_VENDA = 101
 export const PE_VENDA_COM_BUYBACK = 102
 export const PE_PERDA = 103
 export const PE_ALTERACAO = 201
+export const PE_LANCAMENTO = 202
 export const PE_ESTORNO_PARCIAL = 301
 export const PE_ESTORNO_TOTAL = 302
 const mapProcessoEstoque = new Map()
@@ -59,6 +60,7 @@ mapProcessoEstoque.set(PE_VENDA, "Venda")
 mapProcessoEstoque.set(PE_VENDA_COM_BUYBACK, "Venda com Buyback")
 mapProcessoEstoque.set(PE_PERDA, "Perda de Estoque")
 mapProcessoEstoque.set(PE_ALTERACAO, "Alteração de Processo")
+mapProcessoEstoque.set(PE_LANCAMENTO, "Lançamento em Inventário")
 mapProcessoEstoque.set(PE_ESTORNO_PARCIAL, "Estorno Parcial")
 mapProcessoEstoque.set(PE_ESTORNO_TOTAL, "Estorno Total")
 export const PES_SAIDA = new Map(Array.from(mapProcessoEstoque.entries()).filter(([value]) => value > 100 && value <= 200))
@@ -299,6 +301,28 @@ export const mapEntradaFC = {
   creditos: [
     { nome: "Tributo de Entrada", desc: "Adicionar crédito tributário de entrada", classe: FCC_CUSTO, multiplicador: 1, tipo_fc: FC_C_TRIBUTO_ENTRADA },
     { nome: "Cashback", desc: "Adicionar cashback e outras formas de retorno de pagamento", classe: FCC_CUSTO, multiplicador: 1, tipo_fc: FC_C_CASHBACK },
+  ],
+}
+
+export const mapLancamentoFC = {
+  custos: [
+    { nome: "Manutenção/Melhoria", desc: "Adicionar custo de manutenção ou melhoria de mercadoria", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_MANUTENCAO_MELHORIA },
+    { nome: "Transporte/Delivery", desc: "Adicionar custo de transporte e delivery", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_TRANSPORTE_ENTREGA },
+    { nome: "Embalagem", desc: "Adicionar custo de embalagem", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_EMBALAGEM },
+    { nome: "Desembaraço Aduaneiro", desc: "Adicionar custo de desembaraço aduaneiro e afins", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_ADUANEIRO },
+    { nome: "Seguro", desc: "Adicionar custo de seguros contratados", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_SEGURO },
+    { nome: "Taxa/Tarifa", desc: "Adicionar custo de taxas e tarifas pagas", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_TAXA },
+    { nome: "Juro", desc: "Adicionar custo de juro em geral", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_JURO },
+    { nome: "Multa", desc: "Adicionar custo de multas de qualquer tipo", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_MULTA },
+    { nome: "Falta de Troco", desc: "Adicionar falta de troco como custo", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_TROCO },
+    { nome: "Tributo", desc: "Adicionar custo de tributos pagos", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_TRIBUTO },
+    { nome: "Comissão Externa", desc: "Adicionar custo de comissão externa em geral", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_COMISSAO_EXTERNA },
+    { nome: "Outro Custo", desc: "Adicionar outros custos", classe: FCC_CUSTO, multiplicador: -1, tipo_fc: FC_C_OUTRO },
+  ],
+  creditos: [
+    { nome: "Tributo de Entrada", desc: "Adicionar crédito tributário de entrada", classe: FCC_CUSTO, multiplicador: 1, tipo_fc: FC_C_TRIBUTO_ENTRADA },
+    { nome: "Cashback", desc: "Adicionar cashback e outras formas de retorno de pagamento", classe: FCC_CUSTO, multiplicador: 1, tipo_fc: FC_C_CASHBACK },
+    { nome: "Estorno", desc: "Estorno de custo de processos anteriores", classe: FCC_CUSTO, multiplicador: 1, tipo_fc: FC_C_ESTORNO },
   ],
 }
 
