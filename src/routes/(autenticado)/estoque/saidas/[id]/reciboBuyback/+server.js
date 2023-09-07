@@ -1,7 +1,7 @@
-import { formatMoeda } from '$lib/helpers.js';
-import { db } from '$lib/server/db/index.js';
+import { formatMoeda } from '$lib/helpers';
+import { db } from '$lib/server/db';
 import { error } from '@sveltejs/kit';
-import { gerarPDF } from "$lib/pdf.cjs"
+import { gerarPDF } from "$lib/pdf"
 
 export const GET = (async ({ setHeaders, locals, params }) => {
   const venda_id = params.id

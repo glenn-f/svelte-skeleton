@@ -1,10 +1,7 @@
 import PdfPrinter from 'pdfmake';
 import path from "node:path";
 import { cwd } from 'node:process';
-import { fileURLToPath } from 'node:url';
 
-var __filename = fileURLToPath(import.meta.url);
-var __dirname = path.dirname(__filename);
 const fonts = {
   Quicksand: {
     normal: path.join(cwd(), "/static/fonts/Quicksand.ttf"),
