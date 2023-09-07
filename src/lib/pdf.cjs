@@ -3,10 +3,10 @@ import path from "node:path";
 import { cwd } from 'node:process';
 
 const fonts = {
-  // Quicksand: {
-  //   normal: path.join(cwd(), "/static/fonts/Quicksand.ttf"),
-  //   bold: path.join(cwd(), "/static/fonts/Quicksand-Bold.ttf"),
-  // },
+  Quicksand: {
+    normal: path.join(cwd(), "/static/fonts/Quicksand.ttf"),
+    bold: path.join(cwd(), "/static/fonts/Quicksand-Bold.ttf"),
+  },
   Helvetica: {
     normal: 'Helvetica',
     bold: 'Helvetica-Bold',
