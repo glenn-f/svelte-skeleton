@@ -4,7 +4,19 @@
   import ExternalLinkIcon from '$lib/components/ExternalLinkIcon.svelte'
   import Button from '$lib/components/Forms/Button.svelte'
   import ShowBox from '$lib/components/ShowBox.svelte'
-  import { PE_PERDA, getClasseContabil, isCusto, isReceita, mapCondicao, mapFluxoContabil, mapFluxoEstoque, mapFluxoFinanceiro, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
+  import {
+    PE_PERDA,
+    PE_VENDA_COM_BUYBACK,
+    getClasseContabil,
+    isCusto,
+    isReceita,
+    mapCondicao,
+    mapFluxoContabil,
+    mapFluxoEstoque,
+    mapFluxoFinanceiro,
+    mapOrigem,
+    mapProcessoEstoque
+  } from '$lib/globals.js'
   import { formatDateTime, formatTaxa } from '$lib/helpers.js'
   import Icon from '@iconify/svelte'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
@@ -155,6 +167,16 @@
           disabled
           icon="fa6-solid:pen-to-square"
         />
+        {#if entrada.tipo_pe == PE_VENDA_COM_BUYBACK}
+          <Button
+            href={`/estoque/saidas/${entrada.id}/reciboBuyback`}
+            target="_blank"
+            text="Recibo de Buyback"
+            data-tooltip="Recibo resumido do Buyback"
+            class="variant-ghost-success dark:text-white text-black"
+            icon="fa6-solid:receipt"
+          />
+        {/if}
       </div>
       <div class="col-span-12 flex items-center">
         <h3 class="h3 text-center mr-3">Fluxo de Estoque</h3>
@@ -284,7 +306,7 @@
       </div>
 
       <TabelaTributos {data} />
-      
+
       <TabelaComissoes {data} />
 
       <div class="col-span-12 flex items-center">
