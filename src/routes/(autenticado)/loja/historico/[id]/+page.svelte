@@ -1,4 +1,6 @@
 <script>
+  import { enhance } from '$app/forms'
+  import { downloadBufferBase64 } from '$lib/client.js'
   import ExternalLinkIcon from '$lib/components/ExternalLinkIcon.svelte'
   import Button from '$lib/components/Forms/Button.svelte'
   import ShowBox from '$lib/components/ShowBox.svelte'
@@ -20,6 +22,7 @@
   import { formatDateTime, formatTaxa, resumirProcesso } from '$lib/helpers.js'
   import Icon from '@iconify/svelte'
   import { CodeBlock } from '@skeletonlabs/skeleton'
+  import { fromJSON } from 'postcss'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   export let data
 
@@ -72,6 +75,20 @@
       <div class="col-span-6">
         <ShowBox label="Observações">{entrada.observacoes ?? '-'}</ShowBox>
       </div>
+
+      {#if entrada.tipo_pe == PE_VENDA_COM_BUYBACK}
+        <div class="col-span-12 flex justify-center">
+          <form
+            action="?/reciboBuyback"
+            method="POST"
+            use:enhance={() =>
+              ({ result }) =>
+                downloadBufferBase64(result.data, 'application/pdf')}
+          >
+            <Button type="submit" text="Recibo de Buyback" data-tooltip="Recibo resumido do Buyback" class="variant-ghost-success dark:text-white text-black" icon="fa6-solid:receipt" />
+          </form>
+        </div>
+      {/if}
       <div class="col-span-12 grid grid-cols-4">
         <div class="col-span-1" />
         <div class="col-span-2">
