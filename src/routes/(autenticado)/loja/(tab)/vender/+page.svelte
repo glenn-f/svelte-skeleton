@@ -32,7 +32,7 @@
       triggerMessage(event, toastStore)
       if (event.result.type == 'success') {
         const id = event.result.data.form.data
-        await goto(`/estoque/saidas/${id}`, { invalidateAll: true })
+        await goto(`/loja/historico/${id}`, { invalidateAll: true })
       }
     }
   })
