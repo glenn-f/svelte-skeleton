@@ -1,7 +1,7 @@
-import { formatMoeda } from '$lib/helpers';
+import { capitalizeFirst, formatMoeda } from '$lib/helpers';
+import { gerarPDF } from "$lib/pdf";
 import { db } from '$lib/server/db';
 import { error } from '@sveltejs/kit';
-import { gerarPDF } from "$lib/pdf"
 
 export const GET = (async ({ setHeaders, locals, params }) => {
   const venda_id = params.id
@@ -23,6 +23,8 @@ export const GET = (async ({ setHeaders, locals, params }) => {
 
 async function gerarRecibo(venda) {
   let { cliente, id, data, buybacks, empresa } = venda
+  cliente = capitalizeFirst(cliente)
+
   const tableBuybacks = buybacks.map(b => ([b.nome ?? '', b.codigo ?? '', b.observacoes ?? '', b.qntd?.toString() ?? '', formatMoeda(b.custo ?? 0)]))
   const tableTotal = formatMoeda(buybacks.reduce((acc, b) => acc + (b.qntd * b.custo), 0) ?? 0)
   /** @type {import('pdfmake/interfaces').TDocumentDefinitions} */

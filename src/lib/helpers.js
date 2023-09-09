@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { ERRO_CAMPOS, ERRO_SERVIDOR, mapCausasErro } from "./globals";
+import { ERRO_CAMPOS, ERRO_SERVIDOR, FE_BUYBACK, isReceita, isSaidaEstoque, mapCausasErro, mapFluxoContabil, mapProcessoEstoque } from "./globals";
 
 export function isIterable(value) {
   return typeof value == 'object' && typeof value[Symbol.iterator] === 'function';
@@ -14,6 +14,60 @@ export function objectToArray(obj) {
     return Object.entries(obj)
   }
   return obj
+}
+
+export function capitalizeFirst(str) {
+  if (typeof str !== 'string') return ''
+  let tmp = "";
+  let notFirst = 0;
+  for (const c of str) {
+    tmp += notFirst ? c.toLowerCase() : c.toUpperCase();
+    notFirst = /[^a-zA-Z]/.test(c) ? 0 : notFirst + 1
+  }
+  return tmp;
+}
+
+export function resumirProcesso(dados) {
+  let { id: pid, tipo_pe, responsavel: vendedor, participante: cliente, criacao: data_venda, fe, ff: transacoes, fc } = dados
+  let receitas = fc.filter(v => isReceita(v.tipo_fc))
+  let buybacks = fe.filter(v => v.tipo_fe === FE_BUYBACK)
+  let nomeProcesso = mapProcessoEstoque.get(tipo_pe)
+  const totalBuyback = buybacks.reduce((acc, v) => acc + v.var_custo, 0) || 0
+  const totalTransacoes = transacoes.reduce((acc, v) => acc + v.valor, 0) || 0
+  let totalReceitas = 0
+  const estoques = new Map()
+  fe?.forEach((v) => estoques.set(v.estoque_id, { ...v, custos: [], receitas: [] }))
+  receitas.forEach((v) => { estoques.get(v.estoque_id)?.receitas.push({ valor: v.valor, tipo_fc: v.tipo_fc }); totalReceitas += v.valor })
+  data_venda = DateTime.fromMillis(data_venda).toFormat("dd/LL/yy HH:mm")
+  let textoEstoques = `💥 ${nomeProcesso} ${data_venda} (PID: ${pid})\n`
+  estoques.forEach((v, k) => {
+    if (!isSaidaEstoque(v.tipo_fe)) return
+    textoEstoques += `${v.produto} (EID: ${v.estoque_id})\n`
+    textoEstoques += `Código: ${v.codigo ?? '-'}\n`
+    textoEstoques += `Receitas: `
+    v.receitas.forEach(v => textoEstoques += `${formatMoeda(v.valor)} (${mapFluxoContabil.get(v.tipo_fc)})\n`)
+  })
+  textoEstoques += `⬆️ Vendas Total: ${formatMoeda(totalReceitas)}\n`
+
+  if (buybacks.length > 0) textoEstoques += `\n⬇️Buybacks Total: ${formatMoeda(totalBuyback)}\n`
+  buybacks.forEach((v) => {
+    textoEstoques += `${v.produto} (EID: ${v.estoque_id})\n`
+    textoEstoques += `Código: ${v.codigo ?? '-'}\n`
+    textoEstoques += `Custo: ${formatMoeda(v.var_custo)}\n`
+  })
+
+  if (transacoes.length > 0) textoEstoques += `\n⬇️Transações Total: ${formatMoeda(totalTransacoes)}\n`
+
+  transacoes.forEach((v) => {
+    textoEstoques += `${formatMoeda(v.valor)} (${v.conta_forma}${v.parcela ? ` ${v.parcela}x` : ''})\n`
+  })
+  vendedor = vendedor ? vendedor + ' 😎' : undefined
+  cliente = cliente ? cliente + ' 😃' : undefined
+  textoEstoques += `\n`
+  textoEstoques += `Cliente: ${cliente ?? '-'}\n`
+  textoEstoques += `Vendedor: ${vendedor ?? '-'}\n`
+
+  return textoEstoques
 }
 
 /**

@@ -1,5 +1,6 @@
 <script>
   import { DataTable, TH, THF } from '$lib/components/DataTable'
+  import IconButton from '$lib/components/IconButton.svelte'
   import ShowChip from '$lib/components/ShowChip.svelte'
   import { mapCondicao, mapOrigem } from '$lib/globals'
   import { diferencaEmHoras, formatMoeda } from '$lib/helpers'
@@ -29,6 +30,7 @@
           <TH orderBy="preco_total">Preço Total</TH>
           <TH orderBy="codigo">Código</TH>
           <TH orderBy="observacoes">Observações</TH>
+          <th>Ações</th>
         </tr>
         <tr>
           <THF filterBy={(row) => new Date(row.data_venda).toLocaleString()} />
@@ -41,6 +43,7 @@
           <THF filterBy="preco_total" />
           <THF filterBy="codigo" />
           <THF filterBy="observacoes" />
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -48,15 +51,18 @@
           {@const diffHoras = diferencaEmHoras(row.data_venda)}
           <tr class:saida-12h={diffHoras < 12} class:saida-24h={diffHoras < 24} class:saida-36h={diffHoras < 36}>
             <td class="!whitespace-nowrap">{new Date(row.data_venda).toLocaleString()}</td>
-            <td>{row.vendedor}</td>
+            <td>{row.vendedor ?? ''}</td>
             <td class="!whitespace-nowrap">{row.produto}</td>
             <td><ShowChip text={mapCondicao.get(row.condicao)} value={row.condicao} /></td>
             <td><ShowChip text={mapOrigem.get(row.origem)} value={row.origem} /></td>
             <td>{row.qntd_venda}</td>
             <td>{formatMoeda(row.preco_total / row.qntd_venda)}</td>
             <td>{formatMoeda(row.preco_total)}</td>
-            <td>{row.codigo}</td>
-            <td>{row.observacoes}</td>
+            <td>{row.codigo ?? ''}</td>
+            <td>{row.observacoes ?? ''}</td>
+            <td class="flex flex-nowrap justify-center">
+              <IconButton href={`/loja/historico/${row.pe_id}`} icon="mdi:receipt-text-check" width="20px" height="20px" data-tooltip="Ver Detalhes" data-placement="left" />
+            </td>
           </tr>
         {/each}
       </tbody>

@@ -17,11 +17,12 @@
     mapOrigem,
     mapProcessoEstoque
   } from '$lib/globals.js'
-  import { formatDateTime, formatTaxa } from '$lib/helpers.js'
+  import { formatDateTime, formatTaxa, resumirProcesso } from '$lib/helpers.js'
   import Icon from '@iconify/svelte'
   import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
   import VariacaoNumero from '../../../../../lib/components/VariacaoNumero.svelte'
   import TabelaTributos from './TabelaTributos.svelte'
+  import { CodeBlock } from '@skeletonlabs/skeleton'
   export let data
 
   $: entrada = data.entrada || {}
@@ -177,6 +178,13 @@
             icon="fa6-solid:receipt"
           />
         {/if}
+      </div>
+      <div class="col-span-12 grid grid-cols-3">
+        <div class="col-span-1" />
+        <div class="col-span-1">
+          <CodeBlock code={resumirProcesso(entrada)} shadow="shadow-xl" buttonLabel="Copiar" language={`Resumo da ${mapProcessoEstoque.get(entrada.tipo_pe)}`} />
+        </div>
+        <div class="col-span-1" />
       </div>
       <div class="col-span-12 flex items-center">
         <h3 class="h3 text-center mr-3">Fluxo de Estoque</h3>

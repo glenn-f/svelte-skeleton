@@ -70,8 +70,13 @@
       {required}
       bind:value
     />
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <span class="!px-2 grid place-items-center hover:bg-surface-hover-token" on:click={changeInputVisibility}>
+    <span
+      class="!px-2 grid place-items-center hover:bg-surface-hover-token"
+      on:click={changeInputVisibility}
+      role="button"
+      tabindex="-1"
+      on:keydown={(e) => ['Enter', 'NumpadEnter', 'Space', 'Return'].includes(e.code) && changeInputVisibility()}
+    >
       <Icon icon={input?.type === 'password' ? 'ph:eye-closed' : 'ph:eye'} width="24px" height="24px" />
     </span>
   </div>

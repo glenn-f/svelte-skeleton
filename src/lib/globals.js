@@ -94,6 +94,9 @@ export const mapFEPerdas = new Map()
 mapFEPerdas.set(FE_EXTRAVIO, "Extravio")
 mapFEPerdas.set(FE_ROUBO, "Roubo ou Furto")
 mapFEPerdas.set(FE_DEFEITO, "Descarte ou Defeito")
+export function isEntradaEstoque(id) { return id >= 1 && id <= 100 }
+export function isSaidaEstoque(id) { return id >= 101 && id <= 200 }
+export function isAlteracaoEstoque(id) { return id >= 201 && id <= 300 }
 
 export const ORIGEM_NACIONAL = 1
 export const ORIGEM_IMPORTADO = 2
