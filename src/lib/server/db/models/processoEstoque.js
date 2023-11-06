@@ -389,6 +389,10 @@ export function criarEntrada(dados) {
     return { valid: false, fieldErrors, message, errorType, code: cause }
   }
 }
+
+export function estornarSaida() {
+  
+}
 //TODO .......................xxxxxxxxxxxxxxx...........................!!
 /** Insere os dados da saída de estoque no banco de dados
  * @param {DadosCriarSaida} dados 
