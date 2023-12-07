@@ -16,8 +16,9 @@
     onResult: async (event) => {
       triggerMessage(event, toastStore)
       if (event.result.type == 'success') {
-        const id = event.result.data?.form?.data
-        await goto(`/estoque/saidas/${id}`, { invalidateAll: true })
+        const id = event.result.data?.form?.data?.responsavel_id
+        await goto(`/estoque/saidas/${saida.id}`, { invalidateAll: true })
+        modalStore.close();
       }
     }
   })

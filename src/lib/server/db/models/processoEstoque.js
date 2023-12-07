@@ -390,7 +390,7 @@ export function criarEntrada(dados) {
   }
 }
 
-export function estornarSaida() {
+export function estornarSaida(id) {
   
 }
 //TODO .......................xxxxxxxxxxxxxxx...........................!!

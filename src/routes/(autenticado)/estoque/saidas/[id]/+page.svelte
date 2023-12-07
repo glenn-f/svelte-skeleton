@@ -168,7 +168,7 @@
       {/if}
       <div class="col-span-12 flex items-center justify-center flex-wrap gap-2">
         <Button on:click={() => abrirAlterarVendedor()} text="Trocar Vendedor" class="variant-filled-primary" icon="fa6-solid:rotate" />
-        <Button on:click={() => abrirIniciarEstorno()} text="Iniciar Estorno" data-tooltip="Efetuar estorno parcial ou total do processo" class="variant-filled-error" icon="fa-solid:undo-alt" />
+        <!-- <Button on:click={() => abrirIniciarEstorno()} text="Iniciar Estorno" data-tooltip="Efetuar estorno parcial ou total do processo" class="variant-filled-error" icon="fa-solid:undo-alt" /> -->
         <Button
           on:click={() => alert('TODO: modal ou página para edição do processo \n(responsavel, participante, observacoes)\n+estoques, transações, lançamentos')}
           text="Editar Processo"
