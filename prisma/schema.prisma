@@ -1,0 +1,493 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model comissao {
+  id                Int                @id @default(autoincrement())
+  regra_comissao_id Int
+  pessoa_id         Int
+  valor_fixo        Int
+  valor_taxa        Int
+  criacao           Int                @default(dbgenerated("unixepoch() * 1000"))
+  alteracao         Int?
+  delecao           Int?
+  pessoa            pessoa             @relation(fields: [pessoa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  regra_comissao    regra_comissao     @relation(fields: [regra_comissao_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  comissao_contabil comissao_contabil?
+}
+
+model comissao_contabil {
+  comissao_id Int      @unique(map: "sqlite_autoindex_comissao_contabil_2")
+  fc_id       Int      @unique(map: "sqlite_autoindex_comissao_contabil_3")
+  fc          fc       @relation(fields: [fc_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  comissao    comissao @relation(fields: [comissao_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([comissao_id, fc_id])
+}
+
+model conta {
+  id          Int           @id @default(autoincrement())
+  empresa_id  Int
+  nome        String
+  saldo       Int           @default(0)
+  criacao     Int           @default(dbgenerated("unixepoch() * 1000"))
+  alteracao   Int?
+  delecao     Int?
+  criador_id  Int?
+  empresa     empresa       @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario     usuario?      @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  conta_forma conta_forma[]
+  ff          ff[]
+}
+
+model conta_forma {
+  id              Int               @id @default(autoincrement())
+  conta_id        Int
+  nome            String
+  pode_parcelar   Int               @default(0)
+  pode_receber    Int               @default(0)
+  pode_pagar      Int               @default(0)
+  criacao         Int               @default(dbgenerated("unixepoch() * 1000"))
+  alteracao       Int?
+  delecao         Int?
+  criador_id      Int?
+  conta           conta             @relation(fields: [conta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario         usuario?          @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  forma_transacao forma_transacao[]
+}
+
+model empresa {
+  id                       Int                       @id @default(autoincrement())
+  dono_id                  Int?                      @unique(map: "sqlite_autoindex_empresa_1")
+  nome_fantasia            String
+  razao_social             String?
+  cnpj                     String?
+  inscricao_estadual       String?
+  codigo_regime_tributario String?
+  pais                     String?
+  uf                       String?
+  municipio                String?
+  bairro                   String?
+  cep                      String?
+  endereco                 String?
+  telefone                 String?
+  criacao                  Int                       @default(dbgenerated("unixepoch() * 1000"))
+  alteracao                Int?
+  delecao                  Int?
+  conta                    conta[]
+  usuario                  usuario?                  @relation(fields: [dono_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fc                       fc[]
+  grupo_permissao_empresa  grupo_permissao_empresa[]
+  pe                       pe[]
+  pessoa                   pessoa[]
+  produto                  produto[]
+  produto_categoria        produto_categoria[]
+  regra_comissao           regra_comissao[]
+  regra_tributo            regra_tributo[]
+  usuario_empresa          usuario_empresa[]
+}
+
+model estoque {
+  id                Int             @id @default(autoincrement())
+  produto_id        Int
+  regra_comissao_id Int?
+  regra_tributo_id  Int?
+  qntd              Int
+  custo             Int
+  preco_unitario    Int?
+  estado            Int             @default(1)
+  condicao          Int             @default(1)
+  origem            Int             @default(1)
+  codigo            String?
+  dados_json        String?
+  observacoes       String?
+  produto           produto         @relation(fields: [produto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  regra_comissao    regra_comissao? @relation(fields: [regra_comissao_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  regra_tributo     regra_tributo?  @relation(fields: [regra_tributo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fe                fe[]
+}
+
+model fc {
+  id                Int                @id @default(autoincrement())
+  empresa_id        Int
+  fcg_id            Int?
+  tipo_fc           Int
+  valor             Int
+  observacoes       String?
+  criacao           Int                @default(dbgenerated("unixepoch() * 1000"))
+  alteracao         Int?
+  delecao           Int?
+  criador_id        Int?
+  comissao_contabil comissao_contabil?
+  fcg               fcg?               @relation(fields: [fcg_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  empresa           empresa            @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario           usuario?           @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fc_fe             fc_fe?
+  fc_ff             fc_ff?
+  tributo_contabil  tributo_contabil?
+}
+
+model fc_fe {
+  fc_id         Int @unique(map: "sqlite_autoindex_fc_fe_2")
+  fe_id         Int
+  valor_inicial Int
+  fe            fe  @relation(fields: [fe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fc            fc  @relation(fields: [fc_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([fc_id, fe_id])
+}
+
+model fc_ff {
+  fc_id Int @unique(map: "sqlite_autoindex_fc_ff_2")
+  ff_id Int
+  ff    ff  @relation(fields: [ff_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fc    fc  @relation(fields: [fc_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([fc_id, ff_id])
+}
+
+model fcg {
+  id     Int     @id @default(autoincrement())
+  fc     fc[]
+  pe_fcg pe_fcg?
+}
+
+model fe {
+  id              Int     @id @default(autoincrement())
+  estoque_id      Int
+  pe_id           Int
+  responsavel_id  Int?
+  tipo_fe         Int
+  var_qntd        Int
+  var_custo       Int
+  faturamento     Int     @default(0)
+  observacoes     String?
+  alteracoes_json String?
+  fc_fe           fc_fe[]
+  pessoa          pessoa? @relation(fields: [responsavel_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pe              pe      @relation(fields: [pe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  estoque         estoque @relation(fields: [estoque_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model fechamento_comissao {
+  id                Int            @id @default(autoincrement())
+  pessoa_id         Int
+  regra_comissao_id Int
+  bonus_fixo        Int
+  taxa_fixa         Int
+  criacao           Int            @default(dbgenerated("unixepoch() * 1000"))
+  alteracao         Int?
+  delecao           Int?
+  criador_id        Int?
+  regra_comissao    regra_comissao @relation(fields: [regra_comissao_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pessoa            pessoa         @relation(fields: [pessoa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario           usuario?       @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model ff {
+  id                                      Int        @id @default(autoincrement())
+  conta_id                                Int
+  tipo_ff                                 Int
+  valor                                   Int
+  observacoes                             String?
+  criacao                                 Int        @default(dbgenerated("unixepoch() * 1000"))
+  alteracao                               Int?
+  delecao                                 Int?
+  criador_id                              Int?
+  fc_ff                                   fc_ff[]
+  conta                                   conta      @relation(fields: [conta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario                                 usuario?   @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transacao_transacao_encargo_ff_idToff   transacao? @relation("transacao_encargo_ff_idToff")
+  transacao_transacao_transacao_ff_idToff transacao? @relation("transacao_transacao_ff_idToff")
+}
+
+model forma_transacao {
+  id             Int         @id @default(autoincrement())
+  conta_forma_id Int
+  parcela        Int         @default(0)
+  taxa_encargo   Int         @default(0)
+  criacao        Int         @default(dbgenerated("unixepoch() * 1000"))
+  alteracao      Int?
+  delecao        Int?
+  criador_id     Int?
+  conta_forma    conta_forma @relation(fields: [conta_forma_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario        usuario?    @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transacao      transacao[]
+
+  @@unique([conta_forma_id, parcela], map: "sqlite_autoindex_forma_transacao_1")
+}
+
+model grupo_permissao_empresa {
+  id                          Int               @id @default(autoincrement())
+  empresa_id                  Int
+  nome                        String
+  pode_iniciar_venda          Int               @default(0)
+  pode_ver_estoque_disponivel Int               @default(0)
+  pode_ver_historico_vendas   Int               @default(0)
+  pode_ver_estoque            Int               @default(0)
+  pode_entrada_estoque        Int               @default(0)
+  pode_saida_estoque          Int               @default(0)
+  pode_ver_saldo              Int               @default(0)
+  pode_transacao_receita      Int               @default(0)
+  pode_transacao_despesa      Int               @default(0)
+  pode_cadastrar_produto      Int               @default(0)
+  pode_cadastrar_pessoa       Int               @default(0)
+  pode_cadastrar_conta        Int               @default(0)
+  pode_cadastrar_usuario      Int               @default(0)
+  criacao                     Int               @default(dbgenerated("unixepoch() * 1000"))
+  alteracao                   Int?
+  delecao                     Int?
+  criador_id                  Int?
+  empresa                     empresa           @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario                     usuario?          @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario_empresa             usuario_empresa[]
+
+  @@unique([empresa_id, nome], map: "sqlite_autoindex_grupo_permissao_empresa_1")
+}
+
+model pe {
+  id                                Int            @id @default(autoincrement())
+  empresa_id                        Int
+  responsavel_id                    Int?
+  participante_id                   Int?
+  tipo_pe                           Int
+  observacoes                       String?
+  criacao                           Int            @default(dbgenerated("unixepoch() * 1000"))
+  alteracao                         Int?
+  delecao                           Int?
+  criador_id                        Int?
+  fe                                fe[]
+  pessoa_pe_participante_idTopessoa pessoa?        @relation("pe_participante_idTopessoa", fields: [participante_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pessoa_pe_responsavel_idTopessoa  pessoa?        @relation("pe_responsavel_idTopessoa", fields: [responsavel_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  empresa                           empresa        @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario                           usuario?       @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pe_fcg                            pe_fcg[]
+  pe_transacao                      pe_transacao[]
+}
+
+model pe_fcg {
+  pe_id  Int
+  fcg_id Int @unique(map: "sqlite_autoindex_pe_fcg_2")
+  fcg    fcg @relation(fields: [fcg_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pe     pe  @relation(fields: [pe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([pe_id, fcg_id])
+}
+
+model pe_transacao {
+  pe_id        Int
+  transacao_id Int       @unique(map: "sqlite_autoindex_pe_transacao_2")
+  transacao    transacao @relation(fields: [transacao_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pe           pe        @relation(fields: [pe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([pe_id, transacao_id])
+}
+
+model pessoa {
+  id                            Int                   @id @default(autoincrement())
+  empresa_id                    Int
+  tipo_pessoa                   Int                   @default(1)
+  rep                           Int                   @default(1)
+  nome                          String
+  email                         String?
+  cpf                           String?
+  cnpj                          String?
+  rg                            String?
+  apelido                       String?
+  endereco                      String?
+  cep                           String?
+  telefone                      String?
+  sexo                          Int?
+  dn                            Int?
+  criacao                       Int                   @default(dbgenerated("unixepoch() * 1000"))
+  alteracao                     Int?
+  delecao                       Int?
+  criador_id                    Int?
+  comissao                      comissao[]
+  fe                            fe[]
+  fechamento_comissao           fechamento_comissao[]
+  pe_pe_participante_idTopessoa pe[]                  @relation("pe_participante_idTopessoa")
+  pe_pe_responsavel_idTopessoa  pe[]                  @relation("pe_responsavel_idTopessoa")
+  usuario                       usuario?              @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  empresa                       empresa               @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario_empresa               usuario_empresa?
+
+  @@unique([cnpj, empresa_id], map: "sqlite_autoindex_pessoa_2")
+  @@unique([cpf, empresa_id], map: "sqlite_autoindex_pessoa_1")
+}
+
+model produto {
+  id                     Int                      @id @default(autoincrement())
+  empresa_id             Int
+  produto_categoria_id   Int?
+  regra_comissao_id      Int?
+  regra_tributo_id       Int?
+  nome                   String                   @unique(map: "sqlite_autoindex_produto_1")
+  titulo_codigo          String?
+  config_json            String?
+  criacao                Int                      @default(dbgenerated("unixepoch() * 1000"))
+  alteracao              Int?
+  delecao                Int?
+  criador_id             Int?
+  estoque                estoque[]
+  produto_categoria      produto_categoria?       @relation(fields: [produto_categoria_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  empresa                empresa                  @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario                usuario?                 @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  regra_tributo          regra_tributo?           @relation(fields: [regra_tributo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  regra_comissao         regra_comissao?          @relation(fields: [regra_comissao_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  produto_regra_comissao produto_regra_comissao[]
+}
+
+model produto_categoria {
+  id         Int       @id @default(autoincrement())
+  empresa_id Int
+  nome       String    @unique(map: "sqlite_autoindex_produto_categoria_1")
+  criacao    Int       @default(dbgenerated("unixepoch() * 1000"))
+  alteracao  Int?
+  delecao    Int?
+  criador_id Int?
+  produto    produto[]
+  empresa    empresa   @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario    usuario?  @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model produto_regra_comissao {
+  id                Int            @id @default(autoincrement())
+  produto_id        Int
+  regra_comissao_id Int
+  condicao          String
+  origem            String
+  regra_comissao    regra_comissao @relation(fields: [regra_comissao_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  produto           produto        @relation(fields: [produto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model regra_comissao {
+  id                     Int                      @id @default(autoincrement())
+  empresa_id             Int
+  bonus_fixo             Int
+  taxa_fixa              Int
+  nome                   String
+  descricao              String?
+  criacao                Int                      @default(dbgenerated("unixepoch() * 1000"))
+  alteracao              Int?
+  delecao                Int?
+  criador_id             Int?
+  comissao               comissao[]
+  estoque                estoque[]
+  fechamento_comissao    fechamento_comissao[]
+  produto                produto[]
+  produto_regra_comissao produto_regra_comissao[]
+  empresa                empresa                  @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario                usuario?                 @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model regra_tributo {
+  id         Int       @id @default(autoincrement())
+  empresa_id Int
+  taxa_fixa  Int
+  nome       String
+  descricao  String?
+  criacao    Int       @default(dbgenerated("unixepoch() * 1000"))
+  alteracao  Int?
+  delecao    Int?
+  criador_id Int?
+  estoque    estoque[]
+  produto    produto[]
+  empresa    empresa   @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario    usuario?  @relation(fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tributo    tributo[]
+}
+
+model sessao {
+  id         String   @id
+  usuario_id Int?
+  expiracao  Int
+  criacao    Int      @default(dbgenerated("unixepoch() * 1000"))
+  alteracao  Int?
+  usuario    usuario? @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model transacao {
+  id                               Int             @id @default(autoincrement())
+  transacao_ff_id                  Int             @unique(map: "sqlite_autoindex_transacao_1")
+  encargo_ff_id                    Int?            @unique(map: "sqlite_autoindex_transacao_2")
+  forma_transacao_id               Int
+  pe_transacao                     pe_transacao?
+  forma_transacao                  forma_transacao @relation(fields: [forma_transacao_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ff_transacao_encargo_ff_idToff   ff?             @relation("transacao_encargo_ff_idToff", fields: [encargo_ff_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ff_transacao_transacao_ff_idToff ff              @relation("transacao_transacao_ff_idToff", fields: [transacao_ff_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tributo {
+  id               Int               @id @default(autoincrement())
+  regra_tributo_id Int
+  valor_taxa       Int
+  criacao          Int               @default(dbgenerated("unixepoch() * 1000"))
+  alteracao        Int?
+  delecao          Int?
+  regra_tributo    regra_tributo     @relation(fields: [regra_tributo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tributo_contabil tributo_contabil?
+}
+
+model tributo_contabil {
+  tributo_id Int     @unique(map: "sqlite_autoindex_tributo_contabil_2")
+  fc_id      Int     @unique(map: "sqlite_autoindex_tributo_contabil_3")
+  fc         fc      @relation(fields: [fc_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tributo    tributo @relation(fields: [tributo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tributo_id, fc_id])
+}
+
+model usuario {
+  id                                                  Int                       @id @default(autoincrement())
+  criador_id                                          Int?
+  nome                                                String
+  email                                               String                    @unique(map: "sqlite_autoindex_usuario_1")
+  senha                                               String
+  tipo_usuario                                        Int                       @default(0)
+  criacao                                             Int                       @default(dbgenerated("unixepoch() * 1000"))
+  alteracao                                           Int?
+  delecao                                             Int?
+  conta                                               conta[]
+  conta_forma                                         conta_forma[]
+  empresa                                             empresa?
+  fc                                                  fc[]
+  fechamento_comissao                                 fechamento_comissao[]
+  ff                                                  ff[]
+  forma_transacao                                     forma_transacao[]
+  grupo_permissao_empresa                             grupo_permissao_empresa[]
+  pe                                                  pe[]
+  pessoa                                              pessoa[]
+  produto                                             produto[]
+  produto_categoria                                   produto_categoria[]
+  regra_comissao                                      regra_comissao[]
+  regra_tributo                                       regra_tributo[]
+  sessao                                              sessao[]
+  usuario                                             usuario?                  @relation("usuarioTousuario", fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_usuario                                       usuario[]                 @relation("usuarioTousuario")
+  usuario_empresa_usuario_empresa_usuario_idTousuario usuario_empresa[]         @relation("usuario_empresa_usuario_idTousuario")
+  usuario_empresa_usuario_empresa_criador_idTousuario usuario_empresa[]         @relation("usuario_empresa_criador_idTousuario")
+}
+
+model usuario_empresa {
+  usuario_id                                  Int
+  empresa_id                                  Int
+  pessoa_id                                   Int                      @unique(map: "sqlite_autoindex_usuario_empresa_2")
+  gpe_id                                      Int?
+  criacao                                     Int                      @default(dbgenerated("unixepoch() * 1000"))
+  alteracao                                   Int?
+  delecao                                     Int?
+  criador_id                                  Int?
+  grupo_permissao_empresa                     grupo_permissao_empresa? @relation(fields: [gpe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pessoa                                      pessoa                   @relation(fields: [pessoa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  empresa                                     empresa                  @relation(fields: [empresa_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario_usuario_empresa_usuario_idTousuario usuario                  @relation("usuario_empresa_usuario_idTousuario", fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuario_usuario_empresa_criador_idTousuario usuario?                 @relation("usuario_empresa_criador_idTousuario", fields: [criador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([usuario_id, empresa_id])
+}

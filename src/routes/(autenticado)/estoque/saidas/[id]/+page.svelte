@@ -1,6 +1,4 @@
 <script>
-  import TabelaComissoes from './TabelaComissoes.svelte'
-
   import ExternalLinkIcon from '$lib/components/ExternalLinkIcon.svelte'
   import Button from '$lib/components/Forms/Button.svelte'
   import ShowBox from '$lib/components/ShowBox.svelte'
@@ -19,25 +17,42 @@
   } from '$lib/globals.js'
   import { formatDateTime, formatTaxa, resumirProcesso } from '$lib/helpers.js'
   import Icon from '@iconify/svelte'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
+  import { CodeBlock, getModalStore } from '@skeletonlabs/skeleton'
   import VariacaoNumero from '../../../../../lib/components/VariacaoNumero.svelte'
+  import ModalEstornar from './ModalEstornar.svelte'
+  import TabelaComissoes from './TabelaComissoes.svelte'
   import TabelaTributos from './TabelaTributos.svelte'
-  import { CodeBlock } from '@skeletonlabs/skeleton'
+  import ModalAlterarVendedor from './ModalAlterarVendedor.svelte'
   export let data
 
-  $: entrada = data.entrada || {}
-  $: totalQntdEstoque = entrada.fe?.reduce((acc, { var_qntd }) => acc + var_qntd, 0)
-  $: totalCustoEstoque = entrada.fe?.reduce((acc, { var_custo }) => acc + var_custo, 0)
-  $: totalTransacoes = entrada.ff?.reduce((acc, { valor }) => acc + valor, 0)
-  $: totalEncargos = entrada.ff?.reduce((acc, { encargo_valor }) => acc + (encargo_valor || 0), 0)
-  $: totalOutrosLancamentos = entrada.fc?.reduce((acc, { valor }) => acc + valor, 0)
-  $: totalCustos = entrada.fc?.reduce((acc, { valor, tipo_fc }) => acc + (isCusto(tipo_fc) ? valor : 0), 0)
-  $: totalReceitas = entrada.fc?.reduce((acc, { valor, tipo_fc }) => acc + (isReceita(tipo_fc) ? valor : 0), 0)
+  $: colaboradores = data.colaboradores || []
+  $: saida = data.entrada || {}
+  $: totalQntdEstoque = saida.fe?.reduce((acc, { var_qntd }) => acc + var_qntd, 0)
+  $: totalCustoEstoque = saida.fe?.reduce((acc, { var_custo }) => acc + var_custo, 0)
+  $: totalTransacoes = saida.ff?.reduce((acc, { valor }) => acc + valor, 0)
+  $: totalEncargos = saida.ff?.reduce((acc, { encargo_valor }) => acc + (encargo_valor || 0), 0)
+  $: totalOutrosLancamentos = saida.fc?.reduce((acc, { valor }) => acc + valor, 0)
+  $: totalCustos = saida.fc?.reduce((acc, { valor, tipo_fc }) => acc + (isCusto(tipo_fc) ? valor : 0), 0)
+  $: totalReceitas = saida.fc?.reduce((acc, { valor, tipo_fc }) => acc + (isReceita(tipo_fc) ? valor : 0), 0)
   $: varTransacoes = totalTransacoes + totalEncargos
   $: varPatrimonio = totalCustoEstoque + varTransacoes
   $: resultadoContabil = totalCustos + totalReceitas
   $: console.log({ totalOutrosLancamentos, totalEncargos })
   //TODO somar custo rateado do estoque (valor lançamento = custo aquisicao, outros lançamentos = lançamentos rateados, total lancamentos = custo + outros )
+
+  const modalStore = getModalStore()
+  function abrirIniciarEstorno() {
+    modalStore.trigger({
+      type: 'component',
+      component: { ref: ModalEstornar, props: { data: saida } }
+    })
+  }
+  function abrirAlterarVendedor() {
+    modalStore.trigger({
+      type: 'component',
+      component: { ref: ModalAlterarVendedor, props: { data: { formData: data.formData, saida, colaboradores } } }
+    })
+  }
 </script>
 
 <div class="grid place-items-center">
@@ -57,41 +72,41 @@
     <div class="grid grid-cols-12 gap-2">
       <div class="col-span-4">
         <ShowBox label="Processo de Estoque">
-          {mapProcessoEstoque.get(entrada.tipo_pe)}
+          {mapProcessoEstoque.get(saida.tipo_pe)}
         </ShowBox>
       </div>
       <div class="col-span-4">
         <ShowBox label="Usuário Criador">
-          {#if entrada.criador}
-            {entrada.criador}
-            <ExternalLinkIcon href={`/cadastros/usuarios/${entrada.criador_id}`} data-tooltip="Abrir Detalhes do Usuário" />
+          {#if saida.criador}
+            {saida.criador}
+            <ExternalLinkIcon href={`/cadastros/usuarios/${saida.criador_id}`} data-tooltip="Abrir Detalhes do Usuário" />
           {:else}
             -
           {/if}
         </ShowBox>
       </div>
       <div class="col-span-2">
-        <ShowBox label="Data de Criação">{formatDateTime(entrada.criacao)}</ShowBox>
+        <ShowBox label="Data de Criação">{formatDateTime(saida.criacao)}</ShowBox>
       </div>
       <div class="col-span-2">
-        <ShowBox label="Data de Deleção">{formatDateTime(entrada.delecao) || '-'}</ShowBox>
+        <ShowBox label="Data de Deleção">{formatDateTime(saida.delecao) || '-'}</ShowBox>
       </div>
       <div class="col-span-3">
         <ShowBox label="Responsável">
-          {#if entrada.responsavel}
-            {entrada.responsavel}
-            <ExternalLinkIcon href={`/cadastros/pessoas/${entrada.responsavel_id}`} data-tooltip="Abrir Detalhes da Pessoa" />
+          {#if saida.responsavel}
+            {saida.responsavel}
+            <ExternalLinkIcon href={`/cadastros/pessoas/${saida.responsavel_id}`} data-tooltip="Abrir Detalhes da Pessoa" />
           {:else}
             -
           {/if}
         </ShowBox>
       </div>
-      {#if entrada.tipo_pe !== PE_PERDA}
+      {#if saida.tipo_pe !== PE_PERDA}
         <div class="col-span-3">
           <ShowBox label="Cliente">
-            {#if entrada.participante}
-              {entrada.participante}
-              <ExternalLinkIcon href={`/cadastros/pessoas/${entrada.participante_id}`} data-tooltip="Abrir Detalhes da Pessoa" />
+            {#if saida.participante}
+              {saida.participante}
+              <ExternalLinkIcon href={`/cadastros/pessoas/${saida.participante_id}`} data-tooltip="Abrir Detalhes da Pessoa" />
             {:else}
               -
             {/if}
@@ -146,20 +161,14 @@
           </ShowBox>
         </div>
       {/if}
-      {#if entrada.observacoes}
+      {#if saida.observacoes}
         <div class="col-span-12">
-          <ShowBox label="Observações">{entrada.observacoes}</ShowBox>
+          <ShowBox label="Observações">{saida.observacoes}</ShowBox>
         </div>
       {/if}
       <div class="col-span-12 flex items-center justify-center flex-wrap gap-2">
-        <Button
-          on:click={() => alert('TODO: redirecionar para página de estorno de entrada')}
-          text="Iniciar Estorno"
-          data-tooltip="Efetuar estorno parcial ou total do processo"
-          class="variant-filled-error"
-          disabled
-          icon="fa-solid:undo-alt"
-        />
+        <Button on:click={() => abrirAlterarVendedor()} text="Trocar Vendedor" class="variant-filled-primary" icon="fa6-solid:rotate" />
+        <!-- <Button on:click={() => abrirIniciarEstorno()} text="Iniciar Estorno" data-tooltip="Efetuar estorno parcial ou total do processo" class="variant-filled-error" icon="fa-solid:undo-alt" /> -->
         <Button
           on:click={() => alert('TODO: modal ou página para edição do processo \n(responsavel, participante, observacoes)\n+estoques, transações, lançamentos')}
           text="Editar Processo"
@@ -168,9 +177,9 @@
           disabled
           icon="fa6-solid:pen-to-square"
         />
-        {#if entrada.tipo_pe == PE_VENDA_COM_BUYBACK}
+        {#if saida.tipo_pe == PE_VENDA_COM_BUYBACK}
           <Button
-            href={`/estoque/saidas/${entrada.id}/reciboBuyback`}
+            href={`/estoque/saidas/${saida.id}/reciboBuyback`}
             target="_blank"
             text="Recibo de Buyback"
             data-tooltip="Recibo resumido do Buyback"
@@ -182,7 +191,7 @@
       <div class="col-span-12 grid grid-cols-3">
         <div class="col-span-1" />
         <div class="col-span-1">
-          <CodeBlock code={resumirProcesso(entrada)} shadow="shadow-xl" buttonLabel="Copiar" language={`Resumo da ${mapProcessoEstoque.get(entrada.tipo_pe)}`} />
+          <CodeBlock code={resumirProcesso(saida)} shadow="shadow-xl" buttonLabel="Copiar" language={`Resumo da ${mapProcessoEstoque.get(saida.tipo_pe)}`} />
         </div>
         <div class="col-span-1" />
       </div>
@@ -209,7 +218,7 @@
             </tr>
           </thead>
           <tbody>
-            {#each entrada.fe ?? [] as fluxo, i}
+            {#each saida.fe ?? [] as fluxo, i}
               <tr class="!whitespace-nowrap">
                 <td>{fluxo.estoque_id}</td>
                 <td>{mapFluxoEstoque.get(fluxo.tipo_fe)}</td>
@@ -271,7 +280,7 @@
             </tr>
           </thead>
           <tbody>
-            {#each entrada.ff ?? [] as fluxo, i}
+            {#each saida.ff ?? [] as fluxo, i}
               <tr class="!whitespace-nowrap">
                 <td>{mapFluxoFinanceiro.get(fluxo.tipo_ff)}</td>
                 <td>
@@ -335,7 +344,7 @@
             </tr>
           </thead>
           <tbody>
-            {#each entrada?.fc ?? [] as { produto, estoque_id, tipo_fc, valor, observacoes }, j}
+            {#each saida?.fc ?? [] as { produto, estoque_id, tipo_fc, valor, observacoes }, j}
               <tr>
                 <td class="!whitespace-nowrap">{estoque_id}</td>
                 <td class="!whitespace-nowrap">{mapFluxoContabil.get(tipo_fc)}</td>
@@ -378,7 +387,7 @@
             </tr>
           </thead>
           <tbody>
-            {#each entrada?.fcg ?? [] as { tipo_fc, valor, observacoes }, j}
+            {#each saida?.fcg ?? [] as { tipo_fc, valor, observacoes }, j}
               <tr>
                 <td class="!whitespace-nowrap">{mapFluxoContabil.get(tipo_fc)}</td>
                 <td class="!whitespace-nowrap">{getClasseContabil(tipo_fc)}</td>
