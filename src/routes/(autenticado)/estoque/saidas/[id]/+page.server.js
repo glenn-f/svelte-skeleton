@@ -1,11 +1,12 @@
 import { ERRO_CAMPOS, ERRO_SERVIDOR, REP_COLABORADOR } from '$lib/globals.js';
 import { consultarPessoas } from '$lib/server/db/models/pessoa.js';
 import { detalharEntrada, estornarSaida } from '$lib/server/db/models/processoEstoque';
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { message, superValidate } from 'sveltekit-superforms/server';
 import { z, zID } from '$lib/zod';
 import { begin, commit, db, dbSelectAll, dbUpdate, rollback } from '$lib/server/db/index.js';
 import { handleAnyError } from '$lib/helpers.js';
+import { desfazerProcessoEstoque } from '$lib/server/db/models/desfazerPE.js';
 
 export async function load({ locals, params }) {
     const id = parseInt(params.id)
@@ -24,7 +25,11 @@ export const actions = {
     estornar: async ({ request, params }) => {
         const id = parseInt(params.id)
         if (!Number.isInteger(id)) throw error(400, "ID de Saída inválido")
-        const resultado = estornarSaida(id)
+        const resultado = await desfazerProcessoEstoque(id)
+        if (!resultado) {
+            return fail(500, "Ocorreu um problema durante o estorno da Saída")
+        }
+        return "Processo de Saída desfeito com sucesso"
     },
     alterarVendedor: async ({ request, params }) => {
         const id = parseInt(params.id)
