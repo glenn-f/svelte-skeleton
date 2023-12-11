@@ -1,9 +1,7 @@
-//vite-node src\lib\server\db\raw\run_test_statement.js
-// import { FE_VENDA } from "$lib/globals"
 import { begin, commit, db, rollback } from ".."
 
-
-async function desfazerProcessoEstoque(pe_id) {
+export async function desfazerProcessoEstoque(pe_id) {
+  if (!Number.isInteger(pe_id)) return false
   try {
     begin.run()
     const { fc_ids: fc1, ...resFF } = await desfazerFluxoFinanceiro(pe_id)
@@ -162,13 +160,3 @@ async function desfazerComissoes(fc_ids) {
   const comissao_apagados = comissao_ids.length > 0 ? db.prepare(`DELETE FROM comissao WHERE id in (${placeholders})`).run(comissao_ids).changes : 0;
   return { comissao_contabil_apagados, comissao_apagados }
 }
-
-// Exemplo de utilização
-const idAlvo = 269; // ID desejado para consulta
-desfazerProcessoEstoque(idAlvo)
-  .then((result) => {
-    console.log("Operações realizadas com sucesso:", result);
-  })
-  .catch((error) => {
-    console.error("Erro ao executar operações:", error);
-  });
