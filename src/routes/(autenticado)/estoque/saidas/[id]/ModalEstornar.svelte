@@ -1,17 +1,42 @@
 <script>
   import { enhance } from '$app/forms'
+  import { goto, invalidateAll } from '$app/navigation'
   import CardModal from '$lib/components/CardModal.svelte'
-  import { getModalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   export let data
   const modalStore = getModalStore()
+  const toastStore = getToastStore()
 </script>
 
 <CardModal>
   <svelte:fragment slot="header">
     <h2 class="h2">Estornar Venda</h2>
   </svelte:fragment>
-  <form id="formEstorno" action="?/estornar" method="POST" class="grid grid-cols-12 gap-1 px-3" use:enhance>
-
+  <form
+    id="formEstorno"
+    action="?/estornar"
+    method="POST"
+    class="grid grid-cols-12 gap-1 px-3"
+    use:enhance={() =>
+      async ({ result }) => {
+        const { data: message, type } = result
+        modalStore.close()
+        if (type == 'success') {
+          await goto('.')
+          invalidateAll()
+          if (!message) return
+          toastStore.trigger({
+            message,
+            background: 'bg-success-500'
+          })
+        } else {
+          return toastStore.trigger({
+            message,
+            background: 'bg-error-500'
+          })
+        }
+      }}
+  >
     <div class="col-span-12">O processo de estorno efetuará o seguinte processo:</div>
     <pre class="col-span-12">
   - desfazer os lançamentos de custos por estoque (se houver)
