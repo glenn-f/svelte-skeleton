@@ -1,18 +1,20 @@
 <script>
+  import { enhance } from '$app/forms'
+  import { invalidateAll } from '$app/navigation'
   import ExternalLinkIcon from '$lib/components/ExternalLinkIcon.svelte'
   import Button from '$lib/components/Forms/Button.svelte'
+  import InputText from '$lib/components/Forms/InputText.svelte'
+  import IconButton from '$lib/components/IconButton.svelte'
   import ShowBox from '$lib/components/ShowBox.svelte'
   import VariacaoNumero from '$lib/components/VariacaoNumero.svelte'
   import { getClasseContabil, mapCondicao, mapEstadoEstoque, mapFluxoContabil, mapFluxoEstoque, mapOrigem, mapProcessoEstoque } from '$lib/globals.js'
   import { formatDateTime, formatMoeda, formatTaxa } from '$lib/helpers.js'
   import Icon from '@iconify/svelte'
-  import { getModalStore } from '@skeletonlabs/skeleton'
+  import { getModalStore, getToastStore } from '@skeletonlabs/skeleton'
   import ModalEditarItem from './ModalEditarItem.svelte'
-  import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
-  import ModalLancamento from '../../lancamento/[id]/ModalLancamento.svelte'
   export let data
   const modalStore = getModalStore()
-
+  const toastStore = getToastStore()
   function abrirEditarItem() {
     modalStore.trigger({
       type: 'component',
@@ -20,11 +22,30 @@
     })
   }
 
+  let editandoCodigo = false
+  let codigo = ''
+  let formEditarCodigo = null
+
   $: estoque = data.estoque || {}
   $: regraComissao = data?.regrasComissao?.find((v) => v.id == data?.estoque?.regra_comissao_id)
   $: regraTributacao = data?.regrasTributo?.find((v) => v.id == data?.estoque?.regra_tributo_id)
   $: rc_text = regraComissao ? `${regraComissao.nome}: ${regraComissao.descricao} (Taxa: ${formatTaxa(regraComissao.taxa_fixa)}% + Bônus: ${formatMoeda(regraComissao.bonus_fixo)})` : '-'
   $: rt_text = regraTributacao ? `${regraTributacao.nome}: ${regraTributacao.descricao} (Taxa: ${formatTaxa(regraTributacao.taxa_fixa)}%)` : '-'
+
+  function editarCodigo() {
+    editandoCodigo = true
+    codigo = estoque.codigo
+  }
+
+  async function finalizarEdicao() {
+    editandoCodigo = false
+    formEditarCodigo.requestSubmit()
+  }
+
+  async function cancelarEdicao() {
+    editandoCodigo = false
+    codigo = ''
+  }
 </script>
 
 <div class="grid place-items-center">
@@ -57,7 +78,36 @@
         </ShowBox>
       </div>
       <div class="col-span-6 lg:col-span-3">
-        <ShowBox label={'Código' + (estoque.titulo_codigo ? ` (${estoque.titulo_codigo})` : '')}>{estoque.codigo || ''}</ShowBox>
+        {#if editandoCodigo}
+          <form
+            bind:this={formEditarCodigo}
+            action="?/editarCodigo"
+            method="post"
+            class="flex flex-nowrap"
+            use:enhance={({}) => {
+              return ({ result, update }) => {
+                toastStore.trigger({ message: result.data.message, classes: 'bg-success-600' })
+                update()
+                if (result.type === 'success') {
+                  invalidateAll()
+                }
+              }
+            }}
+          >
+            <InputText name="codigo" label="Editar Código" inputClass="w-full" bind:value={codigo} class="input flex-grow" />
+            <div class="flex items-end gap-1 mb-2 ml-2">
+              <IconButton class="text-success-500" height="1.7rem" data-tooltip="Salvar Código" icon="fa6-solid:check" on:click={finalizarEdicao} />
+              <IconButton class="text-error-500" height="1.7rem" data-tooltip="Cancelar" icon="fa6-solid:xmark" on:click={cancelarEdicao} />
+            </div>
+          </form>
+        {:else}
+          <ShowBox label={'Código' + (estoque.titulo_codigo ? ` (${estoque.titulo_codigo})` : '')}
+            >{estoque.codigo || ''}
+            <div class="!cursor-pointer" data-tooltip="Editar Código" on:click={editarCodigo}>
+              <Icon class="ml-2 text-warning-500 hover:text-warning-600 cursor-pointer" icon="fa6-solid:pen" />
+            </div>
+          </ShowBox>
+        {/if}
       </div>
       <div class="col-span-3 lg:col-span-2">
         <ShowBox label="Origem">{mapOrigem.get(estoque.origem)}</ShowBox>
