@@ -10,7 +10,8 @@
     "test": "playwright test",
     "test:unit": "vitest",
     "lint": "prettier --plugin-search-dir . --check . && eslint .",
-    "format": "prettier --plugin-search-dir . --write ."
+    "format": "prettier --plugin-search-dir . --write .",
+    "db:refresh": "vite-node src/lib/server/db/raw/run_reset_db.js"
   },
   "devDependencies": {
     "@floating-ui/dom": "^1.5.1",
