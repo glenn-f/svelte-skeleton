@@ -2,6 +2,7 @@
   "name": "svelte-skeleton",
   "version": "0.0.1",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "start": "node build",
     "dev": "vite dev",
